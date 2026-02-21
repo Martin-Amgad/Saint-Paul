@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "183434026267",
+    "project_id": "saint-paul-24b2f",
+    "storage_bucket": "saint-paul-24b2f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183434026267:android:2bc83ecbb17b113dde07be",
+        "android_client_info": {
+          "package_name": "com.church.saint_paul"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQOo7HQ9b4MhylsHPynAzTtv4oTf7uobk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
