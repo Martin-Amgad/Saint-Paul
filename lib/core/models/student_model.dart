@@ -1,77 +1,112 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class StudentModel {
   final String? uid;
   final String? name;
-  final String? email;
+  final String? motherPhone;
+  final String? fatherPhone;
+  final String? personalPhone;
+  final String? housePhone;
+  final String? address;
+  final DateTime? birthday;
+  final String? studyLevel;
+  final String? responsibleTeacher;
   final String? avatarUrl;
   final int? totalTayo;
   final Map<String, dynamic>? tayo;
-  final String? dob;
-  final bool darkMode;
 
   StudentModel({
     this.uid,
     this.name,
-    this.email,
+    this.motherPhone,
+    this.fatherPhone,
+    this.personalPhone,
+    this.housePhone,
+    this.address,
     this.avatarUrl,
     this.totalTayo = 0,
-    this.dob,
-    this.darkMode = false,
+    this.birthday,
+    this.studyLevel,
+    this.responsibleTeacher,
     this.tayo = const {
-      'حضور القداس': 0,
-      'حضور القداس قبل المستر': 0,
-      'هدوء و مفتحش الموبيل في القداس': 0,
-      'دخل الاجتماع من 11:30 ل 11:40 صباحا': 0,
-      'سلوك كويس في الاجتماع': 0,
-      'مفتحش الموبيل و الفقرة شغالة': 0,
-      'اجابة علي سؤال في الدرس': 0,
+      'حضور القداس': {'count': 0, 'takenAt': null},
+      'حضور القداس قبل المستر': {'count': 0, 'takenAt': null},
+      'هدوء و مفتحش الموبيل في القداس': {'count': 0, 'takenAt': null},
+      'دخل الاجتماع من 11:30 ل 11:40 صباحا': {'count': 0, 'takenAt': null},
+      'سلوك كويس في الاجتماع': {'count': 0, 'takenAt': null},
+      'مفتحش الموبيل و الفقرة شغالة': {'count': 0, 'takenAt': null},
+      'اجابة علي سؤال في الدرس': {'count': 0, 'takenAt': null},
     },
   });
+
+  /// Model → Firestore
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'motherPhone': motherPhone,
+      'fatherPhone': fatherPhone,
+      'personalPhone': personalPhone,
+      'housePhone': housePhone,
+      'address': address,
+      'avatarUrl': avatarUrl,
+      'totalTayo': totalTayo,
+      'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
+      'studyLevel': studyLevel,
+      'responsibleTeacher': responsibleTeacher,
+      'tayo': tayo,
+    };
+  }
 
   /// Firestore → Model
   factory StudentModel.fromJson(Map<String, dynamic> map, String uid) {
     return StudentModel(
       uid: uid,
       name: map['name'] ?? '',
-      email: map['email'] ?? '',
+      motherPhone: map['motherPhone'] ?? 'لا يوجد',
+      fatherPhone: map['fatherPhone'] ?? 'لا يوجد',
+      personalPhone: map['personalPhone'] ?? 'لا يوجد',
+      housePhone: map['housePhone'] ?? 'لا يوجد',
+      address: map['address'] ?? 'لا يوجد',
       avatarUrl: map['avatarUrl'] ?? '',
       totalTayo: map['totalTayo'] ?? 0,
-      dob: map['dob'] ?? '',
-      tayo: map['tayo'] as Map<String, dynamic>? ?? {},
-      darkMode: map['darkMode'] ?? false,
-    );
-  }
+      birthday: map['birthday'] != null
+          ? (map['birthday'] as Timestamp).toDate()
+          : null,
 
-  /// Model → Firestore
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'email': email,
-      'avatarUrl': avatarUrl,
-      'totalTayo': totalTayo,
-      'dob': dob,
-      'darkMode': darkMode,
-      'tayo': tayo,
-    };
+      studyLevel: map['studyLevel'] ?? '',
+      responsibleTeacher: map['responsibleTeacher'] ?? 'لا يوجد',
+      tayo: map['tayo'] as Map<String, dynamic>? ?? {},
+    );
   }
 
   /// CopyWith
   StudentModel copyWith({
     String? name,
-    String? email,
+    String? motherPhone,
+    String? fatherPhone,
+    String? personalPhone,
+    String? housePhone,
+    String? address,
     String? avatarUrl,
     int? totalTayo,
-    String? dob,
-    bool? darkMode,
+    DateTime? birthday,
+    String? studyLevel,
+    String? responsibleTeacher,
     Map<String, dynamic>? tayo,
   }) {
     return StudentModel(
       uid: uid,
       name: name ?? this.name,
-      email: email ?? this.email,
+      motherPhone: motherPhone ?? this.motherPhone,
+      fatherPhone: fatherPhone ?? this.fatherPhone,
+      personalPhone: personalPhone ?? this.personalPhone,
+      housePhone: housePhone ?? this.housePhone,
+      address: address ?? this.address,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       totalTayo: totalTayo ?? this.totalTayo,
-      dob: dob ?? this.dob,
-      darkMode: darkMode ?? this.darkMode,
+      birthday: birthday ?? this.birthday,
+      studyLevel: studyLevel ?? this.studyLevel,
+      responsibleTeacher: responsibleTeacher ?? this.responsibleTeacher,
       tayo: tayo ?? this.tayo,
     );
   }
@@ -81,12 +116,19 @@ class StudentModel {
     final Map<String, dynamic> data = <String, dynamic>{};
 
     if (name != null) data['name'] = name;
-    if (email != null) data['email'] = email;
+    if (motherPhone != null) data['motherPhone'] = motherPhone;
+    if (fatherPhone != null) data['fatherPhone'] = fatherPhone;
+    if (personalPhone != null) data['personalPhone'] = personalPhone;
+    if (housePhone != null) data['housePhone'] = housePhone;
+    if (address != null) data['address'] = address;
     if (avatarUrl != null) data['avatarUrl'] = avatarUrl;
     if (totalTayo != null) data['totalTayo'] = totalTayo;
-    if (dob != null) data['dob'] = dob;
+    if (birthday != null) data['birthday'] = Timestamp.fromDate(birthday!);
+    if (studyLevel != null) data['studyLevel'] = studyLevel;
+    if (responsibleTeacher != null) {
+      data['responsibleTeacher'] = responsibleTeacher;
+    }
     if (tayo != null) data['tayo'] = tayo;
-    data['darkMode'] = darkMode;
 
     return data;
   }

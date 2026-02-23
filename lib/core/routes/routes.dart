@@ -4,8 +4,11 @@ import 'package:saint_paul/feature/auth/presentation/page/forget_password/passwo
 import 'package:saint_paul/feature/auth/presentation/page/login/login_screen.dart';
 import 'package:saint_paul/feature/auth/presentation/page/register/register_screen%20.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
+import 'package:saint_paul/feature/home/presentation/page/teacher/add_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/student_details_screen.dart';
+import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_cubit.dart';
+import 'package:saint_paul/feature/home/profile/presentation/teacher/student_info_edit_screen.dart';
 import 'package:saint_paul/feature/main/nav_bar.dart';
 import 'package:saint_paul/feature/splash/splash_screen.dart';
 import 'package:saint_paul/feature/welcome/welcom_screen.dart';
@@ -23,8 +26,10 @@ class Routes {
   static const String confirmScreen = '/confirmScreen';
   static const String mainScreen = '/mainScreen';
   static const String teacherHomeScreen = '/teacherHomeScreen';
+  static const String addNewStudentScreen = '/addNewStudentScreen';
   static const String studentHomeScreen = '/studentHomeScreen';
   static const String studentDetailsScreen = '/studentDetailsScreen';
+  static const String studentInfoEditScreen = '/studentInfoEditScreen';
 
   static final routes = GoRouter(
     routes: [
@@ -49,6 +54,22 @@ class Routes {
         path: mainScreen,
         builder: (context, state) =>
             MainAppScreen(role: state.extra as String?),
+      ),
+
+      GoRoute(
+        path: addNewStudentScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => HomeCubit(),
+          child: AddNewStudentScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: studentInfoEditScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => ProfileCubit(),
+          child: StudentInfoEditScreen(student: state.extra as StudentModel),
+        ),
       ),
 
       // GoRoute(

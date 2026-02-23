@@ -6,14 +6,19 @@ import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 class HomeRepo {
   static Future<String?> updatStudent(
     StudentModel student,
-    List<String> tayoNewCategories,
-    List<String> tayoRemovedCategories,
+    List<String>? tayoNewCategories,
+    List<String>? tayoRemovedCategories,
   ) async {
     try {
       log('Updating student with ID: ${student.uid}');
       log('New Tayo Categories: $tayoNewCategories');
       log('Removed Tayo Categories: $tayoRemovedCategories');
       // THEN update all documents with additions/removals
+      if ((tayoNewCategories?.isEmpty ?? true) &&
+          (tayoRemovedCategories?.isEmpty ?? true)) {
+        await FirebaseProvider.updateStudent(student);
+        return 'تم تحديث بيانات المخدوم بنجاح.';
+      }
       await FirebaseProvider.updateTayoInAllDocuments(
         tayoNewCategories,
         tayoRemovedCategories,
@@ -43,6 +48,26 @@ class HomeRepo {
     } on Exception catch (e) {
       log(e.toString());
       return null;
+    }
+  }
+
+  static Future<String?> createStudent(StudentModel student) async {
+    try {
+      await FirebaseProvider.createStudent(student);
+      return 'تم إنشاء المخدوم بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء إنشاء المخدوم. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  static Future<String?> updatStudentTakenAt(StudentModel student) async {
+    try {
+      await FirebaseProvider.updateStudent(student);
+      return 'تم تحديث بيانات المخدوم بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث بيانات المخدوم. الرجاء المحاولة مرة أخرى.';
     }
   }
 

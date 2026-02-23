@@ -5,6 +5,7 @@ import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/birthday_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
+import 'package:saint_paul/feature/home/profile/presentation/teacher/teacher_profile_screen.dart';
 
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key, this.role});
@@ -25,6 +26,10 @@ class _MainPageState extends State<MainAppScreen> {
       const BirthdayScreen()
     else
       const Center(child: Text('المهام')),
+    if (widget.role == 'خادم')
+      const TeacherProfileScreen()
+    else
+      const TeacherProfileScreen(),
   ];
 
   @override

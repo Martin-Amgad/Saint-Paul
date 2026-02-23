@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 
 class CustomTextField extends StatefulWidget {
@@ -12,6 +13,9 @@ class CustomTextField extends StatefulWidget {
     this.prefixIcon,
     this.onChanged,
     this.isEmail = false,
+    this.isPhone = false,
+    this.isLandline = false,
+    this.readOnly = false,
   });
 
   final TextEditingController controller;
@@ -19,9 +23,12 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final bool isPassword;
   final bool isEmail;
+  final bool isPhone;
+  final bool isLandline;
   final Widget? suffixIcon;
   final Widget? prefixIcon;
   final Function(String)? onChanged;
+  final bool readOnly;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -36,8 +43,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
       validator: widget.validator,
       obscureText: widget.isPassword && isobscure,
       onChanged: widget.onChanged,
+      readOnly: widget.readOnly,
+      inputFormatters: widget.isPhone || widget.isLandline
+          ? [
+              FilteringTextInputFormatter.digitsOnly,
+              widget.isLandline
+                  ? LengthLimitingTextInputFormatter(10)
+                  : LengthLimitingTextInputFormatter(11),
+            ]
+          : null,
       keyboardType: widget.isEmail
           ? TextInputType.emailAddress
+          : widget.isPhone || widget.isLandline
+          ? TextInputType.phone
           : TextInputType.text,
       decoration: InputDecoration(
         hintText: widget.hintText,

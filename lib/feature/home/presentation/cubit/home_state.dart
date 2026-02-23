@@ -10,7 +10,13 @@ class HomeTayoLoadSuccessState extends HomeState {
 }
 
 class HomeSuccessState extends HomeState {
-  HomeSuccessState();
+  final String? message;
+  HomeSuccessState({this.message});
+}
+
+class HomeSuccessStateForTakenAt extends HomeState {
+  final String? message;
+  HomeSuccessStateForTakenAt({this.message});
 }
 
 class HomeErrorState extends HomeState {

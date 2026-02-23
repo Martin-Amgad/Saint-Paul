@@ -20,6 +20,26 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
 
   String? selectedMonth;
 
+  var searchController = TextEditingController();
+  String searchText = '';
+
+  // Month names in order for the chip row
+  static const List<String> months = [
+    "الكل",
+    "يناير",
+    "فبراير",
+    "مارس",
+    "أبريل",
+    "مايو",
+    "يونيو",
+    "يوليو",
+    "أغسطس",
+    "سبتمبر",
+    "أكتوبر",
+    "نوفمبر",
+    "ديسمبر",
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -27,11 +47,9 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
   }
 
   Future<void> loadStudents() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
-    final snapshot = await FirebaseProvider.sortStudentsByBirthday();
+    final snapshot = await FirebaseProvider.fetchStudentsByBirthday();
 
     allStudents = snapshot.docs
         .map(
@@ -41,246 +59,409 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
         .toList();
 
     filteredStudents = List.from(allStudents);
-
-    setState(() {
-      isLoading = false;
+    filteredStudents.sort((a, b) {
+      if (a.birthday == null && b.birthday == null) return 0;
+      if (a.birthday == null) return 1;
+      if (b.birthday == null) return -1;
+      return a.birthday!.month.compareTo(b.birthday!.month);
     });
+
+    setState(() => isLoading = false);
+  }
+
+  bool birthdayInAWeek(DateTime? birthday) {
+    if (birthday == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final inAWeek = today.add(const Duration(days: 7));
+    final birthdayThisYear = DateTime(now.year, birthday.month, birthday.day);
+    return !birthdayThisYear.isBefore(today) &&
+        !birthdayThisYear.isAfter(inAWeek);
+  }
+
+  void _onMonthSelected(String month) {
+    setState(() {
+      selectedMonth = month;
+      if (month == "الكل") {
+        filteredStudents = List.from(allStudents);
+        filteredStudents.sort((a, b) {
+          if (a.birthday == null && b.birthday == null) return 0;
+          if (a.birthday == null) return 1;
+          if (b.birthday == null) return -1;
+          return a.birthday!.month.compareTo(b.birthday!.month);
+        });
+        return;
+      }
+      filteredStudents = allStudents
+          .where((s) => s.birthday?.month == monthMapping[month])
+          .toList();
+      filteredStudents.sort((a, b) {
+        if (a.birthday == null && b.birthday == null) return 0;
+        if (a.birthday == null) return 1;
+        if (b.birthday == null) return -1;
+        return a.birthday!.day.compareTo(b.birthday!.day);
+      });
+    });
+  }
+
+  String _formatBirthday(DateTime? dt) {
+    if (dt == null) return '—';
+    return '${dt.day} / ${dt.month} / ${dt.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      // appBar: AppBar(
-      //   backgroundColor: AppColors.surfaceColor,
-      //   elevation: 0,
-      //   title: Text(
-      //     'اعياد ميلاد الطلاب',
-      //     style: TextStyles.getSize24(
-      //       color: AppColors.primaryColor,
-      //       fontWeight: FontWeight.w600,
-      //     ),
-      //   ),
-      //   leading: IconButton(
-      //     icon: Icon(Icons.arrow_back, color: AppColors.primaryColor),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      // ),
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(color: AppColors.primaryColor),
             )
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'أعياد الميلاد',
-                          style: TextStyles.getSize24(
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ────────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(36),
+                      bottomRight: Radius.circular(36),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryColor.withValues(alpha: 0.4),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.whiteColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.cake_rounded,
+                              color: Color(0xFFFFD700),
+                              size: 26,
+                            ),
+                          ),
+                          const Gap(12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'أعياد الميلاد',
+                                style: TextStyles.getSize24(
+                                  color: AppColors.whiteColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                'المخدومون المحتفلون قريباً',
+                                style: TextStyles.getSize12(
+                                  color: AppColors.whiteColor.withValues(
+                                    alpha: 0.65,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Gap(18),
+                      // Month chips in a horizontal scroll
+                      SizedBox(
+                        height: 36,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: months.length,
+                          separatorBuilder: (_, __) => const Gap(8),
+                          itemBuilder: (context, i) {
+                            final month = months[i];
+                            final isSelected =
+                                selectedMonth == month ||
+                                (month == "الكل" && selectedMonth == null);
+                            return GestureDetector(
+                              onTap: () => _onMonthSelected(month),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.whiteColor
+                                      : AppColors.whiteColor.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  month,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? AppColors.primaryColor
+                                        : AppColors.whiteColor,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Gap(16),
+
+                // ── Count label ──────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Text(
+                        selectedMonth == null || selectedMonth == "الكل"
+                            ? 'الكل'
+                            : selectedMonth!,
+                        style: TextStyles.getSize18(
+                          color: AppColors.accentColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Gap(8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${filteredStudents.length}',
+                          style: TextStyles.getSize12(
                             color: AppColors.primaryColor,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Spacer(flex: 4),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.4,
-                          child: DropdownButtonFormField<String>(
-                            // isExpanded: true,
-                            focusColor: AppColors.primaryColor,
-                            iconEnabledColor: AppColors.whiteColor,
-                            dropdownColor: AppColors.primaryColor,
-                            borderRadius: BorderRadius.circular(12),
-                            value: selectedMonth,
-                            hint: Text(
-                              " اختر الشهر",
-                              style: TextStyles.getSize16(
-                                color: AppColors.whiteColor,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const Gap(12),
+
+                // ── List ─────────────────────────────────────────────
+                Expanded(
+                  child: filteredStudents.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cake_outlined,
+                                size: 64,
+                                color: AppColors.accentColor.withValues(
+                                  alpha: 0.2,
+                                ),
                               ),
-                            ),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: AppColors.primaryColor,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              const Gap(12),
+                              Text(
+                                'لا يوجد مخدومون في هذا الشهر',
+                                style: TextStyles.getSize16(
+                                  color: AppColors.accentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                            items:
-                                [
-                                      "يناير",
-                                      "فبراير",
-                                      "مارس",
-                                      "أبريل",
-                                      "مايو",
-                                      "يونيو",
-                                      "يوليو",
-                                      "أغسطس",
-                                      "سبتمبر",
-                                      "أكتوبر",
-                                      "نوفمبر",
-                                      "ديسمبر",
-                                    ]
-                                    .map(
-                                      (month) => DropdownMenuItem(
-                                        value: month,
-                                        child: Text(
-                                          month,
-                                          style: TextStyles.getSize16(
-                                            color: AppColors.whiteColor,
+                            ],
+                          ),
+                        )
+                      : Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                            itemCount: filteredStudents.length,
+                            itemBuilder: (context, index) {
+                              final student = filteredStudents[index];
+                              final birthday = student.birthday;
+                              final isInAWeek = selectedMonth != null
+                                  ? birthdayInAWeek(birthday)
+                                  : false;
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: isInAWeek
+                                      ? const Color(
+                                          0xFF22C55E,
+                                        ).withValues(alpha: 0.08)
+                                      : AppColors.surfaceColor,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: isInAWeek
+                                        ? const Color(
+                                            0xFF22C55E,
+                                          ).withValues(alpha: 0.5)
+                                        : AppColors.primaryColor.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                    width: isInAWeek ? 1.5 : 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isInAWeek
+                                          ? const Color(
+                                              0xFF22C55E,
+                                            ).withValues(alpha: 0.1)
+                                          : Colors.black.withValues(
+                                              alpha: 0.04,
+                                            ),
+                                      blurRadius: isInAWeek ? 12 : 5,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Avatar / cake icon
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: isInAWeek
+                                              ? const Color(
+                                                  0xFF22C55E,
+                                                ).withValues(alpha: 0.15)
+                                              : AppColors.primaryColor
+                                                    .withValues(alpha: 0.08),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isInAWeek
+                                                ? const Color(
+                                                    0xFF22C55E,
+                                                  ).withValues(alpha: 0.4)
+                                                : AppColors.primaryColor
+                                                      .withValues(alpha: 0.15),
                                           ),
                                         ),
+                                        child: Center(
+                                          child: isInAWeek
+                                              ? const Text(
+                                                  '🎂',
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                  ),
+                                                )
+                                              : Text(
+                                                  '${index + 1}',
+                                                  style: TextStyles.getSize16(
+                                                    color:
+                                                        AppColors.primaryColor,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                        ),
                                       ),
-                                    )
-                                    .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedMonth = value;
-                              });
+                                      const Gap(12),
+                                      // Name & birthday
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              student.name ?? 'بدون اسم',
+                                              style: TextStyles.getSize16(
+                                                color:
+                                                    AppColors.textPrimaryColor,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const Gap(3),
+                                            Text(
+                                              'تاريخ الميلاد: ${_formatBirthday(birthday)}',
+                                              style: TextStyles.getSize12(
+                                                color: AppColors
+                                                    .textSecondaryColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // "Soon" badge
+                                      if (isInAWeek)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF22C55E,
+                                            ).withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'قريباً 🎉',
+                                            style: TextStyle(
+                                              color: const Color(0xFF16A34A),
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         ),
-                        Spacer(flex: 1),
-                      ],
-                    ),
-                    // SizedBox(
-                    //       width: 200,
-                    //       child: DropdownButtonFormField<String>(
-                    //         focusColor: AppColors.primaryColor,
-                    //         iconEnabledColor: AppColors.whiteColor,
-                    //         dropdownColor: AppColors.primaryColor,
-                    //         borderRadius: BorderRadius.circular(12),
-                    //         value: selectedMonth,
-                    //         hint: Text(
-                    //           " اختر الشهر",
-                    //           style: TextStyles.getSize16(
-                    //             color: AppColors.whiteColor,
-                    //           ),
-                    //         ),
-                    //         decoration: InputDecoration(
-                    //           filled: true,
-                    //           fillColor: AppColors.primaryColor,
-                    //           contentPadding: EdgeInsets.symmetric(
-                    //             horizontal: 16,
-                    //             vertical: 12,
-                    //           ),
-                    //           border: OutlineInputBorder(
-                    //             borderRadius: BorderRadius.circular(12),
-                    //             borderSide: BorderSide.none,
-                    //           ),
-                    //         ),
-                    //         items:
-                    //             [
-                    //                   "يناير",
-                    //                   "فبراير",
-                    //                   "مارس",
-                    //                   "أبريل",
-                    //                   "مايو",
-                    //                   "يونيو",
-                    //                   "يوليو",
-                    //                   "أغسطس",
-                    //                   "سبتمبر",
-                    //                   "أكتوبر",
-                    //                   "نوفمبر",
-                    //                   "ديسمبر",
-                    //                 ]
-                    //                 .map(
-                    //                   (month) => DropdownMenuItem(
-                    //                     value: month,
-                    //                     child: Text(
-                    //                       month,
-                    //                       style: TextStyles.getSize16(
-                    //                         color: AppColors.whiteColor,
-                    //                       ),
-                    //                     ),
-                    //                   ),
-                    //                 )
-                    //                 .toList(),
-                    //         onChanged: (value) {
-                    //           setState(() {
-                    //             selectedMonth = value;
-                    //           });
-                    //         },
-                    //       ),
-                    //     ),
-                    Gap(24),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredStudents.length, // عدد المعلمين
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.borderColor,
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primaryColor.withOpacity(
-                                    0.05,
-                                  ),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              leading: CircleAvatar(
-                                backgroundColor: AppColors.primaryColor,
-                                radius: 24,
-                                child: Text(
-                                  'م${index + 1}',
-                                  style: TextStyles.getSize16(
-                                    color: AppColors.whiteColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                filteredStudents[index].name ??
-                                    'المعلم ${index + 1}',
-                                style: TextStyles.getSize16(
-                                  color: AppColors.textPrimaryColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'تاريخ الميلاد: ${filteredStudents[index].dob ?? "غير محدد"}',
-                                  style: TextStyles.getSize12(
-                                    color: AppColors.textSecondaryColor,
-                                  ),
-                                ),
-                              ),
-                              trailing: Icon(
-                                Icons.cake_outlined,
-                                color: AppColors.accentColor,
-                                size: 24,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
                 ),
-              ),
+              ],
             ),
     );
   }
 }
+
+Map<String, int> monthMapping = {
+  "يناير": 1,
+  "فبراير": 2,
+  "مارس": 3,
+  "أبريل": 4,
+  "مايو": 5,
+  "يونيو": 6,
+  "يوليو": 7,
+  "أغسطس": 8,
+  "سبتمبر": 9,
+  "أكتوبر": 10,
+  "نوفمبر": 11,
+  "ديسمبر": 12,
+};

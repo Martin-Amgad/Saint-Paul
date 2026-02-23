@@ -39,15 +39,20 @@ class FirebaseProvider {
     return await studentCollection.orderBy('totalTayo', descending: true).get();
   }
 
-  static Future<QuerySnapshot> sortStudentsByBirthday() async {
-    return await studentCollection.orderBy('dob', descending: true).get();
+  static Stream<QuerySnapshot> streamedSortStudentsByTotalTayo() {
+    return studentCollection.orderBy('totalTayo', descending: true).snapshots();
+  }
+
+  static Future<QuerySnapshot> fetchStudentsByBirthday() async {
+    return await studentCollection.orderBy('birthday', descending: true).get();
   }
 
   static Future<void> updateTayoInAllDocuments(
-    List<String> tayoNewCategories,
-    List<String> tayoRemovedCategories,
+    List<String>? tayoNewCategories,
+    List<String>? tayoRemovedCategories,
   ) async {
-    if (tayoNewCategories.isEmpty && tayoRemovedCategories.isEmpty) {
+    if ((tayoNewCategories?.isEmpty ?? true) &&
+        (tayoRemovedCategories?.isEmpty ?? true)) {
       return;
     }
 
@@ -56,11 +61,12 @@ class FirebaseProvider {
     final futures = snapshot.docs.map((doc) {
       Map<String, dynamic> updates = {};
 
-      for (var key in tayoNewCategories) {
-        updates['tayo.$key'] = 0;
+      for (var key in tayoNewCategories ?? []) {
+        updates['tayo.$key.count'] = 0;
+        updates['tayo.$key.takenAt'] = null;
       }
 
-      for (var key in tayoRemovedCategories) {
+      for (var key in tayoRemovedCategories ?? []) {
         updates['tayo.$key'] = FieldValue.delete();
       }
 
@@ -69,8 +75,8 @@ class FirebaseProvider {
 
     await Future.wait(futures);
 
-    tayoNewCategories.clear();
-    tayoRemovedCategories.clear();
+    tayoNewCategories?.clear();
+    tayoRemovedCategories?.clear();
   }
 
   static Future<void> updateCurrentStudentTayo(

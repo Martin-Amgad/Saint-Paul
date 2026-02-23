@@ -6,8 +6,8 @@ import 'package:saint_paul/feature/home/data/repo/home_repo.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(Homeinit());
+class ProfileCubit extends Cubit<HomeState> {
+  ProfileCubit() : super(Homeinit());
   var nameController = TextEditingController();
   var fatherPhoneController = TextEditingController();
   var motherPhoneController = TextEditingController();
