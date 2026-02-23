@@ -79,7 +79,7 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
         !birthdayThisYear.isAfter(inAWeek);
   }
 
-  void _onMonthSelected(String month) {
+  void onMonthSelected(String month) {
     setState(() {
       selectedMonth = month;
       if (month == "الكل") {
@@ -104,9 +104,9 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
     });
   }
 
-  String _formatBirthday(DateTime? dt) {
+  String formatBirthday(DateTime? dt) {
     if (dt == null) return '—';
-    return '${dt.day} / ${dt.month} / ${dt.year}';
+    return ' ${dt.month} / ${dt.day} ';
   }
 
   @override
@@ -181,50 +181,7 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                       ),
                       const Gap(18),
                       // Month chips in a horizontal scroll
-                      SizedBox(
-                        height: 36,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: months.length,
-                          separatorBuilder: (_, __) => const Gap(8),
-                          itemBuilder: (context, i) {
-                            final month = months[i];
-                            final isSelected =
-                                selectedMonth == month ||
-                                (month == "الكل" && selectedMonth == null);
-                            return GestureDetector(
-                              onTap: () => _onMonthSelected(month),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.whiteColor
-                                      : AppColors.whiteColor.withValues(
-                                          alpha: 0.15,
-                                        ),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  month,
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? AppColors.primaryColor
-                                        : AppColors.whiteColor,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w400,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                      SizedBox(height: 36, child: monthChipBuilder()),
                     ],
                   ),
                 ),
@@ -404,7 +361,7 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                                             ),
                                             const Gap(3),
                                             Text(
-                                              'تاريخ الميلاد: ${_formatBirthday(birthday)}',
+                                              'تاريخ الميلاد: ${formatBirthday(birthday)}',
                                               style: TextStyles.getSize12(
                                                 color: AppColors
                                                     .textSecondaryColor,
@@ -447,6 +404,43 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  ListView monthChipBuilder() {
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: months.length,
+      separatorBuilder: (_, _) => const Gap(8),
+      itemBuilder: (context, i) {
+        final month = months[i];
+        final isSelected =
+            selectedMonth == month ||
+            (month == "الكل" && selectedMonth == null);
+        return GestureDetector(
+          onTap: () => onMonthSelected(month),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.whiteColor
+                  : AppColors.whiteColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              month,
+              style: TextStyle(
+                color: isSelected
+                    ? AppColors.primaryColor
+                    : AppColors.whiteColor,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

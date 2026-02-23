@@ -12,15 +12,18 @@ import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/feature/home/data/widgets/filter_chip.dart';
+import 'package:saint_paul/feature/home/data/widgets/header_icon_button.dart';
 
-class TeacherProfileScreen extends StatefulWidget {
-  const TeacherProfileScreen({super.key});
+class StudentProfileEditScreen extends StatefulWidget {
+  const StudentProfileEditScreen({super.key});
 
   @override
-  State<TeacherProfileScreen> createState() => _TeacherProfileScreenState();
+  State<StudentProfileEditScreen> createState() =>
+      _StudentProfileEditScreenState();
 }
 
-class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
+class _StudentProfileEditScreenState extends State<StudentProfileEditScreen> {
   var searchController = TextEditingController();
   ValueNotifier<String> searchNotifier = ValueNotifier('');
 
@@ -36,13 +39,6 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
     super.dispose();
   }
 
-  Color? _rankColor(int index) {
-    if (index == 0) return const Color(0xFFFFD700);
-    if (index == 1) return const Color(0xFFB0B0B0);
-    if (index == 2) return const Color(0xFFCD7F32);
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,11 +51,11 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseProvider.streamedSortStudentsByTotalTayo(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(color: AppColors.primaryColor),
-            );
-          }
+          // if (snapshot.connectionState == ConnectionState.waiting) {
+          //   return Center(
+          //     child: CircularProgressIndicator(color: AppColors.primaryColor),
+          //   );
+          // }
 
           if (snapshot.hasError) {
             log('streamedSortStudentsByTotalTayo error: ${snapshot.error}');
@@ -83,6 +79,8 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                 ),
               )
               .toList();
+
+          filteredStudents = allStudents;
 
           return SafeArea(
             child: Column(
@@ -119,31 +117,24 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
-                              Icons.emoji_events_rounded,
+                              Icons.person_rounded,
                               color: Color(0xFFFFD700),
                               size: 26,
                             ),
                           ),
                           const Gap(12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'حسابات المخدومين',
-                                style: TextStyles.getSize24(
-                                  color: AppColors.whiteColor,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                'مرتبون حسب مجموع الطايو',
-                                style: TextStyles.getSize12(
-                                  color: AppColors.whiteColor.withValues(
-                                    alpha: 0.65,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'حسابات المخدومين',
+                            style: TextStyles.getSize24(
+                              color: AppColors.whiteColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          HeaderIconButton(
+                            icon: Icons.add_rounded,
+                            onTap: () =>
+                                pushTo(context, Routes.addEditNewStudentScreen),
                           ),
                         ],
                       ),
@@ -161,7 +152,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                             child: SvgPicture.asset(
                               AppAssets.searchSvg,
                               colorFilter: ColorFilter.mode(
-                                AppColors.whiteColor.withValues(alpha: 0.7),
+                                AppColors.primaryColor.withValues(alpha: 0.7),
                                 BlendMode.srcIn,
                               ),
                             ),
@@ -169,11 +160,14 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                           suffixIcon: IconButton(
                             onPressed: () {
                               searchController.clear();
-                              setState(() => searchText = '');
+                              setState(() {
+                                searchText = '';
+                                searchNotifier.value = searchText;
+                              });
                             },
                             icon: Icon(
                               Icons.close_rounded,
-                              color: AppColors.whiteColor.withValues(
+                              color: AppColors.primaryColor.withValues(
                                 alpha: 0.7,
                               ),
                             ),
@@ -205,14 +199,14 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: [
-                              _FilterChip(
+                              FilteredChip(
                                 label: 'الكل',
                                 selected: selectedYear == null,
                                 onTap: () =>
                                     setState(() => selectedYear = null),
                               ),
                               const Gap(8),
-                              _FilterChip(
+                              FilteredChip(
                                 label: 'اولي اعدادي',
                                 selected: selectedYear == 'اولي اعدادي',
                                 onTap: () => setState(
@@ -220,7 +214,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                                 ),
                               ),
                               const Gap(8),
-                              _FilterChip(
+                              FilteredChip(
                                 label: 'تانيه اعدادي',
                                 selected: selectedYear == 'تانيه اعدادي',
                                 onTap: () => setState(
@@ -228,7 +222,7 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                                 ),
                               ),
                               const Gap(8),
-                              _FilterChip(
+                              FilteredChip(
                                 label: 'ثالثة اعدادي',
                                 selected: selectedYear == 'ثالثة اعدادي',
                                 onTap: () => setState(
@@ -288,160 +282,96 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                           );
                         }
 
-                        return ListView.builder(
+                        return GridView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                           itemCount: filteredStudents.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 1,
+                                crossAxisSpacing: 8,
+                                childAspectRatio: 1.2,
+                              ),
                           itemBuilder: (context, index) {
                             final student = filteredStudents[index];
-                            final rankColor = _rankColor(index);
-                            final isTopThree = rankColor != null;
+                            //   final isTopThree = rankColor != null;
 
                             return GestureDetector(
                               onTap: () {
                                 pushTo(
                                   context,
-                                  Routes.studentInfoEditScreen,
+                                  Routes.addEditNewStudentScreen,
                                   extra: student,
                                 );
                               },
                               child: Container(
                                 margin: const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 12,
-                                ),
+                                padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: isTopThree
-                                      ? rankColor!.withValues(alpha: 0.07)
-                                      : AppColors.surfaceColor,
+                                  color: AppColors.surfaceColor,
                                   borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
-                                    color: isTopThree
-                                        ? rankColor!.withValues(alpha: 0.4)
-                                        : AppColors.primaryColor.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                    width: isTopThree ? 1.5 : 1,
+                                    color: AppColors.primaryColor.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: isTopThree
-                                          ? rankColor!.withValues(alpha: 0.12)
-                                          : Colors.black.withValues(
-                                              alpha: 0.04,
-                                            ),
-                                      blurRadius: isTopThree ? 12 : 6,
+                                      color: Colors.black.withValues(
+                                        alpha: 0.04,
+                                      ),
+                                      blurRadius: 6,
                                       offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
-                                child: Row(
-                                  children: [
-                                    // Rank badge
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: isTopThree
-                                            ? rankColor!.withValues(alpha: 0.15)
-                                            : AppColors.primaryColor.withValues(
-                                                alpha: 0.08,
-                                              ),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: isTopThree
-                                              ? rankColor!.withValues(
-                                                  alpha: 0.5,
-                                                )
-                                              : AppColors.primaryColor
-                                                    .withValues(alpha: 0.15),
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: isTopThree
-                                            ? Icon(
-                                                Icons.emoji_events_rounded,
-                                                size: 20,
-                                                color: rankColor,
-                                              )
-                                            : Text(
-                                                '${index + 1}',
-                                                style: TextStyles.getSize16(
-                                                  color: AppColors.primaryColor,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                              ),
-                                      ),
-                                    ),
-                                    const Gap(12),
-                                    // Name & level
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            student.name ?? 'بدون اسم',
-                                            style: TextStyles.getSize18(
-                                              color: AppColors.accentColor,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 15,
+                                child: SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.2,
+
+                                  child: Column(
+                                    children: [
+                                      // image circular avatar
+                                      CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: AppColors.primaryColor
+                                            .withValues(alpha: 0.08),
+                                        child: Center(
+                                          child: Text(
+                                            '${index + 1}',
+                                            style: TextStyles.getSize16(
+                                              color: AppColors.primaryColor,
+                                              fontWeight: FontWeight.w700,
                                             ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          if ((student.studyLevel ?? '')
-                                              .isNotEmpty) ...[
-                                            const Gap(2),
-                                            Text(
-                                              student.studyLevel!,
-                                              style: TextStyles.getSize12(
-                                                color: AppColors.accentColor
-                                                    .withValues(alpha: 0.5),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                    // Total tayo badge
-                                    if (student.totalTayo != null &&
-                                        student.totalTayo! > 0)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isTopThree
-                                              ? rankColor!.withValues(
-                                                  alpha: 0.15,
-                                                )
-                                              : AppColors.primaryColor
-                                                    .withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '${student.totalTayo}',
-                                          style: TextStyles.getSize16(
-                                            color: isTopThree
-                                                ? rankColor!
-                                                : AppColors.primaryColor,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
                                           ),
                                         ),
                                       ),
-                                    const Gap(6),
-                                    Icon(
-                                      Icons.arrow_back_ios_rounded,
-                                      size: 14,
-                                      color: AppColors.accentColor.withValues(
-                                        alpha: 0.3,
+
+                                      const Gap(3),
+                                      // Name & level
+                                      Text(
+                                        student.name ?? 'بدون اسم',
+                                        style: TextStyles.getSize18(
+                                          color: AppColors.accentColor,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
-                                  ],
+                                      if ((student.studyLevel ?? '')
+                                          .isNotEmpty) ...[
+                                        const Gap(2),
+                                        Text(
+                                          student.studyLevel!,
+                                          style: TextStyles.getSize12(
+                                            color: AppColors.accentColor
+                                                .withValues(alpha: 0.5),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
@@ -455,48 +385,6 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primaryColor
-              : AppColors.primaryColor.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected
-                ? AppColors.primaryColor
-                : AppColors.primaryColor.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.whiteColor : AppColors.primaryColor,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            fontSize: 13,
-          ),
-        ),
       ),
     );
   }

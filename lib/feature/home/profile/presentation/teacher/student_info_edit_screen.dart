@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 
-class StudentInfoEditScreen extends StatefulWidget {
-  const StudentInfoEditScreen({super.key, required this.student});
+class StudentInfoScreen extends StatefulWidget {
+  const StudentInfoScreen({super.key, required this.student});
   final StudentModel student;
 
   @override
-  State<StudentInfoEditScreen> createState() => _StudentInfoEditScreenState();
+  State<StudentInfoScreen> createState() => _StudentInfoScreenState();
 }
 
-class _StudentInfoEditScreenState extends State<StudentInfoEditScreen> {
+class _StudentInfoScreenState extends State<StudentInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold();

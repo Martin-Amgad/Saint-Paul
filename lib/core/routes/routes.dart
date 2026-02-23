@@ -26,7 +26,7 @@ class Routes {
   static const String confirmScreen = '/confirmScreen';
   static const String mainScreen = '/mainScreen';
   static const String teacherHomeScreen = '/teacherHomeScreen';
-  static const String addNewStudentScreen = '/addNewStudentScreen';
+  static const String addEditNewStudentScreen = '/addNewStudentScreen';
   static const String studentHomeScreen = '/studentHomeScreen';
   static const String studentDetailsScreen = '/studentDetailsScreen';
   static const String studentInfoEditScreen = '/studentInfoEditScreen';
@@ -57,10 +57,10 @@ class Routes {
       ),
 
       GoRoute(
-        path: addNewStudentScreen,
+        path: addEditNewStudentScreen,
         builder: (context, state) => BlocProvider(
           create: (context) => HomeCubit(),
-          child: AddNewStudentScreen(),
+          child: AddEditNewStudentScreen(student: state.extra as StudentModel?),
         ),
       ),
 
@@ -68,7 +68,7 @@ class Routes {
         path: studentInfoEditScreen,
         builder: (context, state) => BlocProvider(
           create: (context) => ProfileCubit(),
-          child: StudentInfoEditScreen(student: state.extra as StudentModel),
+          child: StudentInfoScreen(student: state.extra as StudentModel),
         ),
       ),
 

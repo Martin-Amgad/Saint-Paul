@@ -13,20 +13,26 @@ import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 
-class AddNewStudentScreen extends StatefulWidget {
-  const AddNewStudentScreen({super.key, this.student});
+class AddEditNewStudentScreen extends StatefulWidget {
+  const AddEditNewStudentScreen({super.key, this.student});
   final StudentModel? student;
 
   @override
-  State<AddNewStudentScreen> createState() => _AddNewStudentScreenState();
+  State<AddEditNewStudentScreen> createState() =>
+      _AddEditNewStudentScreenState();
 }
 
-class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
+class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
   DateTime? pickedDate;
+  @override
+  void initState() {
+    context.read<HomeCubit>().loadStudentControllers(widget.student);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.watch<HomeCubit>();
+    final cubit = context.read<HomeCubit>();
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -38,6 +44,21 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
             onPressed: () async {
               if (cubit.formkey.currentState?.validate() ?? false) {
                 if (cubit.formkey.currentState!.validate()) {
+                  if (widget.student != null) {
+                    cubit.updateStudent(
+                      widget.student!.copyWith(
+                        name: cubit.nameController.text,
+                        fatherPhone: cubit.fatherPhoneController.text,
+                        motherPhone: cubit.motherPhoneController.text,
+                        personalPhone: cubit.personalPhoneController.text,
+                        housePhone: cubit.housePhoneController.text,
+                        address: cubit.addressController.text,
+                        studyLevel: cubit.studyLevelController.text,
+                        birthday: pickedDate,
+                      ),
+                    );
+                    return;
+                  }
                   cubit.createStudent(
                     StudentModel(
                       name: cubit.nameController.text,
@@ -118,7 +139,9 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'اضافة مخدوم جديد',
+                        widget.student == null
+                            ? 'اضافة مخدوم جديد'
+                            : 'تعديل بيانات المخدوم',
                         style: TextStyles.getSize24(
                           color: AppColors.whiteColor,
                           fontWeight: FontWeight.w700,
@@ -170,10 +193,11 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
                             controller: cubit.fatherPhoneController,
                             isPhone: true,
                             validator: (p0) {
-                              if (!AppRegex.isEgyptianPhoneValid(p0!)) {
+                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
+                                  p0.isNotEmpty) {
                                 return 'رجاء ادخل رقم هاتف صالحا';
                               } else if (p0.isEmpty) {
-                                cubit.fatherPhoneController.text = 'لا يوجد';
+                                cubit.fatherPhoneController.text = '';
                               }
                               return null;
                             },
@@ -188,10 +212,11 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
                             controller: cubit.motherPhoneController,
                             isPhone: true,
                             validator: (p0) {
-                              if (!AppRegex.isEgyptianPhoneValid(p0!)) {
+                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
+                                  p0.isNotEmpty) {
                                 return 'رجاء ادخل رقم هاتف صالحا';
                               } else if (p0.isEmpty) {
-                                cubit.motherPhoneController.text = 'لا يوجد';
+                                cubit.motherPhoneController.text = '';
                               }
                               return null;
                             },
@@ -206,10 +231,11 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
                             controller: cubit.personalPhoneController,
                             isPhone: true,
                             validator: (p0) {
-                              if (!AppRegex.isEgyptianPhoneValid(p0!)) {
+                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
+                                  p0.isNotEmpty) {
                                 return 'رجاء ادخل رقم هاتف صالحا';
                               } else if (p0.isEmpty) {
-                                cubit.personalPhoneController.text = 'لا يوجد';
+                                cubit.personalPhoneController.text = '';
                               }
                               return null;
                             },
@@ -224,10 +250,11 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
                             controller: cubit.housePhoneController,
                             isLandline: true,
                             validator: (p0) {
-                              if (!AppRegex.isEgyptianLandlineValid(p0!)) {
+                              if (!AppRegex.isEgyptianLandlineValid(p0!) &&
+                                  p0.isNotEmpty) {
                                 return 'رجاء ادخل رقم هاتف صالحا';
                               } else if (p0.isEmpty) {
-                                cubit.housePhoneController.text = 'لا يوجد';
+                                cubit.housePhoneController.text = '';
                               }
                               return null;
                             },
@@ -242,7 +269,7 @@ class _AddNewStudentScreenState extends State<AddNewStudentScreen> {
                             controller: cubit.addressController,
                             validator: (p0) {
                               if (p0 == null || p0.isEmpty) {
-                                cubit.addressController.text = 'لا يوجد';
+                                cubit.addressController.text = '';
                               }
                               return null;
                             },

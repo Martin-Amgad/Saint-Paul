@@ -118,4 +118,17 @@ class HomeCubit extends Cubit<HomeState> {
       emit(HomeErrorState(message: res ?? e.toString()));
     }
   }
+
+  void loadStudentControllers(StudentModel? student) {
+    nameController.text = student?.name ?? '';
+    fatherPhoneController.text = student?.fatherPhone ?? '';
+    motherPhoneController.text = student?.motherPhone ?? '';
+    personalPhoneController.text = student?.personalPhone ?? '';
+    housePhoneController.text = student?.housePhone ?? '';
+    addressController.text = student?.address ?? '';
+    studyLevelController.text = student?.studyLevel ?? '';
+    birthdayController.text = DateFormat(
+      'yyyy-MM-dd',
+    ).format(student?.birthday ?? DateTime.now());
+  }
 }
