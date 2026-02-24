@@ -66,7 +66,9 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
       return a.birthday!.month.compareTo(b.birthday!.month);
     });
 
-    setState(() => isLoading = false);
+    setState(() {
+      if (context.mounted) isLoading = false;
+    });
   }
 
   bool birthdayInAWeek(DateTime? birthday) {

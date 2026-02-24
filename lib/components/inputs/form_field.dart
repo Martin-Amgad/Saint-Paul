@@ -4,8 +4,8 @@ import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 
 /// A labelled form section with an icon and a content slot
-class FormField extends StatelessWidget {
-  const FormField({
+class CustomFormField extends StatelessWidget {
+  const CustomFormField({
     super.key,
     required this.label,
     required this.icon,

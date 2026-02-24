@@ -68,22 +68,15 @@ class AuthRepo {
     }
   }
 
-  //   static Future<AuthResponse?> forget_password(AuthParams params) async {
-  //     try {
-  //       var res = await DioProvider.post(
-  //         endpoint: ApiEndpoints.forget_password,
-  //         data: params.toJson(),
-  //       );
-  //       if (res.statusCode == 200) {
-  //         return AuthResponse.fromJson(res.data);
-  //       } else {
-  //         return null;
-  //       }
-  //     } on Exception catch (e) {
-  //       log(e.toString());
-  //       return null;
-  //     }
-  //   }
+  static Future<String?>? resetPassword(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      return 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.';
+    } on FirebaseAuthException catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
 
   //   static Future<AuthResponse?> check_forget_password(AuthParams params) async {
   //     try {

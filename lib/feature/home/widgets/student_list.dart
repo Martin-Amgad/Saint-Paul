@@ -33,11 +33,9 @@ class StudentList extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseProvider.streamedSortStudentsByTotalTayo(),
       builder: (context, snapshot) {
-        // if (snapshot.connectionState == ConnectionState.waiting) {
-        //   return Center(
-        //     child: CircularProgressIndicator(color: AppColors.primaryColor),
-        //   );
-        // }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox();
+        }
 
         if (snapshot.hasError) {
           log('streamedSortStudentsByTotalTayo error: ${snapshot.error}');
@@ -108,7 +106,7 @@ class StudentList extends StatelessWidget {
             return GestureDetector(
               onTap: () {
                 if (isStudent == true) return;
-                pushTo(context, Routes.studentDetailsScreen, extra: student);
+                pushTo(context, Routes.tayoDetailsScreen, extra: student);
               },
               child: Container(
                 margin: const EdgeInsets.only(bottom: 10),

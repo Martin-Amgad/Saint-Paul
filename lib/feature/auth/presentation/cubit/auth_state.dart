@@ -6,7 +6,14 @@ class AuthloadingState extends AuthState {}
 
 class AuthSuccessState extends AuthState {
   String? role;
-  AuthSuccessState({this.role});
+  String? message;
+  AuthSuccessState({this.role, this.message});
+}
+
+class AuthResetPasswordSuccessState extends AuthState {
+  final String message;
+
+  AuthResetPasswordSuccessState(this.message);
 }
 
 class AuthErrorState extends AuthState {

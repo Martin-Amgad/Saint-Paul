@@ -16,6 +16,7 @@ class CustomTextField extends StatefulWidget {
     this.isPhone = false,
     this.isLandline = false,
     this.readOnly = false,
+    this.maxLines = 1,
   });
 
   final TextEditingController controller;
@@ -29,6 +30,7 @@ class CustomTextField extends StatefulWidget {
   final Widget? prefixIcon;
   final Function(String)? onChanged;
   final bool readOnly;
+  final int? maxLines;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -44,6 +46,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: widget.isPassword && isobscure,
       onChanged: widget.onChanged,
       readOnly: widget.readOnly,
+      maxLines: widget.maxLines,
       inputFormatters: widget.isPhone || widget.isLandline
           ? [
               FilteringTextInputFormatter.digitsOnly,

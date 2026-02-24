@@ -8,9 +8,9 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
-import 'package:saint_paul/feature/home/data/widgets/header_icon_button.dart';
-import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_cubit.dart';
-import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_state.dart';
+import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});

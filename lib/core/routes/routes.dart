@@ -8,10 +8,12 @@ import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/add_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
-import 'package:saint_paul/feature/home/presentation/page/teacher/student_details_screen.dart';
-import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_cubit.dart';
-import 'package:saint_paul/feature/home/profile/presentation/student/student_profile_screen.dart';
-import 'package:saint_paul/feature/home/profile/presentation/teacher/edit_student_info_screen.dart';
+import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
+import 'package:saint_paul/feature/missions/presentation/page/student/student_mission_screen.dart';
+import 'package:saint_paul/feature/missions/presentation/page/teacher/create_mission_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
+import 'package:saint_paul/feature/profile/presentation/student/student_profile_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/edit_student_info_screen.dart';
 import 'package:saint_paul/feature/main/nav_bar.dart';
 import 'package:saint_paul/feature/splash/splash_screen.dart';
 import 'package:saint_paul/feature/welcome/welcom_screen.dart';
@@ -31,9 +33,11 @@ class Routes {
   static const String teacherHomeScreen = '/teacherHomeScreen';
   static const String addEditNewStudentScreen = '/addNewStudentScreen';
   static const String studentHomeScreen = '/studentHomeScreen';
-  static const String studentDetailsScreen = '/studentDetailsScreen';
+  static const String tayoDetailsScreen = '/tayoDetailsScreen';
   static const String studentInfoEditScreen = '/studentInfoEditScreen';
   static const String studentProfileScreen = '/studentProfileScreen';
+  static const String studentMissionScreen = '/studentMissionScreen';
+  static const String createMissionScreen = '/createMissionScreen';
 
   static final routes = GoRouter(
     routes: [
@@ -89,6 +93,16 @@ class Routes {
         ),
       ),
 
+      GoRoute(
+        path: studentMissionScreen,
+        builder: (context, state) => StudentMissionScreen(),
+      ),
+
+      GoRoute(
+        path: createMissionScreen,
+        builder: (context, state) => CreateMissionScreen(),
+      ),
+
       // GoRoute(
       //   path: emailScreen,
       //   builder: (context, state) => BlocProvider(
@@ -130,11 +144,11 @@ class Routes {
       ),
 
       GoRoute(
-        path: studentDetailsScreen,
+        path: tayoDetailsScreen,
 
         builder: (context, state) => BlocProvider(
           create: (context) => HomeCubit(),
-          child: StudentDetailsScreen(student: state.extra as StudentModel),
+          child: TayoDetailsScreen(student: state.extra as StudentModel),
         ),
       ),
     ],

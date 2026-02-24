@@ -1,0 +1,599 @@
+import 'dart:developer';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gap/gap.dart';
+import 'package:saint_paul/components/buttons/custom_back_button.dart';
+import 'package:saint_paul/components/buttons/main_button.dart';
+import 'package:saint_paul/core/extentions/dialogs.dart';
+import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/utils/colors.dart';
+import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
+import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
+
+void removeCommonElements(
+  List<String> tayoNewCategories,
+  List<String> tayoRemovedCategories,
+) {
+  final set1 = tayoNewCategories.toSet();
+  final set2 = tayoRemovedCategories.toSet();
+  final common = set1.intersection(set2);
+  tayoNewCategories.removeWhere((item) => common.contains(item));
+  tayoRemovedCategories.removeWhere((item) => common.contains(item));
+}
+
+class TayoDetailsScreen extends StatefulWidget {
+  const TayoDetailsScreen({super.key, required this.student});
+  final StudentModel student;
+
+  @override
+  State<TayoDetailsScreen> createState() => _TayoDetailsScreenState();
+}
+
+class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
+  bool isLoading = true;
+  Map<String, dynamic> tayo = {};
+  Map<String, dynamic> oldTayo = {};
+  List<String> tayoNewCategories = [];
+  List<String> tayoRemovedCategories = [];
+  final tayoCategoryController = TextEditingController();
+
+  void checkAndResetTayo() {
+    bool changed = false;
+    tayo.forEach((key, value) {
+      if (value is Map && value["takenAt"] != null) {
+        final takenAt = value["takenAt"];
+        final takenAtMillis = takenAt is int
+            ? takenAt
+            : int.tryParse(takenAt.toString());
+        if (takenAtMillis != null && isTakenExpired(takenAtMillis)) {
+          value["takenAt"] = null;
+          changed = true;
+        }
+      }
+    });
+    if (changed) {
+      context.read<HomeCubit>().updateStudentTakenAt(
+        widget.student.copyWith(tayo: tayo, totalTayo: computeTotalTayo()),
+      );
+    }
+  }
+
+  bool isTakenExpired(int? takenAtMillis, {int expireHours = 10}) {
+    if (takenAtMillis == null) return true;
+    final now = DateTime.now();
+    final takenTime = DateTime.fromMillisecondsSinceEpoch(takenAtMillis);
+    return now.difference(takenTime).inHours >= expireHours;
+  }
+
+  int computeTotalTayo() {
+    int total = 0;
+    tayo.forEach((key, value) {
+      total += tayo[key]['count'] as int? ?? 0;
+    });
+    return total;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<HomeCubit>().getStudentTayoDetails(widget.student);
+    log('Fetching tayo details for student: ${widget.student.name}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<HomeCubit>();
+
+    return PopScope(
+      canPop: mapEquals(tayo, oldTayo),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        showChangesNotSavedDialog(context);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundColor,
+        // ── Bottom bar ───────────────────────────────────────────────────
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: MainButton(
+                    title: 'اضف بند جديد',
+                    onPressed: () => addNewTayoItemBottomSheet(context),
+                    bgcolor: AppColors.secondaryColor.withValues(alpha: 0.15),
+                    textColor: AppColors.primaryColor,
+                    borderColor: AppColors.primaryColor.withValues(alpha: 0.4),
+                  ),
+                ),
+                const Gap(10),
+                Expanded(
+                  child: MainButton(
+                    title: 'تاكيد',
+                    onPressed: () {
+                      removeCommonElements(
+                        tayoNewCategories,
+                        tayoRemovedCategories,
+                      );
+                      cubit.updateStudent(
+                        widget.student.copyWith(
+                          tayo: tayo,
+                          totalTayo: computeTotalTayo(),
+                        ),
+                        tayoNewCategories: tayoNewCategories,
+                        tayoRemovedCategories: tayoRemovedCategories,
+                      );
+                      checkAndResetTayo();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        body: BlocConsumer<HomeCubit, HomeState>(
+          listener: (context, state) {
+            if (state is HomeLoadingState) {
+              showLoadingDialog(context);
+            } else if (state is HomeErrorState) {
+              pop(context);
+              showMyDialoge(context, state.message, type: DialogType.error);
+            } else if (state is HomeSuccessState) {
+              pop(context);
+              showMyDialoge(
+                context,
+                'تم تحديث بيانات المخدوم بنجاح',
+                type: DialogType.success,
+              );
+            } else if (state is HomeSuccessStateForTakenAt) {
+              log('HomeSuccessStateForTakenAt triggered');
+            } else if (state is HomeTayoLoadSuccessState && tayo.isEmpty) {
+              tayo = state.tayo;
+              oldTayo = tayo.map(
+                (key, value) => MapEntry(key, Map<String, dynamic>.from(value)),
+              );
+              checkAndResetTayo();
+              setState(() {});
+            }
+          },
+          builder: (context, state) {
+            if (state is HomeErrorState) {
+              return Center(child: Text('حدث خطأ: ${state.message}'));
+            }
+
+            return Column(
+              children: [
+                // ── Header (extends behind status bar) ─────────────────
+                Container(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    MediaQuery.of(context).padding.top + 16,
+                    20,
+                    24,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(36),
+                      bottomRight: Radius.circular(36),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryColor.withValues(alpha: 0.4),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Back + title
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (mapEquals(tayo, oldTayo)) {
+                                print('tayo contents  ${tayo.toString()}');
+                                print(
+                                  'oldTayo contents  ${oldTayo.toString()}',
+                                );
+                                pop(context);
+                                return;
+                              } else {
+                                log('tayo contents  ${tayo.toString()}');
+                                log('oldTayo contents  ${oldTayo.toString()}');
+                                showChangesNotSavedDialog(context);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.whiteColor.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.arrow_back_ios_rounded,
+                                color: AppColors.whiteColor,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          const Gap(12),
+                          Expanded(
+                            child: Text(
+                              widget.student.name ?? 'معلومات المخدوم',
+                              style: TextStyles.getSize24(
+                                color: AppColors.whiteColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Gap(20),
+                      // Total tayo summary card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.whiteColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: Color(0xFFFFD700),
+                              size: 28,
+                            ),
+                            const Gap(12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'مجموع الطايو',
+                                  style: TextStyles.getSize12(
+                                    color: AppColors.whiteColor.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${computeTotalTayo()}',
+                                  style: TextStyles.getSize24(
+                                    color: AppColors.whiteColor,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Tayo list ───────────────────────────────────────────
+                Expanded(
+                  child: tayo.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.inbox_rounded,
+                                size: 64,
+                                color: AppColors.accentColor.withValues(
+                                  alpha: 0.2,
+                                ),
+                              ),
+                              const Gap(12),
+                              Text(
+                                'لا توجد بنود بعد',
+                                style: TextStyles.getSize16(
+                                  color: AppColors.accentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                          itemCount: tayo.length,
+                          separatorBuilder: (_, _) => const Gap(10),
+                          itemBuilder: (context, index) {
+                            final key = tayo.keys.toList()[index];
+                            int categoryvalue = tayo[key]['count'];
+                            final takenAt = tayo[key]['takenAt'];
+                            final isExpired = isTakenExpired(
+                              takenAt is int ? takenAt : null,
+                            );
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: isExpired
+                                    ? AppColors.surfaceColor
+                                    : const Color(
+                                        0xFF22C55E,
+                                      ).withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isExpired
+                                      ? AppColors.primaryColor.withValues(
+                                          alpha: 0.1,
+                                        )
+                                      : const Color(
+                                          0xFF22C55E,
+                                        ).withValues(alpha: 0.4),
+                                  width: isExpired ? 1 : 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isExpired
+                                        ? Colors.black.withValues(alpha: 0.04)
+                                        : const Color(
+                                            0xFF22C55E,
+                                          ).withValues(alpha: 0.1),
+                                    blurRadius: isExpired ? 5 : 12,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 5, 8, 10),
+                                child: Column(
+                                  children: [
+                                    // Active indicator dot
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 10,
+                                          height: 10,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: isExpired
+                                                ? AppColors.accentColor
+                                                      .withValues(alpha: 0.2)
+                                                : const Color(0xFF22C55E),
+                                          ),
+                                        ),
+                                        const Gap(10),
+                                        // Category name
+                                        Expanded(
+                                          child: Text(
+                                            key,
+                                            style: TextStyles.getSize18(
+                                              color: AppColors.accentColor,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                        ),
+                                        // Remove button
+                                        IconButton(
+                                          onPressed: () {
+                                            log('Removing category: $key');
+                                            tayo.remove(key);
+                                            tayoRemovedCategories.add(key);
+                                            log(
+                                              'removed: ${tayoRemovedCategories.toList()}',
+                                            );
+                                            setState(() {});
+                                          },
+                                          icon: Icon(
+                                            Icons.close_rounded,
+                                            size: 18,
+                                            color: AppColors.accentColor
+                                                .withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    // Counter controls
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primaryColor
+                                                .withValues(alpha: 0.08),
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Increment
+                                              _CounterButton(
+                                                icon: Icons.add_rounded,
+                                                onTap: () {
+                                                  tayo[key] = {
+                                                    "count": categoryvalue + 1,
+                                                    "takenAt": DateTime.now()
+                                                        .millisecondsSinceEpoch,
+                                                  };
+                                                  setState(() {});
+                                                },
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                    ),
+                                                child: Text(
+                                                  '$categoryvalue',
+                                                  style: TextStyles.getSize18(
+                                                    color:
+                                                        AppColors.accentColor,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                              // Decrement
+                                              _CounterButton(
+                                                icon: Icons.remove_rounded,
+                                                onTap: () {
+                                                  if (categoryvalue > 0) {
+                                                    tayo[key] = {
+                                                      "count":
+                                                          categoryvalue - 1,
+                                                      "takenAt":
+                                                          tayo[key]['takenAt'],
+                                                    };
+                                                    setState(() {});
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void addNewTayoItemBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: MediaQuery.of(context).viewInsets,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Gap(20),
+                  Text(
+                    'بند طايو جديد',
+                    style: TextStyles.getSize18(
+                      color: AppColors.accentColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Gap(14),
+                  TextField(
+                    controller: tayoCategoryController,
+                    decoration: InputDecoration(
+                      hintText: 'اسم البند...',
+                      filled: true,
+                      fillColor: AppColors.primaryColor.withValues(alpha: 0.06),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                  const Gap(16),
+                  MainButton(
+                    title: 'اضف البند',
+                    onPressed: () {
+                      setState(() {
+                        tayo[tayoCategoryController.text] = {
+                          "count": 0,
+                          "takenAt": null,
+                        };
+                        tayoNewCategories.add(tayoCategoryController.text);
+                        log('new categories: ${tayoNewCategories.toList()}');
+                        tayoCategoryController.clear();
+                        pop(context);
+                      });
+                    },
+                  ),
+                  const Gap(8),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CounterButton extends StatelessWidget {
+  const _CounterButton({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: AppColors.whiteColor, size: 18),
+      ),
+    );
+  }
+}

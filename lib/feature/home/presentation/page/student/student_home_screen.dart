@@ -9,8 +9,8 @@ import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
-import 'package:saint_paul/feature/home/data/widgets/student_list.dart';
-import 'package:saint_paul/feature/home/data/widgets/header_icon_button.dart';
+import 'package:saint_paul/feature/home/widgets/student_list.dart';
+import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 

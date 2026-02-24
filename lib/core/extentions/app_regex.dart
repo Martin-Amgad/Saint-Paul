@@ -1,8 +1,14 @@
 class AppRegex {
-  static bool isEmailValid(String email) {
-    String emailPattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-    RegExp regex = RegExp(emailPattern);
-    return regex.hasMatch(email);
+  bool isValidGmail(String email) {
+    final gmailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
+    return gmailRegex.hasMatch(email);
+  }
+
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$',
+    );
+    return emailRegex.hasMatch(email.trim());
   }
 
   static bool isPasswordValid(String password) {

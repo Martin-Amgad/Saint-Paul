@@ -5,8 +5,10 @@ import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/birthday_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
-import 'package:saint_paul/feature/home/profile/presentation/student/student_profile_screen.dart';
-import 'package:saint_paul/feature/home/profile/presentation/teacher/edit_student_info_screen.dart';
+import 'package:saint_paul/feature/missions/presentation/page/student/student_mission_screen.dart';
+import 'package:saint_paul/feature/missions/presentation/page/teacher/teacher_mission_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/student/student_profile_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/edit_student_info_screen.dart';
 
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key, this.role});
@@ -18,20 +20,31 @@ class MainAppScreen extends StatefulWidget {
 
 class _MainPageState extends State<MainAppScreen> {
   int _selectedIndex = 0;
-  List<Widget> get pages => [
-    if (widget.role == 'خادم')
-      const TeacherHomeScreen()
-    else
-      const StudentHomeScreen(),
-    if (widget.role == 'خادم')
-      const BirthdayScreen()
-    else
-      const Center(child: Text('المهام')),
-    if (widget.role == 'خادم')
-      const StudentProfileEditScreen()
-    else
-      const StudentProfileScreen(),
-  ];
+  List<Widget> get pages => widget.role == 'خادم'
+      ? [
+          const TeacherHomeScreen(),
+          const BirthdayScreen(),
+          const TeacherMissionScreen(),
+          const StudentProfileEditScreen(),
+        ]
+      : [
+          const StudentHomeScreen(),
+          StudentMissionScreen(),
+          const StudentProfileScreen(),
+        ];
+
+  List<GButton> get tabs => widget.role == 'خادم'
+      ? [
+          GButton(iconSize: 28, icon: Icons.local_atm, text: 'طايو'),
+          GButton(icon: Icons.cake, text: 'أعياد الميلاد'),
+          GButton(iconSize: 29, icon: Icons.assignment, text: 'المهام'),
+          GButton(iconSize: 29, icon: Icons.people, text: 'المخدومون'),
+        ]
+      : [
+          GButton(iconSize: 28, icon: Icons.leaderboard, text: 'المتصدرين'),
+          GButton(icon: Icons.assignment, text: 'المهام'),
+          GButton(iconSize: 29, icon: Icons.person, text: 'الحساب'),
+        ];
 
   @override
   Widget build(BuildContext context) {
@@ -58,44 +71,17 @@ class _MainPageState extends State<MainAppScreen> {
           hoverColor: AppColors.primaryColor.withValues(alpha: 0.1),
           backgroundColor: Colors.transparent,
           haptic: true,
-          tabBorderRadius: 20,
+          tabBorderRadius: 15,
           gap: 5,
           activeColor: AppColors.whiteColor,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           duration: const Duration(milliseconds: 300),
           tabBackgroundColor: AppColors.primaryColor,
           textStyle: TextStyles.getSize18(color: AppColors.whiteColor),
-          tabs: [
-            widget.role == 'خادم'
-                ? GButton(iconSize: 28, icon: Icons.local_atm, text: 'طايو')
-                : GButton(
-                    iconSize: 28,
-                    icon: Icons.leaderboard,
-                    text: 'المتصدرين',
-                  ),
-            widget.role == 'خادم'
-                ? GButton(icon: Icons.cake, text: 'أعياد الميلاد')
-                : GButton(icon: Icons.assignment, text: 'المهام'),
-            //  widget.role == "teacher"
-            //     ? GButton(
-            //         iconSize: 28,
-            //         icon: Icons.calendar_month_rounded,
-            //         text: 'المواعيد',
-            //       )
-            //     : GButton(
-            //         iconSize: 28,
-            //         icon: Icons.calendar_month_rounded,
-            //         text: 'المواعيد',
-            //       ),
-            widget.role == 'خادم'
-                ? GButton(iconSize: 29, icon: Icons.person, text: 'المخدومون')
-                : GButton(iconSize: 29, icon: Icons.person, text: 'الحساب'),
-          ],
+          tabs: tabs, // ← use getter
           selectedIndex: _selectedIndex,
           onTabChange: (value) {
-            setState(() {
-              _selectedIndex = value;
-            });
+            setState(() => _selectedIndex = value);
           },
         ),
       ),

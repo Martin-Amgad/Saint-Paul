@@ -5,8 +5,8 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/feature/home/data/repo/home_repo.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:saint_paul/feature/home/profile/data/repo/profile_repo.dart';
-import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_state.dart';
+import 'package:saint_paul/feature/profile/data/repo/profile_repo.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit() : super(ProfileInitialState());

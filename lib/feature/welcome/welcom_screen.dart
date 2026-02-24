@@ -51,6 +51,10 @@ class WelcomScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.secondaryColor.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  width: 2,
+                  color: AppColors.primaryColor.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 children: [
@@ -64,9 +68,11 @@ class WelcomScreen extends StatelessWidget {
                   Gap(20),
                   MainButton(
                     title: 'خادم',
-                    bgcolor: AppColors.secondaryColor.withValues(alpha: 1.1),
-                    textColor: AppColors.primaryColor,
-                    borderColor: AppColors.primaryColor.withValues(alpha: 0.5),
+                    bgcolor: AppColors.primaryColor,
+                    textColor: AppColors.whiteColor,
+                    borderColor: AppColors.secondaryColor.withValues(
+                      alpha: 0.5,
+                    ),
                     onPressed: () {
                       LocalHelper.setUserType('خادم');
                       pushTo(context, Routes.register, extra: 'خادم');
@@ -75,9 +81,12 @@ class WelcomScreen extends StatelessWidget {
                   Gap(15),
                   MainButton(
                     title: 'مخدوم',
-                    bgcolor: AppColors.secondaryColor.withValues(alpha: 1.1),
-                    textColor: AppColors.primaryColor,
-                    borderColor: AppColors.primaryColor.withValues(alpha: 0.5),
+                    bgcolor: AppColors.primaryColor,
+                    textColor: AppColors.whiteColor,
+
+                    borderColor: AppColors.secondaryColor.withValues(
+                      alpha: 0.5,
+                    ),
                     onPressed: () {
                       LocalHelper.setUserType('مخدوم');
                       pushTo(context, Routes.register, extra: 'مخدوم');

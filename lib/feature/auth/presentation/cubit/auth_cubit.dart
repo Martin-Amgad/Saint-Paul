@@ -60,19 +60,16 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  //   forget_password() async {
-  //     emit(AuthloadingState());
+  Future<void> resetPassword(String email) async {
+    emit(AuthloadingState());
 
-  //     var params = AuthParams(
-  //       email: LocalHelper.getString(LocalHelper.KEmail) ?? emailController.text,
-  //     );
-  //     var response = await AuthRepo.forget_password(params);
-  //     if (response != null) {
-  //       emit(AuthSuccessState());
-  //     } else {
-  //       emit(AuthErrorState('forget password Failed'));
-  //     }
-  //   }
+    var response = await AuthRepo.resetPassword(email);
+    if (response != null) {
+      emit(AuthResetPasswordSuccessState(response));
+    } else {
+      emit(AuthErrorState('reset password Failed'));
+    }
+  }
 
   //   check_forget_password() async {
   //     emit(AuthloadingState());
