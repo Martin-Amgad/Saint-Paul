@@ -12,7 +12,7 @@ void main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await Future.value([LocalHelper.init()]);
+  await LocalHelper.init();
   runApp(const MainApp());
 }
 

@@ -27,7 +27,7 @@ class FirebaseProvider {
     await studentCollection.doc(student.uid).update(student.toUpdateData());
   }
 
-  static Future<DocumentSnapshot<Object?>> getStudentByID(String id) {
+  static Future<DocumentSnapshot<Object?>> getStudentByID(String? id) {
     return studentCollection.doc(id).get();
   }
 

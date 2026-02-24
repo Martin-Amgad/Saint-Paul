@@ -5,6 +5,7 @@ import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/birthday_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
+import 'package:saint_paul/feature/home/profile/presentation/student/student_profile_screen.dart';
 import 'package:saint_paul/feature/home/profile/presentation/teacher/edit_student_info_screen.dart';
 
 class MainAppScreen extends StatefulWidget {
@@ -29,7 +30,7 @@ class _MainPageState extends State<MainAppScreen> {
     if (widget.role == 'خادم')
       const StudentProfileEditScreen()
     else
-      const StudentProfileEditScreen(),
+      const StudentProfileScreen(),
   ];
 
   @override

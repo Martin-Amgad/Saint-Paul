@@ -19,6 +19,11 @@ class HomeSuccessStateForTakenAt extends HomeState {
   HomeSuccessStateForTakenAt({this.message});
 }
 
+class StudentYearLoaded extends HomeState {
+  final String year;
+  StudentYearLoaded({required this.year});
+}
+
 class HomeErrorState extends HomeState {
   final String message;
   HomeErrorState({required this.message});

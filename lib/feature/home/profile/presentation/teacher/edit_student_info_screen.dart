@@ -12,6 +12,8 @@ import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/feature/home/data/lists/1st_prep_students_list.dart';
+import 'package:saint_paul/feature/home/data/lists/3rd_prep_students_list.dart';
 import 'package:saint_paul/feature/home/data/widgets/filter_chip.dart';
 import 'package:saint_paul/feature/home/data/widgets/header_icon_button.dart';
 
@@ -88,7 +90,12 @@ class _StudentProfileEditScreenState extends State<StudentProfileEditScreen> {
               children: [
                 // ── Header ──────────────────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    MediaQuery.of(context).padding.top + 16,
+                    20,
+                    24,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primaryColor,
                     borderRadius: const BorderRadius.only(
@@ -119,7 +126,7 @@ class _StudentProfileEditScreenState extends State<StudentProfileEditScreen> {
                             child: const Icon(
                               Icons.person_rounded,
                               color: Color(0xFFFFD700),
-                              size: 26,
+                              size: 24,
                             ),
                           ),
                           const Gap(12),
@@ -133,8 +140,16 @@ class _StudentProfileEditScreenState extends State<StudentProfileEditScreen> {
                           const Spacer(),
                           HeaderIconButton(
                             icon: Icons.add_rounded,
-                            onTap: () =>
-                                pushTo(context, Routes.addEditNewStudentScreen),
+                            onTap: () {
+                              pushTo(context, Routes.addEditNewStudentScreen);
+
+                              // var futures = firstPrepStudentsList.map((
+                              //   student,
+                              // ) {
+                              //   return FirebaseProvider.createStudent(student);
+                              // });
+                              // Future.wait(futures);
+                            },
                           ),
                         ],
                       ),

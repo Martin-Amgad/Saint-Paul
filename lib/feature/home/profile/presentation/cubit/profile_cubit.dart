@@ -5,9 +5,11 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/feature/home/data/repo/home_repo.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:saint_paul/feature/home/profile/data/repo/profile_repo.dart';
+import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_state.dart';
 
-class ProfileCubit extends Cubit<HomeState> {
-  ProfileCubit() : super(Homeinit());
+class ProfileCubit extends Cubit<ProfileState> {
+  ProfileCubit() : super(ProfileInitialState());
   var nameController = TextEditingController();
   var fatherPhoneController = TextEditingController();
   var motherPhoneController = TextEditingController();
@@ -21,101 +23,19 @@ class ProfileCubit extends Cubit<HomeState> {
 
   var formkey = GlobalKey<FormState>();
 
-  //   void getHomeData() async {
-  //     emit(HomeLoadingState());
-
-  //     try {
-  //       var res = await Future.wait([
-  //         HomeRepo.getSlider(),
-  //         HomeRepo.getBestSellers(),
-  //         HomeRepo.getNewArrivals(),
-  //         HomeRepo.getAllBooks(),
-  //       ]);
-
-  //       sliders = (res[0] as SliderResponse).data?.sliders ?? [];
-  //       BestSellers = (res[1] as BookListRsponse).data?.products ?? [];
-  //       NewArrivals = (res[2] as BookListRsponse).data?.products ?? [];
-  //       AllBooks = (res[3] as BookListRsponse).data?.products ?? [];
-  //       emit(HomeSuccesState());
-  //     } on Exception catch (e) {
-  //       log(e.toString());
-  //       emit(HomeErrorState(message: e.toString()));
-  //     }
-  //   }
-  void updateStudent(
-    StudentModel student, {
-    List<String>? tayoNewCategories,
-    List<String>? tayoRemovedCategories,
-  }) async {
-    emit(HomeLoadingState());
+  void loadStudentData(String? id) async {
+    emit(ProfileLoadingState());
     try {
-      var res = await HomeRepo.updatStudent(
-        student,
-        tayoNewCategories,
-        tayoRemovedCategories,
-      );
-      emit(HomeSuccessState(message: res));
+      StudentModel? res = await ProfileRepo.loadStudentData(id);
+      emit(ProfileLoadedState(studentData: res));
     } on Exception catch (e) {
-      log(e.toString());
-      emit(HomeErrorState(message: e.toString()));
-    } catch (e) {
       log(e.toString());
       emit(
-        HomeErrorState(
+        ProfileErrorState(
           message:
-              'حدث خطأ أثناء تحديث بيانات المخدوم. الرجاء المحاولة مرة أخرى.',
+              'حدث خطأ أثناء تحميل بيانات الطالب. الرجاء المحاولة مرة أخرى.',
         ),
       );
-    }
-  }
-
-  void updateStudentTakenAt(
-    StudentModel student, {
-    List<String>? tayoNewCategories,
-    List<String>? tayoRemovedCategories,
-  }) async {
-    try {
-      await HomeRepo.updatStudentTakenAt(student);
-      emit(HomeSuccessStateForTakenAt());
-    } on Exception catch (e) {
-      log(e.toString());
-      emit(HomeErrorState(message: e.toString()));
-    } catch (e) {
-      log(e.toString());
-      emit(
-        HomeErrorState(
-          message:
-              'حدث خطأ أثناء تحديث بيانات المخدوم. الرجاء المحاولة مرة أخرى.',
-        ),
-      );
-    }
-  }
-
-  void getStudentTayoDetails(StudentModel student) async {
-    emit(HomeLoadingState());
-    try {
-      var res = await HomeRepo.getStudentTayoDetails(student);
-      if (res != null) {
-        log('Student details retrieved successfully: $res');
-        emit(HomeTayoLoadSuccessState(tayo: res));
-      } else {
-        log('No student details found for the given student.');
-      }
-    } on Exception catch (e) {
-      log(e.toString());
-      emit(HomeErrorState(message: e.toString()));
-    }
-  }
-
-  void createStudent(StudentModel student) async {
-    emit(HomeLoadingState());
-    String? res;
-    try {
-      res = await HomeRepo.createStudent(student);
-      emit(HomeSuccessState(message: res));
-    } on Exception catch (e) {
-      log(e.toString());
-      emit(HomeErrorState(message: res ?? e.toString()));
     }
   }
 }

@@ -1,14 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/feature/auth/presentation/cubit/auth_cubit.dart';
 import 'package:saint_paul/feature/auth/presentation/page/forget_password/password_changed_screen.dart';
 import 'package:saint_paul/feature/auth/presentation/page/login/login_screen.dart';
 import 'package:saint_paul/feature/auth/presentation/page/register/register_screen%20.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
+import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/add_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/student_details_screen.dart';
 import 'package:saint_paul/feature/home/profile/presentation/cubit/profile_cubit.dart';
-import 'package:saint_paul/feature/home/profile/presentation/teacher/student_info_edit_screen.dart';
+import 'package:saint_paul/feature/home/profile/presentation/student/student_profile_screen.dart';
+import 'package:saint_paul/feature/home/profile/presentation/teacher/edit_student_info_screen.dart';
 import 'package:saint_paul/feature/main/nav_bar.dart';
 import 'package:saint_paul/feature/splash/splash_screen.dart';
 import 'package:saint_paul/feature/welcome/welcom_screen.dart';
@@ -30,6 +33,7 @@ class Routes {
   static const String studentHomeScreen = '/studentHomeScreen';
   static const String studentDetailsScreen = '/studentDetailsScreen';
   static const String studentInfoEditScreen = '/studentInfoEditScreen';
+  static const String studentProfileScreen = '/studentProfileScreen';
 
   static final routes = GoRouter(
     routes: [
@@ -52,8 +56,13 @@ class Routes {
 
       GoRoute(
         path: mainScreen,
-        builder: (context, state) =>
-            MainAppScreen(role: state.extra as String?),
+        builder: (context, state) => MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (context) => HomeCubit()),
+            BlocProvider(create: (context) => ProfileCubit()),
+          ],
+          child: MainAppScreen(role: state.extra as String?),
+        ),
       ),
 
       GoRoute(
@@ -68,7 +77,15 @@ class Routes {
         path: studentInfoEditScreen,
         builder: (context, state) => BlocProvider(
           create: (context) => ProfileCubit(),
-          child: StudentInfoScreen(student: state.extra as StudentModel),
+          child: StudentProfileEditScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: studentProfileScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => ProfileCubit(),
+          child: StudentProfileScreen(),
         ),
       ),
 
@@ -99,6 +116,17 @@ class Routes {
       GoRoute(
         path: teacherHomeScreen,
         builder: (context, state) => TeacherHomeScreen(),
+      ),
+
+      GoRoute(
+        path: studentHomeScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => HomeCubit(),
+          child: Builder(
+            // ← add Builder here
+            builder: (context) => StudentHomeScreen(),
+          ),
+        ),
       ),
 
       GoRoute(

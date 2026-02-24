@@ -113,121 +113,119 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: AppColors.primaryColor),
-            )
-          : Column(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(36),
+                bottomRight: Radius.circular(36),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryColor.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Header ────────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(36),
-                      bottomRight: Radius.circular(36),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.whiteColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.cake_rounded,
+                        color: Color(0xFFFFD700),
+                        size: 26,
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryColor.withValues(alpha: 0.4),
-                        blurRadius: 24,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.whiteColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.cake_rounded,
-                              color: Color(0xFFFFD700),
-                              size: 26,
-                            ),
+                    const Gap(12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'أعياد الميلاد',
+                          style: TextStyles.getSize24(
+                            color: AppColors.whiteColor,
+                            fontWeight: FontWeight.w700,
                           ),
-                          const Gap(12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'أعياد الميلاد',
-                                style: TextStyles.getSize24(
-                                  color: AppColors.whiteColor,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                'المخدومون المحتفلون قريباً',
-                                style: TextStyles.getSize12(
-                                  color: AppColors.whiteColor.withValues(
-                                    alpha: 0.65,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const Gap(18),
-                      // Month chips in a horizontal scroll
-                      SizedBox(height: 36, child: monthChipBuilder()),
-                    ],
-                  ),
-                ),
-
-                const Gap(16),
-
-                // ── Count label ──────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Text(
-                        selectedMonth == null || selectedMonth == "الكل"
-                            ? 'الكل'
-                            : selectedMonth!,
-                        style: TextStyles.getSize18(
-                          color: AppColors.accentColor,
-                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                      const Gap(8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${filteredStudents.length}',
+                        Text(
+                          'المخدومون المحتفلون قريباً',
                           style: TextStyles.getSize12(
-                            color: AppColors.primaryColor,
-                            fontWeight: FontWeight.w600,
+                            color: AppColors.whiteColor.withValues(alpha: 0.65),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ],
+                ),
+                const Gap(18),
+                // Month chips in a horizontal scroll
+                SizedBox(height: 36, child: monthChipBuilder()),
+              ],
+            ),
+          ),
+
+          const Gap(16),
+
+          // ── Count label ──────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  selectedMonth == null || selectedMonth == "الكل"
+                      ? 'الكل'
+                      : selectedMonth!,
+                  style: TextStyles.getSize18(
+                    color: AppColors.accentColor,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+                const Gap(8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${filteredStudents.length}',
+                    style: TextStyles.getSize12(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-                const Gap(12),
+          const Gap(12),
 
-                // ── List ─────────────────────────────────────────────
-                Expanded(
+          // ── List ─────────────────────────────────────────────
+          isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryColor,
+                  ),
+                )
+              : Expanded(
                   child: filteredStudents.isEmpty
                       ? Center(
                           child: Column(
@@ -402,8 +400,8 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                           ),
                         ),
                 ),
-              ],
-            ),
+        ],
+      ),
     );
   }
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide FormField;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +10,7 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/home/data/widgets/form_field.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 
@@ -170,7 +171,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FormField(
+                        FormField(
                           label: 'اسم المخدوم',
                           icon: Icons.person_rounded,
                           child: CustomTextField(
@@ -185,7 +186,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'تليفون الأب',
                           icon: Icons.phone_rounded,
                           child: CustomTextField(
@@ -204,7 +205,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'تليفون الأم',
                           icon: Icons.phone_rounded,
                           child: CustomTextField(
@@ -223,7 +224,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'تليفون المخدوم',
                           icon: Icons.smartphone_rounded,
                           child: CustomTextField(
@@ -242,7 +243,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'تليفون المنزل',
                           icon: Icons.home_rounded,
                           child: CustomTextField(
@@ -261,7 +262,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'العنوان',
                           icon: Icons.location_on_rounded,
                           child: CustomTextField(
@@ -276,7 +277,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'المستوى الدراسي',
                           icon: Icons.school_rounded,
                           child: CustomTextField(
@@ -291,7 +292,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                         ),
                         const Gap(16),
-                        _FormField(
+                        FormField(
                           label: 'تاريخ الميلاد',
                           icon: Icons.cake_rounded,
                           child: CustomTextField(
@@ -330,51 +331,6 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// A labelled form section with an icon and a content slot
-class _FormField extends StatelessWidget {
-  const _FormField({
-    required this.label,
-    required this.icon,
-    required this.child,
-  });
-
-  final String label;
-  final IconData icon;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: AppColors.primaryColor, size: 16),
-            ),
-            const Gap(8),
-            Text(
-              label,
-              style: TextStyles.getSize18(
-                color: AppColors.accentColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const Gap(8),
-        child,
-      ],
     );
   }
 }

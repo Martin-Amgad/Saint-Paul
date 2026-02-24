@@ -131,4 +131,15 @@ class HomeCubit extends Cubit<HomeState> {
       'yyyy-MM-dd',
     ).format(student?.birthday ?? DateTime.now());
   }
+
+  Future<void> loadStudentYear(String? id) async {
+    emit(HomeLoadingState());
+    try {
+      final res = await HomeRepo.loadStudentYear(id);
+      emit(StudentYearLoaded(year: res ?? 'ثالثة اعدادي'));
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(HomeErrorState(message: e.toString()));
+    }
+  }
 }

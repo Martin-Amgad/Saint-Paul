@@ -71,6 +71,17 @@ class HomeRepo {
     }
   }
 
+  static Future<String?> loadStudentYear(String? id) async {
+    try {
+      final snapshot = await FirebaseProvider.getStudentByID(id);
+      final data = snapshot.data() as Map<String, dynamic>? ?? {};
+      return data['studyLevel'] as String?;
+    } on Exception catch (e) {
+      log(e.toString());
+      return e.toString();
+    }
+  }
+
   //   static Future<BookListRsponse?> getNewArrivals() async {
   //     try {
   //       var res = await DioProvider.get(endpoint: ApiEndpoints.new_arrivals);

@@ -14,10 +14,12 @@ class StudentList extends StatelessWidget {
     super.key,
     required this.searchText,
     required this.filterSelection,
+    this.isStudent = false,
   });
 
   final String searchText;
   final String filterSelection;
+  final bool? isStudent;
 
   Color? _rankColor(int index) {
     if (index == 0) return const Color(0xFFFFD700);
@@ -104,8 +106,10 @@ class StudentList extends StatelessWidget {
             final tayo = student.totalTayo ?? 0;
 
             return GestureDetector(
-              onTap: () =>
-                  pushTo(context, Routes.studentDetailsScreen, extra: student),
+              onTap: () {
+                if (isStudent == true) return;
+                pushTo(context, Routes.studentDetailsScreen, extra: student);
+              },
               child: Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.symmetric(

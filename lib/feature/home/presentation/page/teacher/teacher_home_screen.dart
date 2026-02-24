@@ -1,14 +1,9 @@
-import 'dart:developer';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart' hide FilteredChip;
+import 'package:flutter/material.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
-import 'package:saint_paul/core/routes/navigation.dart';
-import 'package:saint_paul/core/routes/routes.dart';
-import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
@@ -59,7 +54,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               20,
               MediaQuery.of(context).padding.top + 16,
               20,
-              20,
+              24,
             ),
             decoration: BoxDecoration(
               color: AppColors.primaryColor,
@@ -110,7 +105,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     ),
                   ],
                 ),
-                const Gap(16),
+                const Gap(18),
                 // Search bar
                 Container(
                   decoration: BoxDecoration(
