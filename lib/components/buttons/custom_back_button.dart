@@ -3,14 +3,16 @@ import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 
 class CustomBackButton extends StatelessWidget {
-  const CustomBackButton({super.key});
-
+  const CustomBackButton({super.key, this.onTap});
+  final Function()? onTap;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        pop(context);
-      },
+      onTap:
+          onTap ??
+          () {
+            pop(context);
+          },
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(

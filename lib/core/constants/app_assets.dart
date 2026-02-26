@@ -1,9 +1,12 @@
 class AppAssets {
   static const String logo = 'assets/images/logo.png';
   static const String welcome = 'assets/images/welcome.png';
-  static const String facebookSvg = 'assets/images/facebook_ic.svg';
-  static const String appleSvg = 'assets/images/apple.svg';
-  static const String googleSvg = 'assets/images/google_ic.svg';
+  static const String tayoKing = 'assets/images/tayoKing.png';
+  static const String missionMaster = 'assets/images/missionMaster.png';
+  static const String smartstar = 'assets/images/smartStar.png';
+  static const String silentKing = 'assets/images/silentKing.png';
+  static const String consistencyChampion =
+      'assets/images/consistencyChampion.png';
 
   static const String arrowBack =
       'assets/icons/arabic_back-removebg-preview.png';
@@ -11,6 +14,9 @@ class AppAssets {
   static const String cameraSvg = 'assets/icons/camera.svg';
   static const String categorySvg = 'assets/icons/Category.svg';
   static const String eyeSvg = 'assets/icons/eye.svg';
+  static const String facebookSvg = 'assets/images/facebook_ic.svg';
+  static const String appleSvg = 'assets/images/apple.svg';
+  static const String googleSvg = 'assets/images/google_ic.svg';
   static const String homeSvg = 'assets/icons/Home.svg';
   static const String logoutSvg = 'assets/icons/logout.svg';
   static const String profileSvg = 'assets/icons/Profile.svg';

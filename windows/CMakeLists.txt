@@ -2,6 +2,12 @@
 cmake_minimum_required(VERSION 3.14)
 project(saint_paul LANGUAGES CXX)
 
+# Keep compatibility baseline aligned with modern CMake deprecation guidance
+# used by third-party subprojects (e.g., Firebase C++ SDK).
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
+set(CMAKE_ERROR_DEPRECATED OFF CACHE BOOL "" FORCE)
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "saint_paul")

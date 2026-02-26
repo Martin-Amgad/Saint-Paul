@@ -27,4 +27,9 @@ class AppRegex {
     String pattern = r'^0[23][0-9]{7,8}$';
     return RegExp(pattern).hasMatch(phone);
   }
+
+  static bool isValidInt(String value) {
+    String pattern = r'^[0-9]+$';
+    return RegExp(pattern).hasMatch(value);
+  }
 }

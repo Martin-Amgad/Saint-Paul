@@ -8,7 +8,7 @@ import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_s
 import 'package:saint_paul/feature/missions/presentation/page/student/student_mission_screen.dart';
 import 'package:saint_paul/feature/missions/presentation/page/teacher/teacher_mission_screen.dart';
 import 'package:saint_paul/feature/profile/presentation/student/student_profile_screen.dart';
-import 'package:saint_paul/feature/profile/presentation/teacher/edit_student_info_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/students_showcase_and_edit_screen.dart';
 
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key, this.role});
@@ -25,7 +25,7 @@ class _MainPageState extends State<MainAppScreen> {
           const TeacherHomeScreen(),
           const BirthdayScreen(),
           const TeacherMissionScreen(),
-          const StudentProfileEditScreen(),
+          const StudentsShowcaseAndEditScreen(),
         ]
       : [
           const StudentHomeScreen(),
@@ -35,7 +35,7 @@ class _MainPageState extends State<MainAppScreen> {
 
   List<GButton> get tabs => widget.role == 'خادم'
       ? [
-          GButton(iconSize: 28, icon: Icons.local_atm, text: 'طايو'),
+          GButton(iconSize: 28, icon: Icons.storefront_sharp, text: 'طايو'),
           GButton(icon: Icons.cake, text: 'أعياد الميلاد'),
           GButton(iconSize: 29, icon: Icons.assignment, text: 'المهام'),
           GButton(iconSize: 29, icon: Icons.people, text: 'المخدومون'),

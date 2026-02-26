@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,7 @@ import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
@@ -89,10 +91,29 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
     final cubit = context.read<HomeCubit>();
 
     return PopScope(
-      canPop: mapEquals(tayo, oldTayo),
-      onPopInvokedWithResult: (didPop, result) {
+      canPop: false, // always block, handle manually
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        showChangesNotSavedDialog(context);
+        if (jsonEncode(tayo) == jsonEncode(oldTayo)) {
+          pop(context); // no changes, pop manually
+        } else {
+          await showChangesNotSavedDialog(
+            context,
+            tayo: tayo,
+            oldTayo: oldTayo,
+            mainButtonOnConfirm: () {
+              context.read<HomeCubit>().updateStudent(
+                widget.student.copyWith(
+                  tayo: tayo,
+                  totalTayo: computeTotalTayo(),
+                ),
+                tayoNewCategories: tayoNewCategories,
+                tayoRemovedCategories: tayoRemovedCategories,
+              );
+              pushToBase(context, Routes.mainScreen, extra: 'خادم');
+            },
+          );
+        }
       },
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
@@ -137,158 +158,172 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
           ),
         ),
 
-        body: BlocConsumer<HomeCubit, HomeState>(
-          listener: (context, state) {
-            if (state is HomeLoadingState) {
-              showLoadingDialog(context);
-            } else if (state is HomeErrorState) {
-              pop(context);
-              showMyDialoge(context, state.message, type: DialogType.error);
-            } else if (state is HomeSuccessState) {
-              pop(context);
-              showMyDialoge(
-                context,
-                'تم تحديث بيانات المخدوم بنجاح',
-                type: DialogType.success,
-              );
-            } else if (state is HomeSuccessStateForTakenAt) {
-              log('HomeSuccessStateForTakenAt triggered');
-            } else if (state is HomeTayoLoadSuccessState && tayo.isEmpty) {
-              tayo = state.tayo;
-              oldTayo = tayo.map(
-                (key, value) => MapEntry(key, Map<String, dynamic>.from(value)),
-              );
-              checkAndResetTayo();
-              setState(() {});
-            }
-          },
-          builder: (context, state) {
-            if (state is HomeErrorState) {
-              return Center(child: Text('حدث خطأ: ${state.message}'));
-            }
-
-            return Column(
-              children: [
-                // ── Header (extends behind status bar) ─────────────────
-                Container(
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    MediaQuery.of(context).padding.top + 16,
-                    20,
-                    24,
+        body: Column(
+          children: [
+            // ── Header (extends behind status bar) ─────────────────
+            Container(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                MediaQuery.of(context).padding.top + 16,
+                20,
+                24,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(36),
+                  bottomRight: Radius.circular(36),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryColor.withValues(alpha: 0.4),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(36),
-                      bottomRight: Radius.circular(36),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryColor.withValues(alpha: 0.4),
-                        blurRadius: 24,
-                        offset: const Offset(0, 10),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Back + title
+                  Row(
+                    children: [
+                      CustomBackButton(
+                        onTap: () async {
+                          if (jsonEncode(tayo) == jsonEncode(oldTayo)) {
+                            pop(context); // no changes, pop manually
+                          } else {
+                            await showChangesNotSavedDialog(
+                              context,
+                              tayo: tayo,
+                              oldTayo: oldTayo,
+                              mainButtonOnConfirm: () {
+                                context.read<HomeCubit>().updateStudent(
+                                  widget.student.copyWith(
+                                    tayo: tayo,
+                                    totalTayo: computeTotalTayo(),
+                                  ),
+                                  tayoNewCategories: tayoNewCategories,
+                                  tayoRemovedCategories: tayoRemovedCategories,
+                                );
+                                pushToBase(
+                                  context,
+                                  Routes.mainScreen,
+                                  extra: 'خادم',
+                                );
+                              },
+                            );
+                          }
+                        },
+                      ),
+                      const Gap(12),
+                      Expanded(
+                        child: Text(
+                          widget.student.name ?? 'معلومات المخدوم',
+                          style: TextStyles.getSize24(
+                            color: AppColors.whiteColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Back + title
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              if (mapEquals(tayo, oldTayo)) {
-                                print('tayo contents  ${tayo.toString()}');
-                                print(
-                                  'oldTayo contents  ${oldTayo.toString()}',
-                                );
-                                pop(context);
-                                return;
-                              } else {
-                                log('tayo contents  ${tayo.toString()}');
-                                log('oldTayo contents  ${oldTayo.toString()}');
-                                showChangesNotSavedDialog(context);
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
+                  const Gap(20),
+                  // Total tayo summary card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.whiteColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome_rounded,
+                          color: AppColors.yellowIconColor,
+                          size: 28,
+                        ),
+                        const Gap(12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'مجموع الطايو',
+                              style: TextStyles.getSize12(
                                 color: AppColors.whiteColor.withValues(
-                                  alpha: 0.15,
+                                  alpha: 0.7,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.arrow_back_ios_rounded,
-                                color: AppColors.whiteColor,
-                                size: 18,
                               ),
                             ),
-                          ),
-                          const Gap(12),
-                          Expanded(
-                            child: Text(
-                              widget.student.name ?? 'معلومات المخدوم',
+                            Text(
+                              '${computeTotalTayo()}',
                               style: TextStyles.getSize24(
                                 color: AppColors.whiteColor,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Gap(20),
-                      // Total tayo summary card
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.auto_awesome_rounded,
-                              color: Color(0xFFFFD700),
-                              size: 28,
-                            ),
-                            const Gap(12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'مجموع الطايو',
-                                  style: TextStyles.getSize12(
-                                    color: AppColors.whiteColor.withValues(
-                                      alpha: 0.7,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  '${computeTotalTayo()}',
-                                  style: TextStyles.getSize24(
-                                    color: AppColors.whiteColor,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
 
-                // ── Tayo list ───────────────────────────────────────────
-                Expanded(
+            // ── Tayo list ───────────────────────────────────────────
+            BlocConsumer<HomeCubit, HomeState>(
+              listener: (context, state) {
+                if (state is HomeLoadingState) {
+                  showLoadingDialog(context);
+                } else if (state is HomeErrorState) {
+                  pop(context);
+                  showMyDialoge(context, state.message, type: DialogType.error);
+                } else if (state is HomeSuccessState) {
+                  pop(context);
+                  showMyDialoge(
+                    context,
+                    'تم تحديث بيانات المخدوم بنجاح',
+                    type: DialogType.success,
+                  );
+                } else if (state is HomeSuccessStateForTakenAt) {
+                  log('HomeSuccessStateForTakenAt triggered');
+                } else if (state is HomeTayoLoadSuccessState) {
+                  tayo = Map<String, dynamic>.from(
+                    state.tayo.map(
+                      (key, value) =>
+                          MapEntry(key, Map<String, dynamic>.from(value)),
+                    ),
+                  );
+                  oldTayo = Map<String, dynamic>.from(
+                    state.tayo.map(
+                      (key, value) =>
+                          MapEntry(key, Map<String, dynamic>.from(value)),
+                    ),
+                  );
+                  checkAndResetTayo();
+                  setState(() {});
+                }
+              },
+              builder: (context, state) {
+                if (state is HomeErrorState) {
+                  return Center(child: Text('حدث خطأ: ${state.message}'));
+                } else if (state is HomeLoadingState) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Gap(MediaQuery.of(context).size.height * 0.3),
+                      const Center(child: CircularProgressIndicator()),
+                    ],
+                  );
+                }
+
+                return Expanded(
                   child: tayo.isEmpty
                       ? Center(
                           child: Column(
@@ -430,6 +465,15 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                                     "takenAt": DateTime.now()
                                                         .millisecondsSinceEpoch,
                                                   };
+                                                  log(
+                                                    'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
+                                                  );
+                                                  log(
+                                                    'Current tayo state: $tayo',
+                                                  );
+                                                  log(
+                                                    'Current oldTayo state: $oldTayo',
+                                                  );
                                                   setState(() {});
                                                 },
                                               ),
@@ -454,11 +498,22 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                                 onTap: () {
                                                   if (categoryvalue > 0) {
                                                     tayo[key] = {
+                                                      "takenAt": null,
                                                       "count":
                                                           categoryvalue - 1,
-                                                      "takenAt":
-                                                          tayo[key]['takenAt'],
                                                     };
+                                                    log(
+                                                      'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
+                                                    );
+                                                    log(
+                                                      'Current tayo state: $tayo',
+                                                    );
+                                                    log(
+                                                      'Current oldTayo state: $oldTayo',
+                                                    );
+                                                    log(
+                                                      'tayo == oldTayo: ${jsonEncode(tayo) == jsonEncode(oldTayo)}',
+                                                    );
                                                     setState(() {});
                                                   }
                                                 },
@@ -474,10 +529,10 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                             );
                           },
                         ),
-                ),
-              ],
-            );
-          },
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

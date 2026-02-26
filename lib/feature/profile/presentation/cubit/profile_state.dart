@@ -7,13 +7,15 @@ class ProfileInitialState extends ProfileState {}
 class ProfileLoadingState extends ProfileState {}
 
 class ProfileSuccessState extends ProfileState {
-  final String message;
-  ProfileSuccessState({required this.message});
+  final String? message;
+  ProfileSuccessState({this.message});
 }
 
 class ProfileLoadedState extends ProfileState {
   final StudentModel? studentData;
-  ProfileLoadedState({this.studentData});
+  final String? message;
+
+  ProfileLoadedState({this.message, this.studentData});
 }
 
 class ProfileErrorState extends ProfileState {

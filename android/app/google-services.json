@@ -12,7 +12,12 @@
           "package_name": "com.church.saint_paul"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "183434026267-5td6qa3j9lmu2ropnt824h2it1fn6gv9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDQOo7HQ9b4MhylsHPynAzTtv4oTf7uobk"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "183434026267-5td6qa3j9lmu2ropnt824h2it1fn6gv9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "183434026267-rqik4qa5vcp5f3c3176pfbf8g2v7hm7i.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.saintPaul"
+              }
+            }
+          ]
         }
       }
     }

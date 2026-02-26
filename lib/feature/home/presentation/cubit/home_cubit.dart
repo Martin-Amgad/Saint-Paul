@@ -15,6 +15,7 @@ class HomeCubit extends Cubit<HomeState> {
   var housePhoneController = TextEditingController();
   var addressController = TextEditingController();
   var studyLevelController = TextEditingController();
+  var responsibleTeacherController = TextEditingController();
   var birthdayController = TextEditingController(
     text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
   );
@@ -140,6 +141,22 @@ class HomeCubit extends Cubit<HomeState> {
     } on Exception catch (e) {
       log(e.toString());
       emit(HomeErrorState(message: e.toString()));
+    }
+  }
+
+  void loadStudentData(String? id) async {
+    emit(HomeLoadingState());
+    try {
+      StudentModel? res = await HomeRepo.loadStudentData(id);
+      emit(HomeStudentLoadedState(studentData: res));
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(
+        HomeErrorState(
+          message:
+              'حدث خطأ أثناء تحميل بيانات الطالب. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
     }
   }
 }

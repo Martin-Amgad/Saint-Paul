@@ -15,6 +15,8 @@ class AuthCubit extends Cubit<AuthState> {
   var passwordController = TextEditingController();
   var passwordConfirmationController = TextEditingController();
   var pinController = TextEditingController();
+  String? selectedValue;
+
   String? adminPin = '1234';
 
   Future<void> login() async {
@@ -46,6 +48,7 @@ class AuthCubit extends Cubit<AuthState> {
       email: emailController.text,
       password: passwordController.text,
       name: usernameController.text,
+      studyLevel: selectedValue,
     );
     log('Attempting to register with email: ${emailController.text}');
     log('Attempting to register with password: ${passwordController.text}');

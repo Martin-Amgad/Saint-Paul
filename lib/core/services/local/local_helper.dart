@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:saint_paul/core/models/student_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalHelper {
@@ -6,7 +9,8 @@ class LocalHelper {
   static String KUserData = 'user_data';
   static String KEmail = 'email';
   static String Kotp = 'otp';
-  static String KUserType = 'usertype';
+  static String KUserId = 'user_id';
+  static String KUserType = 'user_type';
   static String KIsNewUser = 'isNewUser';
 
   static Future<void> init() async {
@@ -30,11 +34,11 @@ class LocalHelper {
   }
 
   static Future<void> setUserId(String userId) async {
-    await prefrences.setString(KUserData, userId);
+    await prefrences.setString(KUserId, userId);
   }
 
   static String? getUserId() {
-    return prefrences.getString(KUserData);
+    return prefrences.getString(KUserId);
   }
 
   static Future<void> setIsNewUser(bool isNewUser) async {
@@ -43,5 +47,22 @@ class LocalHelper {
 
   static bool? getIsNewUser() {
     return prefrences.getBool(KIsNewUser);
+  }
+
+  // Local storage → use toJsonLocal() and fromJsonLocal()
+  static Future<void> setUserData(StudentModel? userData) async {
+    String dataString = jsonEncode(userData?.toJsonLocal());
+    await prefrences.setString(KUserData, dataString);
+  }
+
+  static StudentModel? getUserData() {
+    String? dataString = prefrences.getString(KUserData);
+    if (dataString != null) {
+      return StudentModel.fromJsonLocal(
+        jsonDecode(dataString),
+        LocalHelper.getUserId() ?? '',
+      );
+    }
+    return null;
   }
 }

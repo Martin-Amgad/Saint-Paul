@@ -1,14 +1,24 @@
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
+import 'package:saint_paul/feature/profile/data/models/badge_model.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
@@ -21,15 +31,27 @@ class StudentProfileScreen extends StatefulWidget {
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
   StudentModel? studentData;
+  String avatarUrl = '';
+  String path = '';
+  List<String>? badges = [];
 
   @override
   void initState() {
-    context.read<ProfileCubit>().loadStudentData(LocalHelper.getUserId());
     super.initState();
+    // 1. Load from local storage immediately — no loading flash
+    final localData = LocalHelper.getUserData();
+    if (localData != null) {
+      studentData = localData;
+      avatarUrl = localData.avatarUrl ?? '';
+      badges = localData.missionBadges ?? [];
+    }
+    // 2. Then fetch from Firestore to sync
+    context.read<ProfileCubit>().loadStudentData(LocalHelper.getUserId());
   }
 
   @override
   Widget build(BuildContext context) {
+    var cubit = context.read<ProfileCubit>();
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: BlocListener<ProfileCubit, ProfileState>(
@@ -37,9 +59,29 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           if (state is ProfileErrorState) {
             showMyDialoge(context, state.message, type: DialogType.error);
           } else if (state is ProfileLoadedState) {
-            setState(() => studentData = state.studentData);
+            if (jsonEncode(state.studentData?.toJsonLocal()) !=
+                jsonEncode(LocalHelper.getUserData()?.toJsonLocal())) {
+              LocalHelper.setUserData(state.studentData);
+              studentData = state.studentData;
+              avatarUrl = state.studentData?.avatarUrl ?? '';
+              badges = state.studentData?.missionBadges ?? [];
+              setState(() {});
+            }
+            log('user ID is ${LocalHelper.getUserId()}');
+            log('Student data loaded: ${state.studentData?.toString()}');
+            log('Student name: ${state.studentData?.name}');
+            log(
+              'Student data updated in local storage: ${state.studentData?.toJsonLocal()}',
+            );
+            log(
+              'Current local storage data: ${jsonEncode(LocalHelper.getUserData()?.toJsonLocal())}',
+            );
+            log(
+              ' data comparison    ${jsonEncode(state.studentData?.toJsonLocal()) != jsonEncode(LocalHelper.getUserData()?.toJsonLocal())}',
+            );
           }
         },
+
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,16 +158,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             color: AppColors.whiteColor.withValues(alpha: 0.15),
                           ),
                           child: ClipOval(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: SvgPicture.asset(
-                                AppAssets.profileSvg,
-                                colorFilter: ColorFilter.mode(
-                                  AppColors.whiteColor,
-                                  BlendMode.srcIn,
-                                ),
-                              ),
-                            ),
+                            child: path.isNotEmpty
+                                ? // local file path starts with /
+                                  Image.file(File(path), fit: BoxFit.cover)
+                                : avatarUrl.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: avatarUrl,
+                                    fit: BoxFit.cover,
+                                  )
+                                : SvgPicture.asset(
+                                    AppAssets.profileSvg,
+                                    width: 60,
+                                    height: 60,
+                                    colorFilter: ColorFilter.mode(
+                                      AppColors.primaryColor,
+                                      BlendMode.srcIn,
+                                    ),
+                                  ),
                           ),
                         ),
                         Positioned(
@@ -145,7 +194,50 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                               ],
                             ),
                             child: IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) {
+                                    return Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.backgroundColor,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          MainButton(
+                                            title: 'Upload from Camera',
+                                            onPressed: () async {
+                                              pop(
+                                                context,
+                                              ); // close bottom sheet
+                                              await uploadImage(true);
+                                              cubit.updateStudentImage(path);
+                                            },
+                                          ),
+                                          Gap(15),
+                                          MainButton(
+                                            title: 'Upload from Gallery',
+                                            onPressed: () async {
+                                              pop(
+                                                context,
+                                              ); // close bottom sheet
+
+                                              // Pick image locally first
+                                              await uploadImage(false);
+                                              cubit.updateStudentImage(path);
+                                            },
+                                          ),
+                                          Gap(15),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                               padding: EdgeInsets.zero,
                               icon: Icon(
                                 Icons.edit_rounded,
@@ -157,6 +249,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         ),
                       ],
                     ),
+
                     const Gap(14),
                     // Name inside header
                     Text(
@@ -207,12 +300,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Color(0xFFFFD700).withValues(alpha: 0.12),
+                          color: AppColors.yellowIconColor.withValues(
+                            alpha: 0.12,
+                          ),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
                           Icons.auto_awesome_rounded,
-                          color: Color(0xFFFFD700),
+                          color: AppColors.yellowIconColor,
                           size: 26,
                         ),
                       ),
@@ -230,7 +325,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           ),
                           const Gap(2),
                           Text(
-                            studentData?.totalTayo.toString() ?? '0',
+                            '${studentData?.totalTayo ?? 0}',
                             style: TextStyles.getSize24(
                               color: AppColors.accentColor,
                               fontWeight: FontWeight.w800,
@@ -269,12 +364,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Color(0xFFFFD700).withValues(alpha: 0.12),
+                              color: AppColors.yellowIconColor.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
                               Icons.military_tech,
-                              color: Color(0xFFFFD700),
+                              color: AppColors.yellowIconColor,
                               size: 28,
                             ),
                           ),
@@ -289,7 +386,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           ),
                           Spacer(),
                           IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              pushTo(
+                                context,
+                                Routes.badgesScreen,
+                                extra: badges,
+                              );
+                            },
                             icon: Icon(
                               Icons.arrow_forward_ios_rounded,
                               color: AppColors.primaryColor,
@@ -300,14 +403,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       ),
                       Gap(15),
                       SizedBox(
-                        height: 200,
+                        height: 150,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: 10,
+                          itemCount: badges?.length ?? 0,
                           separatorBuilder: (BuildContext context, int index) {
                             return Gap(10);
                           },
                           itemBuilder: (BuildContext context, int index) {
+                            final badgeName = badges?[index] ?? 'Badge Name';
+                            final badgeImage =
+                                badgeModel[badgeName]; // to get badge image from name
                             return Container(
                               decoration: BoxDecoration(
                                 color: AppColors.primaryColor.withValues(
@@ -316,27 +422,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               padding: const EdgeInsets.all(12),
-                              child: Row(
+                              child: Column(
                                 children: [
                                   Container(
-                                    height: 40,
-                                    width: 40,
+                                    height: 80,
+                                    width: 80,
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Color(
-                                        0xFFFFD700,
-                                      ).withValues(alpha: 0.12),
+                                      color: AppColors.yellowIconColor
+                                          .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Icon(
-                                      Icons.emoji_events_rounded,
-                                      color: Color(0xFFFFD700),
-                                      size: 20,
+                                    child: Image.asset(
+                                      badgeImage ?? AppAssets.tayoKing,
+                                      fit: BoxFit.contain,
                                     ),
                                   ),
                                   const Gap(12),
                                   Text(
-                                    'وسام التفوق الدراسي',
+                                    badgeName,
                                     style: TextStyles.getSize16(
                                       color: AppColors.accentColor,
                                     ),
@@ -357,72 +461,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       ),
     );
   }
-}
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primaryColor.withValues(alpha: 0.1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: iconColor, size: 26),
-          ),
-          const Gap(16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyles.getSize12(
-                  color: AppColors.accentColor.withValues(alpha: 0.5),
-                ),
-              ),
-              const Gap(2),
-              Text(
-                value,
-                style: TextStyles.getSize24(
-                  color: AppColors.accentColor,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+  Future<void> uploadImage(bool isCamera) async {
+    // Pick image locally first
+    final imagePicker = ImagePicker();
+    final pickedImage = await imagePicker.pickImage(
+      source: isCamera ? ImageSource.camera : ImageSource.gallery,
     );
+
+    if (pickedImage != null) {
+      // Show local image immediately
+      setState(() => path = pickedImage.path);
+    }
   }
 }

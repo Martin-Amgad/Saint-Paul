@@ -33,10 +33,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -63,6 +60,18 @@ class DefaultFirebaseOptions {
     messagingSenderId: '183434026267',
     projectId: 'saint-paul-24b2f',
     storageBucket: 'saint-paul-24b2f.firebasestorage.app',
+    iosClientId: '183434026267-rqik4qa5vcp5f3c3176pfbf8g2v7hm7i.apps.googleusercontent.com',
     iosBundleId: 'com.example.saintPaul',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCSlLs-mGd4GLTqqWAZLNgKZqKCjtORUQY',
+    appId: '1:183434026267:web:78077fa690224632de07be',
+    messagingSenderId: '183434026267',
+    projectId: 'saint-paul-24b2f',
+    authDomain: 'saint-paul-24b2f.firebaseapp.com',
+    storageBucket: 'saint-paul-24b2f.firebasestorage.app',
+    measurementId: 'G-SFD1NDNQSY',
+  );
+
 }

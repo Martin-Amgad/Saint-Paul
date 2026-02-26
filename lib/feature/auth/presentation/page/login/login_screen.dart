@@ -207,7 +207,7 @@ void _blockListener(BuildContext context, AuthState state) {
   if (state is AuthSuccessState) {
     pop(context);
     LocalHelper.setIsNewUser(false);
-    pushToBase(context, Routes.mainScreen, extra: LocalHelper.getUserType());
+    pushToBase(context, Routes.mainScreen, extra: state.role);
   } else if (state is AuthResetPasswordSuccessState) {
     pop(context);
     showMyDialoge(context, state.message, type: DialogType.success);

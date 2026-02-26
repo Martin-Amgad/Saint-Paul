@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.church.saint_paul"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
      ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -43,7 +43,7 @@ android {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("-Xlint:deprecation")
+    options.compilerArgs.add("-Xlint:-options")
 }
 
 flutter {

@@ -2,9 +2,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:saint_paul/core/models/student_model.dart';
-import 'package:saint_paul/feature/home/data/repo/home_repo.dart';
-import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/feature/profile/data/repo/profile_repo.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
@@ -34,6 +33,24 @@ class ProfileCubit extends Cubit<ProfileState> {
         ProfileErrorState(
           message:
               'حدث خطأ أثناء تحميل بيانات الطالب. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
+
+  void updateStudentImage(String path) async {
+    emit(ProfileLoadingState());
+    try {
+      String? res = await ProfileRepo.updateStudentImage(path);
+      var studentData = await ProfileRepo.loadStudentData(
+        LocalHelper.getUserId(),
+      );
+      emit(ProfileLoadedState(studentData: studentData, message: res));
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(
+        ProfileErrorState(
+          message: 'حدث خطأ أثناء تحديث صورة الطالب. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

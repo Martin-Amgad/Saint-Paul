@@ -1,5 +1,7 @@
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class AuthRepo {
@@ -12,11 +14,31 @@ class AuthRepo {
         email: email,
         password: password,
       );
+      var snapshot = await FirebaseProvider.getStudentByID(
+        credential.user!.uid,
+      );
+      snapshot.data() as Map<String, dynamic>? ?? {};
+      var userData = StudentModel.fromJson(
+        snapshot.data() as Map<String, dynamic>,
+        snapshot.id,
+      );
       User user = credential.user!;
       LocalHelper.setUserId(user.uid);
+      LocalHelper.setUserData(userData);
+      log('User logged in with email: $email');
+      log('User UID: ${user.uid}');
+      log('LocalHelper User UID: ${LocalHelper.getUserId()}');
+      log('User display name: ${user.displayName}');
+      log('User photo URL (role indicator): ${user.photoURL}');
+
+      log('================================');
+      log('User data loaded from Firebase: ${userData.toJson()}');
       if (user.photoURL == '1') {
+        LocalHelper.setUserType('خادم');
         return 'خادم';
       } else {
+        LocalHelper.setUserType('مخدوم');
+
         return 'مخدوم';
       }
     } on FirebaseAuthException catch (e) {
@@ -37,12 +59,25 @@ class AuthRepo {
     required String email,
     required String password,
     required String name,
+    String? studyLevel,
+    String? role,
   }) async {
     try {
       String? role = LocalHelper.getUserType();
       var credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       User user = credential.user!;
+
+      if (role == 'مخدوم') {
+        await FirebaseProvider.createStudent(
+          StudentModel(uid: user.uid, name: name, studyLevel: studyLevel),
+        );
+      }
+      log('User logged in with email: $email');
+      log('User UID: ${user.uid}');
+      log('LocalHelper User UID: ${LocalHelper.getUserId()}');
+      log('User display name: ${user.displayName}');
+      log('User photo URL (role indicator): ${user.photoURL}');
       user.updateDisplayName(name);
       if (role == 'خادم') {
         user.updatePhotoURL('1');
@@ -51,7 +86,13 @@ class AuthRepo {
         user.updatePhotoURL('0');
         LocalHelper.setUserType('مخدوم');
       }
+      log('================================');
       LocalHelper.setUserId(user.uid);
+      log('LocalHelper User UID: ${LocalHelper.getUserId()}');
+
+      LocalHelper.setUserData(
+        StudentModel(uid: user.uid, name: name, studyLevel: studyLevel),
+      );
 
       return role;
     } on FirebaseAuthException catch (e) {

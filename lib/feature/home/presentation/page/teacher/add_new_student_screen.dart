@@ -9,6 +9,7 @@ import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/components/inputs/form_field.dart';
@@ -63,6 +64,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                   }
                   cubit.createStudent(
                     StudentModel(
+                      uid: LocalHelper.getUserId() ?? '',
                       name: cubit.nameController.text,
                       fatherPhone: cubit.fatherPhoneController.text,
                       motherPhone: cubit.motherPhoneController.text,
@@ -71,6 +73,8 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                       address: cubit.addressController.text,
                       studyLevel: cubit.studyLevelController.text,
                       birthday: pickedDate,
+                      responsibleTeacher:
+                          cubit.responsibleTeacherController.text,
                     ),
                   );
                 }
@@ -172,97 +176,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                             },
                           ),
                         ),
-                        const Gap(16),
-                        CustomFormField(
-                          label: 'تليفون الأب',
-                          icon: Icons.phone_rounded,
-                          child: CustomTextField(
-                            hintText: 'ادخل تليفون الأب',
-                            controller: cubit.fatherPhoneController,
-                            isPhone: true,
-                            validator: (p0) {
-                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
-                                  p0.isNotEmpty) {
-                                return 'رجاء ادخل رقم هاتف صالحا';
-                              } else if (p0.isEmpty) {
-                                cubit.fatherPhoneController.text = '';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const Gap(16),
-                        CustomFormField(
-                          label: 'تليفون الأم',
-                          icon: Icons.phone_rounded,
-                          child: CustomTextField(
-                            hintText: 'ادخل تليفون الأم',
-                            controller: cubit.motherPhoneController,
-                            isPhone: true,
-                            validator: (p0) {
-                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
-                                  p0.isNotEmpty) {
-                                return 'رجاء ادخل رقم هاتف صالحا';
-                              } else if (p0.isEmpty) {
-                                cubit.motherPhoneController.text = '';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const Gap(16),
-                        CustomFormField(
-                          label: 'تليفون المخدوم',
-                          icon: Icons.smartphone_rounded,
-                          child: CustomTextField(
-                            hintText: 'ادخل تليفون المخدوم',
-                            controller: cubit.personalPhoneController,
-                            isPhone: true,
-                            validator: (p0) {
-                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
-                                  p0.isNotEmpty) {
-                                return 'رجاء ادخل رقم هاتف صالحا';
-                              } else if (p0.isEmpty) {
-                                cubit.personalPhoneController.text = '';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const Gap(16),
-                        CustomFormField(
-                          label: 'تليفون المنزل',
-                          icon: Icons.home_rounded,
-                          child: CustomTextField(
-                            hintText: 'ادخل تليفون المنزل',
-                            controller: cubit.housePhoneController,
-                            isLandline: true,
-                            validator: (p0) {
-                              if (!AppRegex.isEgyptianLandlineValid(p0!) &&
-                                  p0.isNotEmpty) {
-                                return 'رجاء ادخل رقم هاتف صالحا';
-                              } else if (p0.isEmpty) {
-                                cubit.housePhoneController.text = '';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const Gap(16),
-                        CustomFormField(
-                          label: 'العنوان',
-                          icon: Icons.location_on_rounded,
-                          child: CustomTextField(
-                            hintText: 'ادخل العنوان',
-                            controller: cubit.addressController,
-                            validator: (p0) {
-                              if (p0 == null || p0.isEmpty) {
-                                cubit.addressController.text = '';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
+
                         const Gap(16),
                         CustomFormField(
                           label: 'المستوى الدراسي',
@@ -308,6 +222,108 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                             ),
                           ),
                         ),
+                        const Gap(16),
+                        CustomFormField(
+                          label: ' الخادم المسئول',
+                          icon: Icons.supervisor_account_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل الخادم المسئول',
+                            controller: cubit.responsibleTeacherController,
+                          ),
+                        ),
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'العنوان',
+                          icon: Icons.location_on_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل العنوان',
+                            controller: cubit.addressController,
+                            validator: (p0) {
+                              if (p0 == null || p0.isEmpty) {
+                                cubit.addressController.text = '';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'تليفون المخدوم',
+                          icon: Icons.smartphone_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل تليفون المخدوم',
+                            controller: cubit.personalPhoneController,
+                            isPhone: true,
+                            validator: (p0) {
+                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
+                                  p0.isNotEmpty) {
+                                return 'رجاء ادخل رقم هاتف صالحا';
+                              } else if (p0.isEmpty) {
+                                cubit.personalPhoneController.text = '';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'تليفون الأب',
+                          icon: Icons.phone_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل تليفون الأب',
+                            controller: cubit.fatherPhoneController,
+                            isPhone: true,
+                            validator: (p0) {
+                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
+                                  p0.isNotEmpty) {
+                                return 'رجاء ادخل رقم هاتف صالحا';
+                              } else if (p0.isEmpty) {
+                                cubit.fatherPhoneController.text = '';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'تليفون الأم',
+                          icon: Icons.phone_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل تليفون الأم',
+                            controller: cubit.motherPhoneController,
+                            isPhone: true,
+                            validator: (p0) {
+                              if (!AppRegex.isEgyptianPhoneValid(p0!) &&
+                                  p0.isNotEmpty) {
+                                return 'رجاء ادخل رقم هاتف صالحا';
+                              } else if (p0.isEmpty) {
+                                cubit.motherPhoneController.text = '';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'تليفون المنزل',
+                          icon: Icons.home_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل تليفون المنزل',
+                            controller: cubit.housePhoneController,
+                            isLandline: true,
+                            validator: (p0) {
+                              if (!AppRegex.isEgyptianLandlineValid(p0!) &&
+                                  p0.isNotEmpty) {
+                                return 'رجاء ادخل رقم هاتف صالحا';
+                              } else if (p0.isEmpty) {
+                                cubit.housePhoneController.text = '';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+
                         const Gap(20),
                       ],
                     ),

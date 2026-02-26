@@ -4,7 +4,6 @@ import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/components/inputs/form_field.dart';
-import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
@@ -25,6 +24,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
   @override
   initState() {
     super.initState();
@@ -165,6 +165,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
+                  if (LocalHelper.getUserType() == 'مخدوم') ...[
+                    Gap(15),
+                    CustomFormField(
+                      label: 'المستوى الدراسي',
+                      icon: Icons.school_rounded,
+                      child: DropdownButtonFormField<String>(
+                        isDense: false,
+                        value: cubit.selectedValue,
+                        hint: Text(
+                          'المستوى الدراسي',
+                          style: TextStyles.getSize16(
+                            color: AppColors.greyColor,
+                            fontWeight: FontWeight.w500,
+                          ).copyWith(fontFamily: 'Cairo'),
+                        ),
+                        icon: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: AppColors.primaryColor,
+                        ),
+                        dropdownColor: AppColors.primaryColor,
+                        borderRadius: BorderRadius.circular(16),
+                        style: TextStyles.getSize16(
+                          color: AppColors.primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 3,
+                          ),
+                        ),
+                        selectedItemBuilder: (context) {
+                          return items.map((item) {
+                            return Text(
+                              item,
+                              style: TextStyles.getSize16(
+                                color: AppColors.primaryColor,
+                                fontWeight: FontWeight.w500,
+                              ).copyWith(fontFamily: 'Cairo'),
+                            );
+                          }).toList();
+                        },
+
+                        items: items.map((item) {
+                          return DropdownMenuItem(
+                            value: item,
+                            child: Text(
+                              item,
+                              style: TextStyles.getSize16(
+                                color: AppColors.whiteColor,
+                                fontWeight: FontWeight.w500,
+                              ).copyWith(fontFamily: 'Cairo'),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() => cubit.selectedValue = value);
+                        },
+                      ),
+                    ),
+                  ],
                   Gap(15),
                   CustomFormField(
                     label: 'كلمة المرور',

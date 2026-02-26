@@ -46,7 +46,7 @@ void showSignOutDialog(BuildContext context) {
     context: context,
     builder: (context) => AlertDialog(
       title: Text(
-        'تاكيد تسجيل الخروج',
+        'تأكيد تسجيل الخروج',
         style: TextStyles.getSize18(fontWeight: FontWeight.w600),
       ),
       content: Text(
@@ -93,7 +93,15 @@ void showSignOutDialog(BuildContext context) {
   );
 }
 
-void showChangesNotSavedDialog(BuildContext context) {
+void sureToDeleteMissionDialog(
+  BuildContext context, {
+  String? title,
+  String? content,
+  String? mainButtonText,
+  Function()? mainButtonOnConfirm,
+  String? secondaryButtonText,
+  Function()? secondaryButtonOnConfirm,
+}) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -116,7 +124,8 @@ void showChangesNotSavedDialog(BuildContext context) {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'هل تريد الرجوع؟',
+            title ?? 'هل تريد الرجوع؟',
+            textAlign: TextAlign.center,
             style: TextStyles.getSize18(
               color: AppColors.accentColor,
               fontWeight: FontWeight.w700,
@@ -124,7 +133,7 @@ void showChangesNotSavedDialog(BuildContext context) {
           ),
           Gap(8),
           Text(
-            'سيتم فقدان التغييرات غير المحفوظة إذا رجعت الآن.',
+            content ?? 'سيتم فقدان التغييرات غير المحفوظة إذا رجعت الآن.',
             style: TextStyles.getSize16(
               color: AppColors.accentColor.withValues(alpha: 0.55),
             ),
@@ -136,26 +145,125 @@ void showChangesNotSavedDialog(BuildContext context) {
         Row(
           children: [
             MainButton(
-              title: 'الغاء',
-              width: 120,
+              title: mainButtonText ?? 'الغاء',
+              width: 125,
 
-              onPressed: () {
-                pop(context);
-              },
+              onPressed:
+                  mainButtonOnConfirm ??
+                  () {
+                    pop(context);
+                  },
             ),
             Spacer(),
             MainButton(
-              title: 'الرجوع',
-              width: 120,
+              title: secondaryButtonText ?? 'الرجوع',
+              width: 125,
               textColor: AppColors.primaryColor,
               bgcolor: AppColors.primaryColor.withValues(alpha: 0.08),
               borderRadius: 14,
               hasShadow: false,
               borderColor: AppColors.primaryColor.withValues(alpha: 0.2),
-              onPressed: () {
-                pop(context);
-                pop(context);
-              },
+              onPressed:
+                  secondaryButtonOnConfirm ??
+                  () {
+                    pop(context);
+                    pop(context);
+                  },
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> showChangesNotSavedDialog(
+  BuildContext context, {
+  String? title,
+  String? content,
+  String? mainButtonText,
+  Function()? mainButtonOnConfirm,
+  String? secondaryButtonText,
+  Function()? secondaryButtonOnConfirm,
+  Map<String, dynamic>? tayo,
+  Map<String, dynamic>? oldTayo,
+}) {
+  return showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      contentPadding: const EdgeInsets.fromLTRB(5, 20, 5, 12),
+      title: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: AppColors.accentColor.withValues(alpha: 0.08),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.warning_amber_rounded,
+          color: AppColors.accentColor,
+          size: 30,
+        ),
+      ),
+      content: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title ?? 'هل تريد الرجوع؟',
+            textAlign: TextAlign.center,
+            style: TextStyles.getSize18(
+              color: AppColors.accentColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Gap(8),
+          Text(
+            content ?? 'سيتم فقدان التغييرات غير المحفوظة إذا رجعت الآن.',
+            style: TextStyles.getSize16(
+              color: AppColors.accentColor.withValues(alpha: 0.55),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+      actions: [
+        Row(
+          children: [
+            // ⚠️ Go back without saving — filled primary red (destructive)
+            MainButton(
+              title: secondaryButtonText ?? 'رجوع بدون حفظ',
+              width: 125,
+              textColor: AppColors.primaryDarkColor,
+              bgcolor: AppColors.secondaryColor,
+              borderRadius: 14,
+              hasShadow: false,
+              borderColor: AppColors.secondaryColor.withValues(alpha: 0.2),
+              onPressed:
+                  secondaryButtonOnConfirm ??
+                  () {
+                    pop(context);
+                    pop(context);
+                  },
+            ),
+
+            const Spacer(),
+
+            // ✅ Save and go back — filled secondary (safe, calm)
+            MainButton(
+              title: mainButtonText ?? 'حفظ و رجوع',
+              width: 125,
+              textColor: AppColors.whiteColor,
+              bgcolor: AppColors.primaryColor,
+              borderRadius: 14,
+              hasShadow: false,
+              borderColor: AppColors.primaryColor,
+              onPressed:
+                  mainButtonOnConfirm ??
+                  () {
+                    pop(context);
+                  },
             ),
           ],
         ),

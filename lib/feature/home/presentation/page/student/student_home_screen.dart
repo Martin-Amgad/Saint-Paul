@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
@@ -37,19 +39,18 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     super.dispose();
   }
 
-  Color? rankColor(int index) {
-    if (index == 0) return const Color(0xFFFFD700);
-    if (index == 1) return const Color(0xFFB0B0B0);
-    if (index == 2) return const Color(0xFFCD7F32);
-    return null;
-  }
-
   @override
   void initState() {
     super.initState();
 
     final id = LocalHelper.getUserId();
+    log('StudentHomeScreen initState - User ID: $id');
+    log(
+      'StudentHomeScreen initState - LocalHelper User data: ${LocalHelper.getUserData()?.name}, studyLevel: ${LocalHelper.getUserData()?.studyLevel}',
+    );
     context.read<HomeCubit>().loadStudentYear(id);
+
+    context.read<HomeCubit>().loadStudentData(LocalHelper.getUserId());
   }
 
   @override
@@ -69,6 +70,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
         if (state is StudentYearLoaded) {
           selectedYear = state.year;
+          log('Student year loaded: $selectedYear');
+        } else if (state is HomeStudentLoadedState) {
+          LocalHelper.setUserData(state.studentData);
         }
         return Scaffold(
           backgroundColor: AppColors.backgroundColor,
@@ -109,7 +113,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            Icons.home_rounded,
+                            Icons.leaderboard,
                             color: AppColors.whiteColor,
                             size: 24,
                           ),

@@ -120,7 +120,12 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
         children: [
           // ── Header ────────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.of(context).padding.top + 16,
+              20,
+              20,
+            ),
             decoration: BoxDecoration(
               color: AppColors.primaryColor,
               borderRadius: const BorderRadius.only(
@@ -148,7 +153,7 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                       ),
                       child: const Icon(
                         Icons.cake_rounded,
-                        color: Color(0xFFFFD700),
+                        color: AppColors.yellowIconColor,
                         size: 26,
                       ),
                     ),
@@ -222,10 +227,15 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
 
           // ── List ─────────────────────────────────────────────
           isLoading
-              ? Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primaryColor,
-                  ),
+              ? Column(
+                  children: [
+                    Gap(MediaQuery.of(context).size.height * 0.26),
+                    Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryColor,
+                      ),
+                    ),
+                  ],
                 )
               : Expanded(
                   child: filteredStudents.isEmpty

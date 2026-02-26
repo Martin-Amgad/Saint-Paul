@@ -1,3 +1,5 @@
+import 'package:saint_paul/core/models/student_model.dart';
+
 class HomeState {}
 
 class Homeinit extends HomeState {}
@@ -22,6 +24,11 @@ class HomeSuccessStateForTakenAt extends HomeState {
 class StudentYearLoaded extends HomeState {
   final String year;
   StudentYearLoaded({required this.year});
+}
+
+class HomeStudentLoadedState extends HomeState {
+  final StudentModel? studentData;
+  HomeStudentLoadedState({this.studentData});
 }
 
 class HomeErrorState extends HomeState {

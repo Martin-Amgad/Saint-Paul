@@ -73,12 +73,30 @@ class HomeRepo {
 
   static Future<String?> loadStudentYear(String? id) async {
     try {
+      if (id == null || id.isEmpty) {
+        return 'ثالثة اعدادي';
+      }
       final snapshot = await FirebaseProvider.getStudentByID(id);
       final data = snapshot.data() as Map<String, dynamic>? ?? {};
       return data['studyLevel'] as String?;
     } on Exception catch (e) {
       log(e.toString());
-      return e.toString();
+      return 'ثالثة اعدادي';
+    }
+  }
+
+  static Future<StudentModel?> loadStudentData(String? id) async {
+    try {
+      final snapshot = await FirebaseProvider.getStudentByID(id);
+      final data = snapshot.data() as Map<String, dynamic>? ?? {};
+      final student = StudentModel.fromJson(data, snapshot.id);
+      return student;
+    } on Exception catch (e) {
+      log(e.toString());
+      return null;
+    } catch (e) {
+      log(e.toString());
+      return null;
     }
   }
 

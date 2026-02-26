@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
-import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
-
+import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/routes/routes.dart';
+import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
-import 'package:saint_paul/feature/home/widgets/student_list.dart';
-import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
+import 'package:saint_paul/feature/home/data/lists/1st_prep_students_list.dart';
+import 'package:saint_paul/feature/home/data/lists/3rd_prep_students_list.dart';
 import 'package:saint_paul/feature/home/widgets/filter_chip.dart';
+import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
+import 'package:saint_paul/feature/home/widgets/student_info_edit_builder.dart';
 
-class TeacherHomeScreen extends StatefulWidget {
-  const TeacherHomeScreen({super.key});
+class StudentsShowcaseAndEditScreen extends StatefulWidget {
+  const StudentsShowcaseAndEditScreen({super.key});
 
   @override
-  State<TeacherHomeScreen> createState() => _TeacherHomeScreenState();
+  State<StudentsShowcaseAndEditScreen> createState() =>
+      _StudentsShowcaseAndEditScreenState();
 }
 
-class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
+class _StudentsShowcaseAndEditScreenState
+    extends State<StudentsShowcaseAndEditScreen> {
   var searchController = TextEditingController();
   ValueNotifier<String> searchNotifier = ValueNotifier('');
 
@@ -35,20 +40,14 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     super.dispose();
   }
 
-  Color? rankColor(int index) {
-    if (index == 0) return AppColors.yellowIconColor;
-    if (index == 1) return const Color(0xFFB0B0B0);
-    if (index == 2) return const Color(0xFFCD7F32);
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header (extends behind status bar) ──────────────────
+          // ── Header ──────────────────────────────────────────────
           Container(
             padding: EdgeInsets.fromLTRB(
               20,
@@ -73,7 +72,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title row with add + logout
                 Row(
                   children: [
                     Container(
@@ -82,31 +80,35 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                         color: AppColors.whiteColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        Icons.storefront_sharp,
+                      child: const Icon(
+                        Icons.person_rounded,
                         color: AppColors.yellowIconColor,
                         size: 24,
                       ),
                     ),
                     const Gap(12),
                     Text(
-                      'طايو',
+                      'حسابات المخدومين',
                       style: TextStyles.getSize24(
                         color: AppColors.whiteColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const Spacer(),
-
-                    // Logout button
                     HeaderIconButton(
-                      svgAsset: AppAssets.logoutSvg,
-                      onTap: () => showSignOutDialog(context),
+                      icon: Icons.add_rounded,
+                      onTap: () {
+                        pushTo(context, Routes.addEditNewStudentScreen);
+
+                        // var futures = thirdPrepStudentList.map((student) {
+                        //   return FirebaseProvider.createStudent(student);
+                        // });
+                        // Future.wait(futures);
+                      },
                     ),
                   ],
                 ),
                 const Gap(18),
-                // Search bar
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.whiteColor.withValues(alpha: 0.15),
@@ -128,7 +130,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     suffixIcon: IconButton(
                       onPressed: () {
                         searchController.clear();
-                        setState(() => searchText = '');
+                        setState(() {
+                          searchText = '';
+                          searchNotifier.value = searchText;
+                        });
                       },
                       icon: Icon(
                         Icons.close_rounded,
@@ -137,8 +142,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     ),
                     onChanged: (value) {
                       searchText = value.trim();
-
-                      setState(() {});
+                      searchNotifier.value = searchText;
                     },
                   ),
                 ),
@@ -146,7 +150,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             ),
           ),
 
-          // ── Filter chips ────────────────────────────────────────
+          // ── Filter chips ─────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
             child: Row(
@@ -199,15 +203,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
           const Gap(14),
 
-          // ── Student list ────────────────────────────────────────
-          Expanded(
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: StudentList(
-                searchText: searchText,
-                filterSelection: selectedYear ?? '',
-              ),
-            ),
+          // ── List ─────────────────────────────────────────────────
+          StudentInfoEditbuilder(
+            searchNotifier: searchNotifier,
+            selectedYear: selectedYear,
           ),
         ],
       ),

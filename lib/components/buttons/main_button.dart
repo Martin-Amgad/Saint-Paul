@@ -52,6 +52,10 @@ class MainButton extends StatelessWidget {
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
             elevation: 0,
+
+            ////////change padding
+            padding: EdgeInsets.zero,
+
             backgroundColor: bgcolor,
             foregroundColor: textColor,
             shape: RoundedRectangleBorder(

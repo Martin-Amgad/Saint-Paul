@@ -14,6 +14,7 @@ class StudentModel {
   final String? avatarUrl;
   final int? totalTayo;
   final Map<String, dynamic>? tayo;
+  final List<String>? missionBadges;
 
   StudentModel({
     this.uid,
@@ -37,6 +38,7 @@ class StudentModel {
       'مفتحش الموبيل و الفقرة شغالة': {'count': 0, 'takenAt': null},
       'اجابة علي سؤال في الدرس': {'count': 0, 'takenAt': null},
     },
+    this.missionBadges = const [],
   });
 
   /// Model → Firestore
@@ -54,6 +56,26 @@ class StudentModel {
       'studyLevel': studyLevel,
       'responsibleTeacher': responsibleTeacher,
       'tayo': tayo,
+      'missionBadges': missionBadges,
+    };
+  }
+
+  /// Model → local (without nulls)
+
+  Map<String, dynamic> toJsonLocal() {
+    return {
+      'name': name,
+      'motherPhone': motherPhone,
+      'fatherPhone': fatherPhone,
+      'personalPhone': personalPhone,
+      'housePhone': housePhone,
+      'address': address,
+      'avatarUrl': avatarUrl,
+      'totalTayo': totalTayo,
+      'studyLevel': studyLevel,
+      'responsibleTeacher': responsibleTeacher,
+      'tayo': tayo,
+      'missionBadges': missionBadges,
     };
   }
 
@@ -62,11 +84,11 @@ class StudentModel {
     return StudentModel(
       uid: uid,
       name: map['name'] ?? '',
-      motherPhone: map['motherPhone'] ?? 'لا يوجد',
-      fatherPhone: map['fatherPhone'] ?? 'لا يوجد',
-      personalPhone: map['personalPhone'] ?? 'لا يوجد',
-      housePhone: map['housePhone'] ?? 'لا يوجد',
-      address: map['address'] ?? 'لا يوجد',
+      motherPhone: map['motherPhone'] ?? ' ',
+      fatherPhone: map['fatherPhone'] ?? ' ',
+      personalPhone: map['personalPhone'] ?? ' ',
+      housePhone: map['housePhone'] ?? ' ',
+      address: map['address'] ?? ' ',
       avatarUrl: map['avatarUrl'] ?? '',
       totalTayo: map['totalTayo'] ?? 0,
       birthday: map['birthday'] != null
@@ -76,6 +98,31 @@ class StudentModel {
       studyLevel: map['studyLevel'] ?? '',
       responsibleTeacher: map['responsibleTeacher'] ?? 'لا يوجد',
       tayo: map['tayo'] as Map<String, dynamic>? ?? {},
+      missionBadges: map['missionBadges'] is List
+          ? List<String>.from(map['missionBadges'])
+          : const <String>[],
+    );
+  }
+
+  /// Firestore → Model for local (without nulls)
+  factory StudentModel.fromJsonLocal(Map<String, dynamic> map, String uid) {
+    return StudentModel(
+      uid: uid,
+      name: map['name'] ?? '',
+      motherPhone: map['motherPhone'] ?? ' ',
+      fatherPhone: map['fatherPhone'] ?? ' ',
+      personalPhone: map['personalPhone'] ?? ' ',
+      housePhone: map['housePhone'] ?? ' ',
+      address: map['address'] ?? ' ',
+      avatarUrl: map['avatarUrl'] ?? '',
+      totalTayo: map['totalTayo'] ?? 0,
+
+      studyLevel: map['studyLevel'] ?? '',
+      responsibleTeacher: map['responsibleTeacher'] ?? 'لا يوجد',
+      tayo: map['tayo'] as Map<String, dynamic>? ?? {},
+      missionBadges: map['missionBadges'] is List
+          ? List<String>.from(map['missionBadges'])
+          : const <String>[],
     );
   }
 
@@ -93,6 +140,7 @@ class StudentModel {
     String? studyLevel,
     String? responsibleTeacher,
     Map<String, dynamic>? tayo,
+    List<String>? missionBadges,
   }) {
     return StudentModel(
       uid: uid,
@@ -108,6 +156,7 @@ class StudentModel {
       studyLevel: studyLevel ?? this.studyLevel,
       responsibleTeacher: responsibleTeacher ?? this.responsibleTeacher,
       tayo: tayo ?? this.tayo,
+      missionBadges: missionBadges ?? this.missionBadges,
     );
   }
 
@@ -129,7 +178,7 @@ class StudentModel {
       data['responsibleTeacher'] = responsibleTeacher;
     }
     if (tayo != null) data['tayo'] = tayo;
-
+    if (missionBadges != null) data['missionBadges'] = missionBadges;
     return data;
   }
 }

@@ -22,7 +22,7 @@ class StudentList extends StatelessWidget {
   final bool? isStudent;
 
   Color? _rankColor(int index) {
-    if (index == 0) return const Color(0xFFFFD700);
+    if (index == 0) return AppColors.yellowIconColor;
     if (index == 1) return const Color(0xFFB0B0B0);
     if (index == 2) return const Color(0xFFCD7F32);
     return null;
@@ -30,6 +30,10 @@ class StudentList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    List<StudentModel> allStudents;
+    List<StudentModel> allStudentsWithYear;
+    List<StudentModel> filteredStudents;
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseProvider.streamedSortStudentsByTotalTayo(),
       builder: (context, snapshot) {
@@ -51,7 +55,7 @@ class StudentList extends StatelessWidget {
         }
 
         final docs = snapshot.data?.docs ?? [];
-        final allStudents = docs
+        allStudents = docs
             .map(
               (doc) => StudentModel.fromJson(
                 doc.data() as Map<String, dynamic>,
@@ -59,8 +63,12 @@ class StudentList extends StatelessWidget {
               ),
             )
             .toList();
-
-        final filteredStudents = searchText.isEmpty && filterSelection == 'الكل'
+        allStudentsWithYear = allStudents
+            .where(
+              (student) => (student.studyLevel ?? '').contains(filterSelection),
+            )
+            .toList();
+        filteredStudents = searchText.isEmpty && filterSelection == 'الكل'
             ? allStudents
             : allStudents.where((student) {
                 final name = student.name ?? '';
@@ -100,7 +108,8 @@ class StudentList extends StatelessWidget {
           itemBuilder: (context, index) {
             final student = filteredStudents[index];
             final rankColor = _rankColor(index);
-            final isTopThree = rankColor != null;
+            final isTopThree = (rankColor != null) && searchText.isEmpty;
+            final isTopFifteen = index < 15 && searchText.isEmpty;
             final tayo = student.totalTayo ?? 0;
 
             return GestureDetector(
@@ -159,7 +168,7 @@ class StudentList extends StatelessWidget {
                                 color: rankColor,
                               )
                             : Text(
-                                '${index + 1}',
+                                '${allStudentsWithYear.indexOf(filteredStudents[index]) + 1}',
                                 style: TextStyles.getSize16(
                                   color: AppColors.primaryColor,
                                   fontWeight: FontWeight.w700,
@@ -220,8 +229,8 @@ class StudentList extends StatelessWidget {
                       ),
                     const Gap(6),
                     Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
+                      isTopThree ? Icons.military_tech : null,
+                      size: 20,
                       color: AppColors.accentColor.withValues(alpha: 0.3),
                     ),
                   ],

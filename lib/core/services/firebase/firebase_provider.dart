@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 
 class FirebaseProvider {
@@ -8,8 +9,24 @@ class FirebaseProvider {
     'Student',
   );
 
+  static final CollectionReference missionCollection = firebase.collection(
+    'Mission',
+  );
+
   static Future<void> createStudent(StudentModel student) async {
     await studentCollection.doc(student.uid).set(student.toJson());
+  }
+
+  static Future<void> createMission(MissionModel mission) async {
+    await missionCollection.doc(mission.mid).set(mission.toJson());
+  }
+
+  static Future<void> deleteMission(String missionId) async {
+    await missionCollection.doc(missionId).delete();
+  }
+
+  static Future<QuerySnapshot> fetchMissions() async {
+    return await missionCollection.get();
   }
 
   static Future<QuerySnapshot> getStudentByNameAndTotalTayo(
