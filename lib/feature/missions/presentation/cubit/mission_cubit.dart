@@ -42,7 +42,7 @@ class MissionCubit extends Cubit<MissionState> {
     emit(MissionLoadingState());
     try {
       final result = await MissionRepo.deleteMission(mid);
-      emit(MissionSuccessState(message: result));
+      emit(MissionDeleteSuccessState(message: result));
     } catch (e) {
       emit(
         MissionErrorState(
@@ -57,6 +57,7 @@ class MissionCubit extends Cubit<MissionState> {
     try {
       log('Fetching missions...');
       var missions = await MissionRepo.fetchMissions();
+      var acceptedMissions = await MissionRepo.fetchAcceptedMissions();
       log(' Fetched missions: ${missions.length}');
       log(
         'First mission title: ${missions.isNotEmpty ? missions[0].title : 'No missions'}',
@@ -64,12 +65,73 @@ class MissionCubit extends Cubit<MissionState> {
       log(
         'First mission description: ${missions.isNotEmpty ? missions[0].description : 'No missions'}',
       );
+      log('Accepted missions: ${acceptedMissions.length}');
+      log('Accepted missions IDs: $acceptedMissions');
 
-      emit(MissionsLoadedState(missions: missions));
+      emit(
+        MissionsLoadedState(
+          missions: missions,
+          acceptedMissions: acceptedMissions,
+        ),
+      );
     } catch (e) {
       emit(
         MissionErrorState(
           message: 'حدث خطأ أثناء تحميل المهام. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
+
+  Future<String> acceptMission(String mid) async {
+    emit(MissionLoadingState());
+    try {
+      final result = await MissionRepo.acceptMission(mid);
+      emit(MissionSuccessState(message: result));
+      return 'تم قبول المهمة بنجاح.';
+    } catch (e) {
+      emit(
+        MissionErrorState(
+          message: 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+      return 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  Future<String> submitMission(String mid, MissionModel mission) async {
+    emit(MissionLoadingState());
+    try {
+      final result = await MissionRepo.submitMission(mid, mission);
+      emit(MissionSuccessState(message: result));
+      return 'تم إرسال المهمة بنجاح.';
+    } catch (e) {
+      emit(
+        MissionErrorState(
+          message: 'حدث خطأ أثناء إرسال المهمة. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+      return 'حدث خطأ أثناء إرسال المهمة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  void loadMissionControllers(MissionModel? mission) {
+    titleController.text = mission?.title ?? '';
+    descriptionController.text = mission?.description ?? '';
+    linkController.text = mission?.link ?? '';
+    rewardController.text = mission?.reward ?? '';
+    expireAfterController.text = mission?.expireAfter.toString() ?? '';
+  }
+
+  Future<void> updateMission(MissionModel missionEdit) async {
+    emit(MissionLoadingState());
+    try {
+      final result = await MissionRepo.updateMission(missionEdit);
+      emit(MissionSuccessState(message: result));
+    } catch (e) {
+      emit(
+        MissionErrorState(
+          message: 'حدث خطأ أثناء تحديث المهمة. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

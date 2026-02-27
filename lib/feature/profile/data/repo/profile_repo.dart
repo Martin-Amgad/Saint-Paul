@@ -1,7 +1,5 @@
 import 'dart:developer';
 import 'dart:io';
-
-import 'package:image_picker/image_picker.dart';
 import 'package:saint_paul/core/extentions/image_uploader.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
@@ -39,23 +37,17 @@ class ProfileRepo {
   static Future<String?> updateStudentImage(String path) async {
     try {
       final cloudinaryUrl = await uploadImageToCloudinary(File(path));
+      if (cloudinaryUrl == null) return null;
       log('Cloudinary URL: $cloudinaryUrl');
-
-      if (cloudinaryUrl != null) {
-        log(' UID for update: ${LocalHelper.getUserId()}');
-        await FirebaseProvider.updateStudent(
-          StudentModel(uid: LocalHelper.getUserId(), avatarUrl: cloudinaryUrl),
-        );
-      }
+      await FirebaseProvider.updateStudentImage(
+        LocalHelper.getUserId(),
+        cloudinaryUrl,
+      );
       log('Student image updated successfully in Firebase');
-
-      return 'تم تحديث صورة المخدوم بنجاح.';
-    } on Exception catch (e) {
-      log(e.toString());
-      return 'حدث خطأ أثناء تحديث صورة المخدوم. الرجاء المحاولة مرة أخرى.';
+      return cloudinaryUrl; // ← return URL not Arabic string
     } catch (e) {
       log(e.toString());
-      return 'حدث خطأ أثناء تحديث صورة المخدوم. الرجاء المحاولة مرة أخرى.';
+      return null;
     }
   }
 }

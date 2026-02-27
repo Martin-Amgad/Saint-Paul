@@ -8,6 +8,7 @@ class MissionModel {
   final String? reward;
   final int? expireAfter;
   final DateTime? currentDate;
+  final String? studentSolution;
 
   MissionModel({
     this.mid,
@@ -17,6 +18,7 @@ class MissionModel {
     this.reward,
     this.expireAfter,
     this.currentDate,
+    this.studentSolution,
   });
 
   factory MissionModel.fromJson(Map<String, dynamic> map, String mid) {
@@ -30,6 +32,7 @@ class MissionModel {
       currentDate: map['currentDate'] != null
           ? (map['currentDate'] as Timestamp).toDate()
           : null,
+      studentSolution: map['studentSolution'] ?? '',
     );
   }
 
@@ -44,6 +47,7 @@ class MissionModel {
       'currentDate': currentDate != null
           ? Timestamp.fromDate(currentDate!)
           : null,
+      'studentSolution': studentSolution,
     };
   }
 
@@ -55,6 +59,7 @@ class MissionModel {
     String? reward,
     int? expireAfter,
     DateTime? currentDate,
+    String? studentSolution,
   }) {
     return MissionModel(
       mid: mid ?? this.mid,
@@ -64,6 +69,7 @@ class MissionModel {
       reward: reward ?? this.reward,
       expireAfter: expireAfter ?? this.expireAfter,
       currentDate: currentDate ?? this.currentDate,
+      studentSolution: studentSolution ?? this.studentSolution,
     );
   }
 
@@ -76,7 +82,8 @@ class MissionModel {
     if (reward != null) data['reward'] = reward;
     if (expireAfter != null) data['expireAfter'] = expireAfter;
     if (currentDate != null)
-      data['currentDate'] = currentDate!.millisecondsSinceEpoch;
+      data['currentDate'] = Timestamp.fromDate(currentDate!);
+    if (studentSolution != null) data['studentSolution'] = studentSolution;
     return data;
   }
 }

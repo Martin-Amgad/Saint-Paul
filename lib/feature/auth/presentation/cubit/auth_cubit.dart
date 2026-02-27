@@ -16,6 +16,7 @@ class AuthCubit extends Cubit<AuthState> {
   var passwordConfirmationController = TextEditingController();
   var pinController = TextEditingController();
   String? selectedValue;
+  String? selectedRole;
 
   String? adminPin = '1234';
 
@@ -40,6 +41,9 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> register() async {
     emit(AuthloadingState());
+    log(
+      'Selected role during registration from local: ${LocalHelper.getUserType()}',
+    );
     if (pinController.text != adminPin && LocalHelper.getUserType() == 'خادم') {
       emit(AuthErrorState('الرقم السري غير صحيح'));
       return;
@@ -49,15 +53,19 @@ class AuthCubit extends Cubit<AuthState> {
       password: passwordController.text,
       name: usernameController.text,
       studyLevel: selectedValue,
+      role: selectedRole,
     );
     log('Attempting to register with email: ${emailController.text}');
     log('Attempting to register with password: ${passwordController.text}');
-    if (response == 'خادم' || response == 'مخدوم') {
-      emit(AuthSuccessState(role: response));
+    log('Attempting to register with name: ${usernameController.text}');
+    log('Attempting to register with study level: $selectedValue');
+
+    if (response == 'تم إنشاء الحساب بنجاح.') {
+      emit(AuthSuccessState(role: selectedRole));
     } else {
       emit(
         AuthErrorState(
-          response ?? 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.',
+          response ?? 'حدث خطأ أثناء إنشاء الحساب. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

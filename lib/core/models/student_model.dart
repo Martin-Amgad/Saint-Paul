@@ -15,6 +15,9 @@ class StudentModel {
   final int? totalTayo;
   final Map<String, dynamic>? tayo;
   final List<String>? missionBadges;
+  final List<String>? acceptedMissions;
+  final Map<String, dynamic>? submittedMissions;
+  final String? groupID;
 
   StudentModel({
     this.uid,
@@ -39,6 +42,9 @@ class StudentModel {
       'اجابة علي سؤال في الدرس': {'count': 0, 'takenAt': null},
     },
     this.missionBadges = const [],
+    this.acceptedMissions = const [],
+    this.submittedMissions = const {},
+    this.groupID,
   });
 
   /// Model → Firestore
@@ -57,6 +63,9 @@ class StudentModel {
       'responsibleTeacher': responsibleTeacher,
       'tayo': tayo,
       'missionBadges': missionBadges,
+      'acceptedMissions': acceptedMissions,
+      'submittedMissions': submittedMissions,
+      'groupID': groupID,
     };
   }
 
@@ -74,8 +83,35 @@ class StudentModel {
       'totalTayo': totalTayo,
       'studyLevel': studyLevel,
       'responsibleTeacher': responsibleTeacher,
-      'tayo': tayo,
+      'tayo': tayo?.map(
+        (key, value) => MapEntry(key, {
+          'count': value['count'],
+          'takenAt': value['takenAt'] == null
+              ? null
+              : value['takenAt'] is Timestamp
+              ? (value['takenAt'] as Timestamp).millisecondsSinceEpoch
+              : value['takenAt'],
+        }),
+      ),
       'missionBadges': missionBadges,
+      'acceptedMissions': acceptedMissions,
+      'submittedMissions': submittedMissions?.map(
+        (missionId, missionMap) => MapEntry(
+          missionId,
+          (missionMap as Map<String, dynamic>).map((title, details) {
+            final d = Map<String, dynamic>.from(details as Map);
+            return MapEntry(title, {
+              ...d,
+              'currentDate': d['currentDate'] == null
+                  ? null
+                  : d['currentDate'] is Timestamp
+                  ? (d['currentDate'] as Timestamp).millisecondsSinceEpoch
+                  : d['currentDate'],
+            });
+          }),
+        ),
+      ),
+      'groupID': groupID,
     };
   }
 
@@ -101,6 +137,24 @@ class StudentModel {
       missionBadges: map['missionBadges'] is List
           ? List<String>.from(map['missionBadges'])
           : const <String>[],
+      acceptedMissions: map['acceptedMissions'] is List
+          ? List<String>.from(map['acceptedMissions'])
+          : const <String>[],
+      submittedMissions:
+          (map['submittedMissions'] as Map<String, dynamic>? ?? {}).map(
+            (missionId, missionMap) => MapEntry(
+              missionId,
+              (missionMap as Map<String, dynamic>).map((title, details) {
+                final d = Map<String, dynamic>.from(details as Map);
+                return MapEntry(title, {
+                  ...d,
+                  'currentDate':
+                      d['currentDate'], // already int, no conversion needed
+                });
+              }),
+            ),
+          ),
+      groupID: map['groupID'],
     );
   }
 
@@ -119,10 +173,25 @@ class StudentModel {
 
       studyLevel: map['studyLevel'] ?? '',
       responsibleTeacher: map['responsibleTeacher'] ?? 'لا يوجد',
-      tayo: map['tayo'] as Map<String, dynamic>? ?? {},
+      tayo: (map['tayo'] as Map<String, dynamic>? ?? {}).map(
+        (key, value) => MapEntry(key, {
+          'count': value['count'],
+          'takenAt': value['takenAt'] == null
+              ? null
+              : value['takenAt'] is int
+              ? value['takenAt'] // stored as milliseconds
+              : value['takenAt'],
+        }),
+      ),
       missionBadges: map['missionBadges'] is List
           ? List<String>.from(map['missionBadges'])
           : const <String>[],
+      acceptedMissions: map['acceptedMissions'] is List
+          ? List<String>.from(map['acceptedMissions'])
+          : const <String>[],
+      submittedMissions:
+          map['submittedMissions'] as Map<String, dynamic>? ?? {},
+      groupID: map['groupID'],
     );
   }
 
@@ -141,6 +210,9 @@ class StudentModel {
     String? responsibleTeacher,
     Map<String, dynamic>? tayo,
     List<String>? missionBadges,
+    List<String>? acceptedMissions,
+    Map<String, dynamic>? submittedMissions,
+    String? groupID,
   }) {
     return StudentModel(
       uid: uid,
@@ -157,6 +229,9 @@ class StudentModel {
       responsibleTeacher: responsibleTeacher ?? this.responsibleTeacher,
       tayo: tayo ?? this.tayo,
       missionBadges: missionBadges ?? this.missionBadges,
+      acceptedMissions: acceptedMissions ?? this.acceptedMissions,
+      submittedMissions: submittedMissions ?? this.submittedMissions,
+      groupID: groupID ?? this.groupID,
     );
   }
 
@@ -179,6 +254,15 @@ class StudentModel {
     }
     if (tayo != null) data['tayo'] = tayo;
     if (missionBadges != null) data['missionBadges'] = missionBadges;
+    if (acceptedMissions != null) {
+      data['acceptedMissions'] = acceptedMissions;
+    }
+    if (submittedMissions != null) {
+      data['submittedMissions'] = submittedMissions;
+    }
+    if (groupID != null) {
+      data['groupID'] = groupID;
+    }
     return data;
   }
 }

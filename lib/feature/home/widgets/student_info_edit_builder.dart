@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -27,10 +28,18 @@ class StudentInfoEditbuilder extends StatefulWidget {
 class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
   List<StudentModel> allStudents = [];
   List<StudentModel> filteredStudents = [];
+  late Stream<QuerySnapshot> studentsStream;
+  @override
+  void initState() {
+    super.initState();
+    studentsStream =
+        FirebaseProvider.streamedSortStudentsByTotalTayo(); // ← init once
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseProvider.streamedSortStudentsByTotalTayo(),
+      stream: studentsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox();
@@ -103,13 +112,12 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
                   itemCount: filteredStudents.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 1,
+                    mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
                     childAspectRatio: 1.2,
                   ),
                   itemBuilder: (context, index) {
                     final student = filteredStudents[index];
-                    //   final isTopThree = rankColor != null;
 
                     return GestureDetector(
                       onTap: () {
@@ -120,8 +128,7 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
                         );
                       },
                       child: Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceColor,
                           borderRadius: BorderRadius.circular(18),
@@ -140,22 +147,28 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
                           ],
                         ),
                         child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.2,
+                          height: MediaQuery.of(context).size.height * 0.6,
 
                           child: Column(
                             children: [
                               // image circular avatar
                               CircleAvatar(
-                                radius: 30,
+                                radius: 40,
                                 backgroundColor: AppColors.primaryColor
                                     .withValues(alpha: 0.08),
-                                child: Center(
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: TextStyles.getSize16(
-                                      color: AppColors.primaryColor,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                child: ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: student.avatarUrl ?? '',
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (context, url, error) {
+                                      return const Icon(
+                                        Icons.person_rounded,
+                                        color: AppColors.primaryColor,
+                                        size: 30,
+                                      );
+                                    },
                                   ),
                                 ),
                               ),

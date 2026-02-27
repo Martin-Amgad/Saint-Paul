@@ -38,21 +38,15 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  void updateStudentImage(String path) async {
-    emit(ProfileLoadingState());
+  Future<String?> updateStudentImage(String path) async {
     try {
-      String? res = await ProfileRepo.updateStudentImage(path);
-      var studentData = await ProfileRepo.loadStudentData(
-        LocalHelper.getUserId(),
-      );
-      emit(ProfileLoadedState(studentData: studentData, message: res));
-    } on Exception catch (e) {
+      log('Starting image update with path: $path');
+      final newUrl = await ProfileRepo.updateStudentImage(path);
+      log('New image URL: $newUrl');
+      return newUrl; // ← just return the URL, screen handles the rest
+    } catch (e) {
       log(e.toString());
-      emit(
-        ProfileErrorState(
-          message: 'حدث خطأ أثناء تحديث صورة الطالب. الرجاء المحاولة مرة أخرى.',
-        ),
-      );
+      return null;
     }
   }
 }

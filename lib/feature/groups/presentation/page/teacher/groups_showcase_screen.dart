@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
+import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
@@ -9,22 +11,23 @@ import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
+import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
+import 'package:saint_paul/feature/groups/widgets/group_list_builder.dart';
 import 'package:saint_paul/feature/home/data/lists/1st_prep_students_list.dart';
 import 'package:saint_paul/feature/home/data/lists/3rd_prep_students_list.dart';
 import 'package:saint_paul/feature/home/widgets/filter_chip.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
 import 'package:saint_paul/feature/home/widgets/student_info_edit_builder.dart';
 
-class StudentsShowcaseAndEditScreen extends StatefulWidget {
-  const StudentsShowcaseAndEditScreen({super.key});
+class GroupsShowcaseScreen extends StatefulWidget {
+  const GroupsShowcaseScreen({super.key});
 
   @override
-  State<StudentsShowcaseAndEditScreen> createState() =>
-      _StudentsShowcaseAndEditScreenState();
+  State<GroupsShowcaseScreen> createState() => _GroupsShowcaseScreenState();
 }
 
-class _StudentsShowcaseAndEditScreenState
-    extends State<StudentsShowcaseAndEditScreen> {
+class _GroupsShowcaseScreenState extends State<GroupsShowcaseScreen> {
   var searchController = TextEditingController();
   ValueNotifier<String> searchNotifier = ValueNotifier('');
 
@@ -38,6 +41,12 @@ class _StudentsShowcaseAndEditScreenState
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    context.read<GroupCubit>().fetchGroups();
+    super.initState();
   }
 
   @override
@@ -81,14 +90,14 @@ class _StudentsShowcaseAndEditScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
-                        Icons.person_rounded,
+                        Icons.groups_rounded,
                         color: AppColors.yellowIconColor,
                         size: 24,
                       ),
                     ),
                     const Gap(12),
                     Text(
-                      'حسابات المخدومين',
+                      'المجموعات',
                       style: TextStyles.getSize24(
                         color: AppColors.whiteColor,
                         fontWeight: FontWeight.w700,
@@ -98,9 +107,11 @@ class _StudentsShowcaseAndEditScreenState
                     HeaderIconButton(
                       icon: Icons.add_rounded,
                       onTap: () {
-                        pushTo(context, Routes.addEditNewStudentScreen);
+                        pushTo(context, Routes.createGroupScreen).then((_) {
+                          context.read<GroupCubit>().fetchGroups();
+                        });
 
-                        // var futures = firstPrepStudentsList.map((student) {
+                        // var futures = thirdPrepStudentList.map((student) {
                         //   return FirebaseProvider.createStudent(student);
                         // });
                         // Future.wait(futures);
@@ -204,9 +215,34 @@ class _StudentsShowcaseAndEditScreenState
           const Gap(14),
 
           // ── List ─────────────────────────────────────────────────
-          StudentInfoEditbuilder(
-            searchNotifier: searchNotifier,
-            selectedYear: selectedYear,
+          Expanded(
+            child: BlocConsumer<GroupCubit, GroupState>(
+              listener: (context, state) {
+                if (state is GroupErrorState) {
+                  showMyDialoge(context, state.message, type: DialogType.error);
+                } else if (state is GroupDeleteSuccessState) {
+                  showMyDialoge(
+                    context,
+                    state.message ?? 'تم حذف المجموعة بنجاح.',
+                    type: DialogType.success,
+                  ).then((_) {
+                    context.read<GroupCubit>().fetchGroups();
+                  });
+                }
+              },
+              builder: (context, state) {
+                if (state is GroupLoadingState) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is GroupsLoadedSuccessState) {
+                  return GroupsListBuilder(
+                    groups: state.groups,
+                    searchNotifier: searchNotifier,
+                    selectedYear: selectedYear,
+                  );
+                }
+                return const SizedBox();
+              },
+            ),
           ),
         ],
       ),

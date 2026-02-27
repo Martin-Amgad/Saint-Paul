@@ -1,7 +1,9 @@
 import 'dart:developer';
 
 import 'package:saint_paul/core/models/mission_model.dart';
+import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class MissionRepo {
   static Future<String?> createMission(MissionModel mission) async {
@@ -30,19 +32,23 @@ class MissionRepo {
     }
   }
 
-  static Future<void> updateMission(
-    String missionId,
-    Map<String, dynamic> updatedData,
-  ) async {
-    // Simulate a network call with a delay
-    await Future.delayed(const Duration(seconds: 2));
-    // Here you would typically send the updatedData to your backend or database using the missionId
-    log('Mission with ID $missionId updated with data: $updatedData');
+  static Future<String?> updateMission(MissionModel mission) async {
+    try {
+      await FirebaseProvider.updateMission(mission);
+      return 'تم تحديث المهمة بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث المهمة. الرجاء المحاولة مرة أخرى.';
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث المهمة. الرجاء المحاولة مرة أخرى.';
+    }
   }
 
   static Future<List<MissionModel>> fetchMissions() async {
     try {
       final snapshot = await FirebaseProvider.fetchMissions();
+
       log('Fetched missions snapshot: ${snapshot.docs.length} documents');
       try {
         final missions = snapshot.docs.map((doc) {
@@ -63,6 +69,60 @@ class MissionRepo {
     } on Exception catch (e) {
       log(e.toString());
       rethrow;
+    }
+  }
+
+  static Future<List<String>> fetchAcceptedMissions() async {
+    try {
+      final studentSnapshot = await FirebaseProvider.getStudentByID(
+        LocalHelper.getUserId(),
+      );
+      log(
+        'Fetched student snapshot: ${studentSnapshot.id} → ${studentSnapshot.data()}',
+      );
+
+      final data = ((studentSnapshot.data()) as Map<String, dynamic>?) ?? {};
+      log('Student data: $data');
+
+      final acceptedMissions =
+          (data['acceptedMissions'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [];
+
+      log('Accepted missions from student data: $acceptedMissions');
+      return acceptedMissions;
+    } on Exception catch (e) {
+      log(e.toString());
+      rethrow;
+    }
+  }
+
+  static Future<String?> acceptMission(String mid) async {
+    try {
+      final userId = LocalHelper.getUserId();
+      await FirebaseProvider.updateAcceptedMissions(userId, mid);
+      return 'تم قبول المهمة بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.';
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  static Future<String?> submitMission(String mid, MissionModel mission) async {
+    try {
+      final userId = LocalHelper.getUserId();
+      await FirebaseProvider.updateSubmittedMissions(userId, mid, mission);
+      return 'تم إرسال المهمة بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء إرسال المهمة. الرجاء المحاولة مرة أخرى.';
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء إرسال المهمة. الرجاء المحاولة مرة أخرى.';
     }
   }
 }

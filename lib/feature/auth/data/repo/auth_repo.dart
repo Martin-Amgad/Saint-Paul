@@ -14,17 +14,23 @@ class AuthRepo {
         email: email,
         password: password,
       );
-      var snapshot = await FirebaseProvider.getStudentByID(
-        credential.user!.uid,
-      );
-      snapshot.data() as Map<String, dynamic>? ?? {};
-      var userData = StudentModel.fromJson(
-        snapshot.data() as Map<String, dynamic>,
-        snapshot.id,
-      );
       User user = credential.user!;
+
       LocalHelper.setUserId(user.uid);
-      LocalHelper.setUserData(userData);
+
+      if (user.photoURL == '0') {
+        var snapshot = await FirebaseProvider.getStudentByID(
+          credential.user!.uid,
+        );
+        var userData = StudentModel.fromJson(
+          snapshot.data() as Map<String, dynamic>,
+          snapshot.id,
+        );
+        LocalHelper.setUserData(userData.toJsonLocal());
+        LocalHelper.setUserGroup('${userData.groupID}');
+
+        log('User data loaded from Firebase: ${userData.toJsonLocal()}');
+      }
       log('User logged in with email: $email');
       log('User UID: ${user.uid}');
       log('LocalHelper User UID: ${LocalHelper.getUserId()}');
@@ -32,20 +38,25 @@ class AuthRepo {
       log('User photo URL (role indicator): ${user.photoURL}');
 
       log('================================');
-      log('User data loaded from Firebase: ${userData.toJson()}');
       if (user.photoURL == '1') {
         LocalHelper.setUserType('خادم');
         return 'خادم';
       } else {
         LocalHelper.setUserType('مخدوم');
-
         return 'مخدوم';
       }
     } on FirebaseAuthException catch (e) {
+      log('Login error code: ${e.code}');
       if (e.code == 'user-not-found') {
         return 'لا يوجد مستخدم بهذا البريد الإلكتروني.';
       } else if (e.code == 'wrong-password') {
         return 'كلمة المرور خاطئة.';
+      } else if (e.code == 'invalid-email') {
+        return 'البريد الإلكتروني غير صالح.';
+      } else if (e.code == 'INVALID_LOGIN_CREDENTIALS') {
+        return 'بيانات تسجيل الدخول غير صحيحة.';
+      } else if (e.code == 'invalid-credential') {
+        return 'بيانات  تسجيل الدخول غير صحيحة.';
       } else {
         return 'حدث خطأ أثناء تسجيل الدخول. الرجاء المحاولة مرة أخرى.';
       }
@@ -63,7 +74,6 @@ class AuthRepo {
     String? role,
   }) async {
     try {
-      String? role = LocalHelper.getUserType();
       var credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       User user = credential.user!;
@@ -91,16 +101,25 @@ class AuthRepo {
       log('LocalHelper User UID: ${LocalHelper.getUserId()}');
 
       LocalHelper.setUserData(
-        StudentModel(uid: user.uid, name: name, studyLevel: studyLevel),
+        StudentModel(
+          uid: user.uid,
+          name: name,
+          studyLevel: studyLevel,
+        ).toJsonLocal(),
       );
 
-      return role;
+      return 'تم إنشاء الحساب بنجاح.';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         return 'كلمة المرور ضعيفة جداً.';
       } else if (e.code == 'email-already-in-use') {
         return 'الحساب موجود بالفعل لهذا البريد الإلكتروني.';
+      } else if (e.code == 'invalid-email') {
+        return 'البريد الإلكتروني غير صالح.';
+      } else if (e.code == 'operation-not-allowed') {
+        return 'تسجيل الحساب غير مسموح به حالياً.';
       } else {
+        log('Register error code: ${e.code}');
         return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
       }
     } catch (e) {

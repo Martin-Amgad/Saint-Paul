@@ -26,6 +26,8 @@ class AddEditNewStudentScreen extends StatefulWidget {
 }
 
 class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
+  final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
+
   DateTime? pickedDate;
   @override
   void initState() {
@@ -56,8 +58,10 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                         personalPhone: cubit.personalPhoneController.text,
                         housePhone: cubit.housePhoneController.text,
                         address: cubit.addressController.text,
-                        studyLevel: cubit.studyLevelController.text,
+                        studyLevel: cubit.selectedValue,
                         birthday: pickedDate,
+                        responsibleTeacher:
+                            cubit.responsibleTeacherController.text,
                       ),
                     );
                     return;
@@ -71,7 +75,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                       personalPhone: cubit.personalPhoneController.text,
                       housePhone: cubit.housePhoneController.text,
                       address: cubit.addressController.text,
-                      studyLevel: cubit.studyLevelController.text,
+                      studyLevel: cubit.selectedValue,
                       birthday: pickedDate,
                       responsibleTeacher:
                           cubit.responsibleTeacherController.text,
@@ -181,14 +185,58 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                         CustomFormField(
                           label: 'المستوى الدراسي',
                           icon: Icons.school_rounded,
-                          child: CustomTextField(
-                            hintText: 'ادخل المستوى الدراسي',
-                            controller: cubit.studyLevelController,
-                            validator: (p0) {
-                              if (p0 == null || p0.isEmpty) {
-                                return 'ارجوك ادخل المستوى الدراسي';
-                              }
-                              return null;
+                          child: DropdownButtonFormField<String>(
+                            isDense: false,
+                            value: cubit.selectedValue,
+                            hint: Text(
+                              'المستوى الدراسي',
+                              style: TextStyles.getSize16(
+                                color: AppColors.greyColor,
+                                fontWeight: FontWeight.w500,
+                              ).copyWith(fontFamily: 'Cairo'),
+                            ),
+                            icon: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.primaryColor,
+                            ),
+                            dropdownColor: AppColors.primaryColor,
+                            borderRadius: BorderRadius.circular(16),
+                            style: TextStyles.getSize16(
+                              color: AppColors.primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 3,
+                              ),
+                            ),
+                            selectedItemBuilder: (context) {
+                              return items.map((item) {
+                                return Text(
+                                  item,
+                                  style: TextStyles.getSize16(
+                                    color: AppColors.primaryColor,
+                                    fontWeight: FontWeight.w500,
+                                  ).copyWith(fontFamily: 'Cairo'),
+                                );
+                              }).toList();
+                            },
+
+                            items: items.map((item) {
+                              return DropdownMenuItem(
+                                value: item,
+                                child: Text(
+                                  item,
+                                  style: TextStyles.getSize16(
+                                    color: AppColors.whiteColor,
+                                    fontWeight: FontWeight.w500,
+                                  ).copyWith(fontFamily: 'Cairo'),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() => cubit.selectedValue = value);
                             },
                           ),
                         ),

@@ -4,6 +4,7 @@ import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/components/inputs/form_field.dart';
+import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
@@ -25,6 +26,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
+  final List<String> roles = ['خادم', 'مخدوم'];
   @override
   initState() {
     super.initState();
@@ -45,7 +47,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               title: 'تسجيل حساب جديد',
               onPressed: () {
                 if (cubit.formkey.currentState!.validate()) {
+                  if (cubit.selectedRole != null) {
+                    LocalHelper.setUserType(cubit.selectedRole!);
+                  }
                   cubit.register();
+
+                  log(
+                    'RegisterScreen role after saving: ${LocalHelper.getUserType()}',
+                  );
                 }
               },
             ),
@@ -118,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Row(
                     children: [
                       Text(
-                        'مرحبا! سجل حساب جديد\n گ "${LocalHelper.getUserType()}"',
+                        'مرحبا! سجل حساب جديد',
                         style: TextStyles.getSize24(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
@@ -160,13 +169,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء ادخال البريد الالكتروني';
+                        } else if (!AppRegex.isValidEmail(value.trim())) {
+                          return 'الرجاء ادخال بريد الكتروني صالح';
                         }
                         return null;
                       },
                     ),
                   ),
-                  if (LocalHelper.getUserType() == 'مخدوم') ...[
+                  Gap(15),
+                  CustomFormField(
+                    label: 'الانضمام كـ',
+                    icon: Icons.school_rounded,
+                    child: DropdownButtonFormField<String>(
+                      isDense: false,
+                      value: cubit.selectedRole,
+                      hint: Text(
+                        'الانضمام كـ',
+                        style: TextStyles.getSize16(
+                          color: AppColors.greyColor,
+                          fontWeight: FontWeight.w500,
+                        ).copyWith(fontFamily: 'Cairo'),
+                      ),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.primaryColor,
+                      ),
+                      dropdownColor: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(16),
+                      style: TextStyles.getSize16(
+                        color: AppColors.primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 3,
+                        ),
+                      ),
+                      selectedItemBuilder: (context) {
+                        return roles.map((item) {
+                          return Text(
+                            item,
+                            style: TextStyles.getSize16(
+                              color: AppColors.primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ).copyWith(fontFamily: 'Cairo'),
+                          );
+                        }).toList();
+                      },
+
+                      items: roles.map((item) {
+                        return DropdownMenuItem(
+                          value: item,
+                          child: Text(
+                            item,
+                            style: TextStyles.getSize16(
+                              color: AppColors.whiteColor,
+                              fontWeight: FontWeight.w500,
+                            ).copyWith(fontFamily: 'Cairo'),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() => cubit.selectedRole = value);
+                      },
+                    ),
+                  ),
+                  if (cubit.selectedRole == 'مخدوم') ...[
                     Gap(15),
+
                     CustomFormField(
                       label: 'المستوى الدراسي',
                       icon: Icons.school_rounded,
@@ -265,7 +336,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   Gap(15),
-                  if (LocalHelper.getUserType() == 'خادم') ...[
+                  if (cubit.selectedRole == 'خادم') ...[
                     CustomFormField(
                       label: 'الكلمة السرية للخادم',
                       icon: Icons.lock_rounded,

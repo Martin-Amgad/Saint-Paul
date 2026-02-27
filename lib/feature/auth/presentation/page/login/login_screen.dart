@@ -1,11 +1,9 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart' hide FormField;
-import 'package:saint_paul/components/app_bar/app_bar_with_back.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
-import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
@@ -136,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'الرجاء ادخال البريد الالكتروني';
-                            } else if (!AppRegex().isValidEmail(value)) {
+                            } else if (!AppRegex.isValidEmail(value.trim())) {
                               return 'الرجاء ادخال بريد الكتروني صالح';
                             }
                             return null;
@@ -172,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   type: DialogType.error,
                                 );
                                 return;
-                              } else if (!AppRegex().isValidEmail(
+                              } else if (!AppRegex.isValidEmail(
                                 cubit.emailController.text,
                               )) {
                                 showMyDialoge(

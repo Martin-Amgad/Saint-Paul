@@ -14,11 +14,11 @@ class HomeCubit extends Cubit<HomeState> {
   var personalPhoneController = TextEditingController();
   var housePhoneController = TextEditingController();
   var addressController = TextEditingController();
-  var studyLevelController = TextEditingController();
   var responsibleTeacherController = TextEditingController();
   var birthdayController = TextEditingController(
     text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
   );
+  String? selectedValue;
 
   var formkey = GlobalKey<FormState>();
 
@@ -127,7 +127,7 @@ class HomeCubit extends Cubit<HomeState> {
     personalPhoneController.text = student?.personalPhone ?? '';
     housePhoneController.text = student?.housePhone ?? '';
     addressController.text = student?.address ?? '';
-    studyLevelController.text = student?.studyLevel ?? '';
+    selectedValue = student?.studyLevel;
     birthdayController.text = DateFormat(
       'yyyy-MM-dd',
     ).format(student?.birthday ?? DateTime.now());

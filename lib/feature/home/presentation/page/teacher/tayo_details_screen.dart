@@ -150,6 +150,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                         tayoRemovedCategories: tayoRemovedCategories,
                       );
                       checkAndResetTayo();
+                      oldTayo = Map<String, dynamic>.from(tayo);
                     },
                   ),
                 ),
@@ -313,7 +314,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
               builder: (context, state) {
                 if (state is HomeErrorState) {
                   return Center(child: Text('حدث خطأ: ${state.message}'));
-                } else if (state is HomeLoadingState) {
+                } else if (state is HomeLoadingState && tayo.isEmpty) {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

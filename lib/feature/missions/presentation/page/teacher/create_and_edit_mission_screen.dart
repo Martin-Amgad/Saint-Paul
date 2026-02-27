@@ -7,14 +7,32 @@ import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/components/inputs/form_field.dart';
 import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
+import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_state.dart';
 
-class CreateMissionScreen extends StatelessWidget {
-  const CreateMissionScreen({super.key});
+class CreateAndEditMissionScreen extends StatefulWidget {
+  const CreateAndEditMissionScreen({super.key, this.missionEdit});
+  final MissionModel? missionEdit;
+
+  @override
+  State<CreateAndEditMissionScreen> createState() =>
+      _CreateAndEditMissionScreenState();
+}
+
+class _CreateAndEditMissionScreenState
+    extends State<CreateAndEditMissionScreen> {
+  @override
+  void initState() {
+    if (widget.missionEdit != null) {
+      context.read<MissionCubit>().loadMissionControllers(widget.missionEdit);
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +43,21 @@ class CreateMissionScreen extends StatelessWidget {
         child: MainButton(
           onPressed: () {
             if (cubit.formKey.currentState!.validate()) {
-              cubit.createMission();
+              if (widget.missionEdit == null) {
+                cubit.createMission();
+              } else {
+                cubit.updateMission(
+                  widget.missionEdit!.copyWith(
+                    title: cubit.titleController.text,
+                    description: cubit.descriptionController.text,
+                    link: cubit.linkController.text,
+                    reward: cubit.rewardController.text,
+                    expireAfter:
+                        int.tryParse(cubit.expireAfterController.text) ?? 0,
+                    currentDate: DateTime.now(),
+                  ),
+                );
+              }
             }
           },
           title: 'حفظ',

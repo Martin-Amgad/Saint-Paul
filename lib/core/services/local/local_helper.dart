@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +12,7 @@ class LocalHelper {
   static String Kotp = 'otp';
   static String KUserId = 'user_id';
   static String KUserType = 'user_type';
+  static String KUserGroup = 'user_group';
   static String KIsNewUser = 'isNewUser';
 
   static Future<void> init() async {
@@ -33,6 +35,14 @@ class LocalHelper {
     return prefrences.getString(KUserType);
   }
 
+  static Future<void> setUserGroup(String type) async {
+    await prefrences.setString(KUserGroup, type);
+  }
+
+  static String? getUserGroup() {
+    return prefrences.getString(KUserGroup);
+  }
+
   static Future<void> setUserId(String userId) async {
     await prefrences.setString(KUserId, userId);
   }
@@ -50,9 +60,14 @@ class LocalHelper {
   }
 
   // Local storage → use toJsonLocal() and fromJsonLocal()
-  static Future<void> setUserData(StudentModel? userData) async {
-    String dataString = jsonEncode(userData?.toJsonLocal());
-    await prefrences.setString(KUserData, dataString);
+  static Future<void> setUserData(Map<String, dynamic>? userData) async {
+    try {
+      String dataString = jsonEncode(userData);
+      await prefrences.setString(KUserData, dataString);
+      log('✅ User data saved successfully');
+    } catch (e) {
+      log('❌ setUserData failed: $e');
+    }
   }
 
   static StudentModel? getUserData() {

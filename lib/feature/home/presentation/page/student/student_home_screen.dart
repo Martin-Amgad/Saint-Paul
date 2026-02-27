@@ -62,17 +62,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         }
       },
       builder: (context, state) {
-        if (state is HomeLoadingState) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primaryColor),
-          );
-        }
-
         if (state is StudentYearLoaded) {
           selectedYear = state.year;
           log('Student year loaded: $selectedYear');
         } else if (state is HomeStudentLoadedState) {
-          LocalHelper.setUserData(state.studentData);
+          LocalHelper.setUserData(state.studentData?.toJsonLocal());
         }
         return Scaffold(
           backgroundColor: AppColors.backgroundColor,
@@ -126,13 +120,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const Spacer(),
-
-                        // Logout button
-                        HeaderIconButton(
-                          svgAsset: AppAssets.logoutSvg,
-                          onTap: () => showSignOutDialog(context),
-                        ),
                       ],
                     ),
                     const Gap(16),
@@ -181,15 +168,29 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               const Gap(14),
 
               // ── Student list ────────────────────────────────────────
-              Expanded(
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: StudentList(
-                    searchText: searchText,
-                    filterSelection: selectedYear ?? '',
-                    isStudent: true,
-                  ),
-                ),
+              BlocBuilder<HomeCubit, HomeState>(
+                builder: (context, state) {
+                  if (state is HomeLoadingState) {
+                    return Column(
+                      children: [
+                        Gap(MediaQuery.of(context).size.height * 0.21),
+                        CircularProgressIndicator(
+                          color: AppColors.primaryColor,
+                        ),
+                      ],
+                    );
+                  }
+                  return Expanded(
+                    child: Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: StudentList(
+                        searchText: searchText,
+                        filterSelection: selectedYear ?? '',
+                        isStudent: true,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

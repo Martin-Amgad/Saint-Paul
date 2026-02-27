@@ -30,20 +30,71 @@ class StudentProfileScreen extends StatefulWidget {
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
-  StudentModel? studentData;
-  String avatarUrl = '';
-  String path = '';
-  List<String>? badges = [];
+  StudentModel? studentDataLocal;
+  StudentModel? studentDataNew;
+  String avatarUrlLocal = '';
+  String pathLocal = '';
+  List<String>? badgesLocal = [];
+  int totalTayoLocal = 0;
+  bool _isUploadingImage = false;
+  Future<void> _handleImageUpload(
+    BuildContext context,
+    ProfileCubit cubit, {
+    required bool fromCamera,
+  }) async {
+    final imagePicker = ImagePicker();
+    final pickedImage = await imagePicker.pickImage(
+      source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 800,
+    );
+
+    if (pickedImage == null) return;
+
+    final pickedPath = pickedImage.path;
+
+    setState(() {
+      pathLocal = pickedPath;
+      _isUploadingImage = true;
+    });
+
+    pop(context); // close bottom sheet after picking
+
+    try {
+      final newUrl = await cubit.updateStudentImage(pickedPath);
+
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+          if (newUrl != null) {
+            avatarUrlLocal = newUrl;
+            pathLocal = '';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingImage = false);
+        showMyDialoge(
+          context,
+          'فشل رفع الصورة، حاول مرة أخرى',
+          type: DialogType.error,
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     // 1. Load from local storage immediately — no loading flash
     final localData = LocalHelper.getUserData();
+    log('Loaded user data from local storage: ${localData?.toJsonLocal()}');
     if (localData != null) {
-      studentData = localData;
-      avatarUrl = localData.avatarUrl ?? '';
-      badges = localData.missionBadges ?? [];
+      studentDataLocal = localData;
+      avatarUrlLocal = localData.avatarUrl ?? '';
+      badgesLocal = localData.missionBadges ?? [];
+      totalTayoLocal = localData.totalTayo ?? 0;
     }
     // 2. Then fetch from Firestore to sync
     context.read<ProfileCubit>().loadStudentData(LocalHelper.getUserId());
@@ -55,30 +106,42 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: BlocListener<ProfileCubit, ProfileState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is ProfileErrorState) {
             showMyDialoge(context, state.message, type: DialogType.error);
           } else if (state is ProfileLoadedState) {
-            if (jsonEncode(state.studentData?.toJsonLocal()) !=
-                jsonEncode(LocalHelper.getUserData()?.toJsonLocal())) {
-              LocalHelper.setUserData(state.studentData);
-              studentData = state.studentData;
-              avatarUrl = state.studentData?.avatarUrl ?? '';
-              badges = state.studentData?.missionBadges ?? [];
-              setState(() {});
+            final newData = state.studentData;
+            if (newData == null) return;
+            log('Profile loaded from Firebase: ${newData.toJsonLocal()}');
+            // Cache to local storage
+            await LocalHelper.setUserData(newData.toJsonLocal());
+            LocalHelper.getUserData()
+                ?.toJsonLocal(); // to verify it was saved correctly
+
+            // Only update each field if it changed
+            setState(() {
+              if (newData.totalTayo != studentDataLocal?.totalTayo) {
+                totalTayoLocal = newData.totalTayo ?? 0;
+              }
+              if (newData.avatarUrl != studentDataLocal?.avatarUrl) {
+                avatarUrlLocal = newData.avatarUrl ?? '';
+              }
+              if (newData.missionBadges != studentDataLocal?.missionBadges) {
+                badgesLocal = newData.missionBadges ?? [];
+              }
+              if (newData.name != studentDataLocal?.name) {
+                studentDataLocal = newData;
+              }
+              if (newData.studyLevel != studentDataLocal?.studyLevel) {
+                studentDataLocal = newData;
+              }
+              // Update the reference so future comparisons are against latest data
+              studentDataLocal = newData;
+            });
+
+            if (state.message != null) {
+              showMyDialoge(context, state.message!, type: DialogType.success);
             }
-            log('user ID is ${LocalHelper.getUserId()}');
-            log('Student data loaded: ${state.studentData?.toString()}');
-            log('Student name: ${state.studentData?.name}');
-            log(
-              'Student data updated in local storage: ${state.studentData?.toJsonLocal()}',
-            );
-            log(
-              'Current local storage data: ${jsonEncode(LocalHelper.getUserData()?.toJsonLocal())}',
-            );
-            log(
-              ' data comparison    ${jsonEncode(state.studentData?.toJsonLocal()) != jsonEncode(LocalHelper.getUserData()?.toJsonLocal())}',
-            );
           }
         },
 
@@ -158,12 +221,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             color: AppColors.whiteColor.withValues(alpha: 0.15),
                           ),
                           child: ClipOval(
-                            child: path.isNotEmpty
+                            child: pathLocal.isNotEmpty
                                 ? // local file path starts with /
-                                  Image.file(File(path), fit: BoxFit.cover)
-                                : avatarUrl.isNotEmpty
+                                  Image.file(File(pathLocal), fit: BoxFit.cover)
+                                : avatarUrlLocal.isNotEmpty
                                 ? CachedNetworkImage(
-                                    imageUrl: avatarUrl,
+                                    imageUrl: avatarUrlLocal,
                                     fit: BoxFit.cover,
                                   )
                                 : SvgPicture.asset(
@@ -210,26 +273,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                         children: [
                                           MainButton(
                                             title: 'Upload from Camera',
-                                            onPressed: () async {
-                                              pop(
-                                                context,
-                                              ); // close bottom sheet
-                                              await uploadImage(true);
-                                              cubit.updateStudentImage(path);
-                                            },
+                                            onPressed: () => _handleImageUpload(
+                                              context,
+                                              cubit,
+                                              fromCamera: true,
+                                            ), // ✅
                                           ),
                                           Gap(15),
                                           MainButton(
                                             title: 'Upload from Gallery',
-                                            onPressed: () async {
-                                              pop(
-                                                context,
-                                              ); // close bottom sheet
-
-                                              // Pick image locally first
-                                              await uploadImage(false);
-                                              cubit.updateStudentImage(path);
-                                            },
+                                            onPressed: () => _handleImageUpload(
+                                              context,
+                                              cubit,
+                                              fromCamera: false,
+                                            ), // ✅
                                           ),
                                           Gap(15),
                                         ],
@@ -253,7 +310,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     const Gap(14),
                     // Name inside header
                     Text(
-                      studentData?.name ?? 'اسم الطالب',
+                      studentDataLocal?.name ?? 'اسم الطالب',
                       style: TextStyles.getSize24(
                         color: AppColors.whiteColor,
                         fontWeight: FontWeight.w700,
@@ -261,7 +318,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     ),
                     const Gap(4),
                     Text(
-                      studentData?.studyLevel ?? '',
+                      studentDataLocal?.studyLevel ?? '',
                       style: TextStyles.getSize16(
                         color: AppColors.whiteColor.withValues(alpha: 0.65),
                       ),
@@ -325,7 +382,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           ),
                           const Gap(2),
                           Text(
-                            '${studentData?.totalTayo ?? 0}',
+                            '$totalTayoLocal',
                             style: TextStyles.getSize24(
                               color: AppColors.accentColor,
                               fontWeight: FontWeight.w800,
@@ -390,7 +447,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                               pushTo(
                                 context,
                                 Routes.badgesScreen,
-                                extra: badges,
+                                extra: badgesLocal,
                               );
                             },
                             icon: Icon(
@@ -406,12 +463,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         height: 150,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: badges?.length ?? 0,
+                          itemCount: badgesLocal?.length ?? 0,
                           separatorBuilder: (BuildContext context, int index) {
                             return Gap(10);
                           },
                           itemBuilder: (BuildContext context, int index) {
-                            final badgeName = badges?[index] ?? 'Badge Name';
+                            final badgeName =
+                                badgesLocal?[index] ?? 'Badge Name';
                             final badgeImage =
                                 badgeModel[badgeName]; // to get badge image from name
                             return Container(
@@ -471,7 +529,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
     if (pickedImage != null) {
       // Show local image immediately
-      setState(() => path = pickedImage.path);
+      setState(() => pathLocal = pickedImage.path);
     }
   }
 }

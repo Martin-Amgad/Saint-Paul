@@ -12,11 +12,11 @@ import '../utils/colors.dart';
 
 enum DialogType { success, error, warning }
 
-void showMyDialoge(
+Future<void> showMyDialoge(
   BuildContext context,
   String message, {
   DialogType type = DialogType.error,
-}) {
+}) async {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       behavior: SnackBarBehavior.floating,
@@ -62,6 +62,7 @@ void showSignOutDialog(BuildContext context) {
               onPressed: () {
                 FirebaseAuth.instance.signOut();
                 LocalHelper.setIsNewUser(true);
+                LocalHelper.setUserType('null??????');
 
                 pushToBase(context, Routes.welcome);
               },

@@ -6,7 +6,7 @@ import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
-import 'package:saint_paul/feature/missions/data/models/student_missions_list.dart';
+import 'package:saint_paul/feature/missions/widgets/student_missions_list.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_state.dart';
 
@@ -86,11 +86,7 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
                         HeaderIconButton(
                           icon: Icons.add_rounded,
                           onTap: () {
-                            pushTo(context, Routes.createMissionScreen).then((
-                              _,
-                            ) {
-                              context.read<MissionCubit>().fetchMissions();
-                            });
+                            pushTo(context, Routes.createMissionScreen);
                           },
                         ),
                       ],
@@ -178,9 +174,12 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
                       ],
                     );
                   }
-                  return StudentMissionsList(
-                    missions: state.missions,
-                    isStudent: false,
+                  return Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: StudentMissionsList(
+                      missions: state.missions,
+                      isStudent: false,
+                    ),
                   );
                 } else if (state is MissionErrorState) {
                   return Center(child: Text(state.message));

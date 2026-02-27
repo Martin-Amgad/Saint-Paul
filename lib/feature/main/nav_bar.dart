@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/groups/presentation/page/student/group_details_screen.dart';
+import 'package:saint_paul/feature/groups/presentation/page/teacher/groups_showcase_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/birthday_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/missions/presentation/page/student/student_mission_screen.dart';
 import 'package:saint_paul/feature/missions/presentation/page/teacher/teacher_mission_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
 import 'package:saint_paul/feature/profile/presentation/student/student_profile_screen.dart';
 import 'package:saint_paul/feature/profile/presentation/teacher/students_showcase_and_edit_screen.dart';
 
@@ -25,11 +30,13 @@ class _MainPageState extends State<MainAppScreen> {
           const TeacherHomeScreen(),
           const BirthdayScreen(),
           const TeacherMissionScreen(),
+          const GroupsShowcaseScreen(),
           const StudentsShowcaseAndEditScreen(),
         ]
       : [
           const StudentHomeScreen(),
           StudentMissionScreen(),
+          GroupDetailsScreen(),
           const StudentProfileScreen(),
         ];
 
@@ -38,11 +45,13 @@ class _MainPageState extends State<MainAppScreen> {
           GButton(iconSize: 28, icon: Icons.storefront_sharp, text: 'طايو'),
           GButton(icon: Icons.cake, text: 'أعياد الميلاد'),
           GButton(iconSize: 29, icon: Icons.assignment, text: 'المهام'),
-          GButton(iconSize: 29, icon: Icons.people, text: 'المخدومون'),
+          GButton(iconSize: 29, icon: Icons.groups, text: 'المجموعات'),
+          GButton(iconSize: 29, icon: Icons.group, text: 'المخدومين'),
         ]
       : [
           GButton(iconSize: 28, icon: Icons.leaderboard, text: 'المتصدرين'),
           GButton(icon: Icons.assignment, text: 'المهام'),
+          GButton(icon: Icons.group, text: 'مجموعتك'),
           GButton(iconSize: 29, icon: Icons.person, text: 'الحساب'),
         ];
 
