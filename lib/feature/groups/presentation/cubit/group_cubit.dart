@@ -110,7 +110,11 @@ class GroupCubit extends Cubit<GroupState> {
     emit(GroupLoadingState());
     try {
       final snapshot = await FirebaseProvider.getStudentByID(studentId);
+      log(
+        'Fetched student snapshot for ID $studentId: ${snapshot.id} → ${snapshot.data()}',
+      );
       final data = snapshot.data() as Map<String, dynamic>? ?? {};
+      log('Fetched student data for ID $studentId: $data');
       final groupId = data['groupID'] as String?;
 
       if (groupId == null || groupId.isEmpty) {

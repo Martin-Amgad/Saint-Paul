@@ -43,6 +43,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       backgroundColor: AppColors.backgroundColor,
       body: BlocConsumer<GroupCubit, GroupState>(
         listener: (context, state) {
+          if (state is GroupLoadingState) {
+            showLoadingDialog(context);
+          }
+
           if (state is GroupErrorState) {
             showMyDialoge(context, state.message, type: DialogType.error);
           }
@@ -333,7 +337,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             );
           }
 
-          return const SizedBox();
+          return Center(
+            child: CircularProgressIndicator(color: AppColors.primaryColor),
+          );
         },
       ),
     );

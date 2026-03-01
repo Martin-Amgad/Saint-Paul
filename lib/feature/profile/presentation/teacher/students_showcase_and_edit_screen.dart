@@ -100,7 +100,7 @@ class _StudentsShowcaseAndEditScreenState
                       onTap: () {
                         pushTo(context, Routes.addEditNewStudentScreen);
 
-                        // var futures = firstPrepStudentsList.map((student) {
+                        // var futures = thirdPrepStudentList.map((student) {
                         //   return FirebaseProvider.createStudent(student);
                         // });
                         // Future.wait(futures);

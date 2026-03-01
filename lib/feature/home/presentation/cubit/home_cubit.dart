@@ -143,6 +143,9 @@ class HomeCubit extends Cubit<HomeState> {
     String studentGroupId,
     int changesToTotalTayo,
   ) async {
+    if (studentGroupId.isEmpty) {
+      return;
+    }
     try {
       log(
         'Updating student group with ID: $studentGroupId, changes to total tayo: $changesToTotalTayo',
