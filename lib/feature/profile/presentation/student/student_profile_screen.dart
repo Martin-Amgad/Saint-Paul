@@ -357,14 +357,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.yellowIconColor.withValues(
+                          color: AppColors.darkYellowIconColor.withValues(
                             alpha: 0.12,
                           ),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
                           Icons.auto_awesome_rounded,
-                          color: AppColors.yellowIconColor,
+                          color: AppColors.darkYellowIconColor,
                           size: 26,
                         ),
                       ),
@@ -421,14 +421,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.yellowIconColor.withValues(
+                              color: AppColors.darkYellowIconColor.withValues(
                                 alpha: 0.12,
                               ),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
                               Icons.military_tech,
-                              color: AppColors.yellowIconColor,
+                              color: AppColors.darkYellowIconColor,
                               size: 28,
                             ),
                           ),
@@ -487,7 +487,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                     width: 80,
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: AppColors.yellowIconColor
+                                      color: AppColors.darkYellowIconColor
                                           .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(10),
                                     ),

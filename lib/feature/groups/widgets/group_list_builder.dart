@@ -225,7 +225,7 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
                             const Spacer(),
                             Icon(
                               Icons.auto_awesome_rounded,
-                              color: AppColors.yellowIconColor,
+                              color: AppColors.darkYellowIconColor,
                               size: 18,
                             ),
                             const Gap(6),
@@ -239,7 +239,7 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
                             Text(
                               '${group.totalTayo ?? 0}',
                               style: TextStyles.getSize16(
-                                color: AppColors.yellowIconColor,
+                                color: AppColors.darkYellowIconColor,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

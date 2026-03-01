@@ -18,6 +18,7 @@ class AppColors {
   static const borderColor = Color(0xffD6CFB0);
 
   static const yellowIconColor = Color(0xFFFFD700);
+  static const darkYellowIconColor = Color(0xFFFFA500);
 
   static const darkColor = Color(0xff2f2f2f);
   static const greyColor = Color(0xff8391A1);

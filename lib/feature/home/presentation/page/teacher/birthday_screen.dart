@@ -153,7 +153,7 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                       ),
                       child: const Icon(
                         Icons.cake_rounded,
-                        color: AppColors.yellowIconColor,
+                        color: AppColors.darkYellowIconColor,
                         size: 26,
                       ),
                     ),

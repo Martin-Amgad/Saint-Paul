@@ -43,6 +43,7 @@ class MissionCubit extends Cubit<MissionState> {
     try {
       final result = await MissionRepo.deleteMission(mid);
       emit(MissionDeleteSuccessState(message: result));
+      await fetchMissions();
     } catch (e) {
       emit(
         MissionErrorState(

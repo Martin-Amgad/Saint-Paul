@@ -82,7 +82,7 @@ class _StudentsShowcaseAndEditScreenState
                       ),
                       child: const Icon(
                         Icons.person_rounded,
-                        color: AppColors.yellowIconColor,
+                        color: AppColors.darkYellowIconColor,
                         size: 24,
                       ),
                     ),

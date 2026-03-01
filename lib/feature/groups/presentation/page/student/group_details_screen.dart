@@ -121,7 +121,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                             ),
                             child: const Icon(
                               Icons.groups_rounded,
-                              color: AppColors.yellowIconColor,
+                              color: AppColors.darkYellowIconColor,
                               size: 24,
                             ),
                           ),
@@ -185,7 +185,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                               children: [
                                 const Icon(
                                   Icons.auto_awesome_rounded,
-                                  color: AppColors.yellowIconColor,
+                                  color: AppColors.darkYellowIconColor,
                                   size: 16,
                                 ),
                                 const Gap(6),
@@ -314,14 +314,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                     children: [
                                       const Icon(
                                         Icons.auto_awesome_rounded,
-                                        color: AppColors.yellowIconColor,
+                                        color: AppColors.darkYellowIconColor,
                                         size: 12,
                                       ),
                                       const Gap(4),
                                       Text(
                                         '${student.totalTayo ?? 0}',
                                         style: TextStyles.getSize12(
-                                          color: AppColors.yellowIconColor,
+                                          color: AppColors.darkYellowIconColor,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),

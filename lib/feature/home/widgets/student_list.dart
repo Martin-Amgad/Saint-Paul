@@ -101,15 +101,32 @@ class StudentList extends StatelessWidget {
             ),
           );
         }
-
+        final Map<int, int> tayoRankMap = {};
+        for (int i = 0; i < filteredStudents.length; i++) {
+          if (i == 0) {
+            tayoRankMap[i] = 1;
+          } else {
+            if (filteredStudents[i].totalTayo ==
+                filteredStudents[i - 1].totalTayo) {
+              tayoRankMap[i] = tayoRankMap[i - 1]!;
+            } else {
+              tayoRankMap[i] = tayoRankMap[i - 1]! + 1;
+            }
+          }
+        }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           itemCount: filteredStudents.length,
           itemBuilder: (context, index) {
+            // Build rank map based on tayo value
+
             final student = filteredStudents[index];
-            final rankColor = _rankColor(index);
-            final isTopThree = (rankColor != null) && searchText.isEmpty;
-            final isTopFifteen = index < 15 && searchText.isEmpty;
+            final studentRank = tayoRankMap[index] ?? index + 1;
+            final rankColor = _rankColor(
+              studentRank - 1,
+            ); // ← use rank not index
+            final isTopThree = rankColor != null && searchText.isEmpty;
+
             final tayo = student.totalTayo ?? 0;
 
             return GestureDetector(

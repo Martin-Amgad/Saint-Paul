@@ -129,7 +129,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         ),
                         child: const Icon(
                           Icons.groups_rounded,
-                          color: AppColors.yellowIconColor,
+                          color: AppColors.darkYellowIconColor,
                           size: 24,
                         ),
                       ),

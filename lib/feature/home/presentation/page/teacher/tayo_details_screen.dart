@@ -290,7 +290,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                       children: [
                         const Icon(
                           Icons.auto_awesome_rounded,
-                          color: AppColors.yellowIconColor,
+                          color: AppColors.darkYellowIconColor,
                           size: 28,
                         ),
                         const Gap(12),

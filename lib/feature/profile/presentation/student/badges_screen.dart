@@ -72,7 +72,7 @@ class BadgesScreen extends StatelessWidget {
                       ),
                       child: Icon(
                         Icons.military_tech_rounded,
-                        color: AppColors.yellowIconColor,
+                        color: AppColors.darkYellowIconColor,
                         size: 26,
                       ),
                     ),
@@ -113,7 +113,7 @@ class BadgesScreen extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.emoji_events_rounded,
-                        color: AppColors.yellowIconColor,
+                        color: AppColors.darkYellowIconColor,
                         size: 18,
                       ),
                       const Gap(8),
@@ -138,7 +138,7 @@ class BadgesScreen extends StatelessWidget {
                           widthFactor: earnedBadges.length / badgeModel.length,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: AppColors.yellowIconColor,
+                              color: AppColors.darkYellowIconColor,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
@@ -162,7 +162,7 @@ class BadgesScreen extends StatelessWidget {
                   if (earnedBadges.isNotEmpty) ...[
                     _SectionLabel(
                       icon: Icons.check_circle_rounded,
-                      color: AppColors.yellowIconColor,
+                      color: AppColors.darkYellowIconColor,
                       label: 'أوسمة محققة',
                     ),
                     const Gap(12),
@@ -278,19 +278,19 @@ class _BadgeCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isEarned
-            ? AppColors.yellowIconColor.withValues(alpha: 0.07)
+            ? AppColors.darkYellowIconColor.withValues(alpha: 0.07)
             : AppColors.surfaceColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isEarned
-              ? AppColors.yellowIconColor.withValues(alpha: 0.35)
+              ? AppColors.darkYellowIconColor.withValues(alpha: 0.35)
               : AppColors.borderColor.withValues(alpha: 0.5),
           width: isEarned ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isEarned
-                ? AppColors.yellowIconColor.withValues(alpha: 0.1)
+                ? AppColors.darkYellowIconColor.withValues(alpha: 0.1)
                 : Colors.black.withValues(alpha: 0.03),
             blurRadius: isEarned ? 12 : 6,
             offset: const Offset(0, 3),
@@ -310,7 +310,7 @@ class _BadgeCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isEarned
-                      ? AppColors.yellowIconColor.withValues(alpha: 0.12)
+                      ? AppColors.darkYellowIconColor.withValues(alpha: 0.12)
                       : AppColors.accentColor.withValues(alpha: 0.05),
                 ),
               ),
@@ -380,13 +380,13 @@ class _BadgeCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.yellowIconColor.withValues(alpha: 0.15),
+                color: AppColors.darkYellowIconColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 'محقق ✓',
                 style: TextStyles.getSize12(
-                  color: AppColors.yellowIconColor,
+                  color: AppColors.darkYellowIconColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),

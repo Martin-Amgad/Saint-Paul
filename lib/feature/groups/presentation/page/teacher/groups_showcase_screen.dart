@@ -91,7 +91,7 @@ class _GroupsShowcaseScreenState extends State<GroupsShowcaseScreen> {
                       ),
                       child: const Icon(
                         Icons.groups_rounded,
-                        color: AppColors.yellowIconColor,
+                        color: AppColors.darkYellowIconColor,
                         size: 24,
                       ),
                     ),

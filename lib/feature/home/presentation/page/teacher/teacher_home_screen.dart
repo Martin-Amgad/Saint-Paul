@@ -44,7 +44,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   }
 
   Color? rankColor(int index) {
-    if (index == 0) return AppColors.yellowIconColor;
+    if (index == 0) return AppColors.darkYellowIconColor;
     if (index == 1) return const Color(0xFFB0B0B0);
     if (index == 2) return const Color(0xFFCD7F32);
     return null;
@@ -92,7 +92,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       ),
                       child: Icon(
                         Icons.storefront_sharp,
-                        color: AppColors.yellowIconColor,
+                        color: AppColors.darkYellowIconColor,
                         size: 24,
                       ),
                     ),

@@ -63,7 +63,6 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
             state.message ?? 'تم حذف المهمة بنجاح.',
             type: DialogType.success,
           );
-          context.read<MissionCubit>().fetchMissions();
         } else if (state is MissionErrorState) {
           showMyDialoge(context, state.message, type: DialogType.error);
         }
@@ -218,29 +217,62 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
                           height: 1,
                         ),
                         const Gap(10),
-                        // Reward row
-                        Row(
+                        // Reward and enrolled students row
+                        Column(
                           children: [
-                            Icon(
-                              Icons.emoji_events_rounded,
-                              color: AppColors.yellowIconColor,
-                              size: 18,
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.emoji_events_rounded,
+                                  color: AppColors.darkYellowIconColor,
+                                  size: 18,
+                                ),
+                                const Gap(6),
+                                Text(
+                                  'المكافأة: ',
+                                  style: TextStyles.getSize12(
+                                    color: AppColors.primaryColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const Gap(4),
+                                Text(
+                                  isRewardNumeric ? '$reward  طايو' : reward,
+                                  style: TextStyles.getSize16(
+                                    color: AppColors.darkYellowIconColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Gap(6),
-                            Text(
-                              'المكافأة: ',
-                              style: TextStyles.getSize12(
-                                color: AppColors.primaryColor,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const Gap(4),
-                            Text(
-                              isRewardNumeric ? '$reward  طايو' : reward,
-                              style: TextStyles.getSize16(
-                                color: AppColors.yellowIconColor,
-                                fontWeight: FontWeight.w700,
-                              ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.group_rounded,
+                                  color: AppColors.darkYellowIconColor
+                                      .withValues(alpha: 0.9),
+                                  size: 18,
+                                ),
+                                const Gap(6),
+
+                                Text(
+                                  ' المشتركين: ',
+                                  style: TextStyles.getSize12(
+                                    color: AppColors.primaryColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const Gap(4),
+                                Text(
+                                  '${filteredMissions?[index].enrolledStudents ?? 0} طالب',
+                                  style: TextStyles.getSize16(
+                                    color: AppColors.darkYellowIconColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

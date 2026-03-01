@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -71,7 +73,7 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
                           ),
                           child: Icon(
                             Icons.assignment_rounded,
-                            color: AppColors.yellowIconColor,
+                            color: AppColors.darkYellowIconColor,
                             size: 24,
                           ),
                         ),
@@ -189,6 +191,7 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
                 } else if (state is MissionErrorState) {
                   return Center(child: Text(state.message));
                 } else {
+                  log('Current state: ${state.runtimeType}');
                   return Column(
                     children: [
                       Gap(MediaQuery.of(context).size.height * 0.35),

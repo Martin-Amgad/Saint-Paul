@@ -161,10 +161,14 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.yellowIconColor.withValues(alpha: 0.2),
+                      color: AppColors.darkYellowIconColor.withValues(
+                        alpha: 0.2,
+                      ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.yellowIconColor.withValues(alpha: 0.4),
+                        color: AppColors.darkYellowIconColor.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -172,7 +176,7 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                       children: [
                         const Icon(
                           Icons.emoji_events_rounded,
-                          color: AppColors.yellowIconColor,
+                          color: AppColors.darkYellowIconColor,
                           size: 18,
                         ),
                         const Gap(6),
@@ -181,7 +185,7 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                               ? 'المكافأة: $reward طايو'
                               : 'المكافأة: $reward',
                           style: TextStyles.getSize16(
-                            color: AppColors.yellowIconColor,
+                            color: AppColors.darkYellowIconColor,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
