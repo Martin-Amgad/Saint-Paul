@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,7 +14,8 @@ import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
-  const GroupDetailsScreen({super.key});
+  const GroupDetailsScreen({super.key, this.group});
+  final GroupModel? group;
 
   @override
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
@@ -20,14 +23,21 @@ class GroupDetailsScreen extends StatefulWidget {
 
 class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   @override
-  @override
   void initState() {
     super.initState();
-    context.read<GroupCubit>().fetchStudentGroup(LocalHelper.getUserId());
+    log('Fetching student group for user ID: ${LocalHelper.getUserId()}');
+    if (widget.group == null) {
+      context.read<GroupCubit>().fetchStudentGroup(LocalHelper.getUserId());
+    } else {
+      log('User is not a student, skipping group fetch.');
+      context.read<GroupCubit>().techersGroupDetails(widget.group);
+      context.read<GroupCubit>().fetchAndUpdateTotalTayo(widget.group);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    var cubit = context.read<GroupCubit>();
     final topPadding = MediaQuery.paddingOf(context).top;
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -38,9 +48,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           }
         },
         builder: (context, state) {
-          if (state is GroupLoadingState) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          // if (state is GroupLoadingState) {
+          //   return const Center(child: CircularProgressIndicator());
+          // }
 
           // ── Not assigned to any group ────────────────────────────
           if (state is GroupNotAssignedState) {
@@ -146,7 +156,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                 ),
                                 const Gap(6),
                                 Text(
-                                  '${group?.students?.length ?? 0} مخدوم',
+                                  '${students.length} مخدوم',
                                   style: TextStyles.getSize16(
                                     color: AppColors.whiteColor,
                                     fontWeight: FontWeight.w600,

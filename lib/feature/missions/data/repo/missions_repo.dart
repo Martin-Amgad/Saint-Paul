@@ -98,6 +98,23 @@ class MissionRepo {
     }
   }
 
+  static Future<List<String>> fetchSubmittedMissions() async {
+    try {
+      final studentSnapshot = await FirebaseProvider.getStudentByID(
+        LocalHelper.getUserId(),
+      );
+
+      final data = studentSnapshot.data() as Map<String, dynamic>? ?? {};
+
+      return (data['submittedMissions'] as Map<String, dynamic>?)?.keys
+              .toList() ??
+          [];
+    } on Exception catch (e) {
+      log(e.toString());
+      rethrow;
+    }
+  }
+
   static Future<String?> acceptMission(String mid) async {
     try {
       final userId = LocalHelper.getUserId();

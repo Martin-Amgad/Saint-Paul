@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
@@ -72,6 +73,8 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
         itemCount: filteredMissions?.length ?? 0,
         separatorBuilder: (_, _) => const Gap(12),
         itemBuilder: (context, index) {
+          var reward = filteredMissions?[index].reward ?? '0';
+          bool isRewardNumeric = AppRegex.containsOnlyNumbers(reward);
           if (daysLeft(filteredMissions![index]) < 0) {
             return const SizedBox.shrink();
           }
@@ -233,7 +236,7 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
                             ),
                             const Gap(4),
                             Text(
-                              '${filteredMissions?[index].reward ?? 0} طايو',
+                              isRewardNumeric ? '$reward  طايو' : reward,
                               style: TextStyles.getSize16(
                                 color: AppColors.yellowIconColor,
                                 fontWeight: FontWeight.w700,

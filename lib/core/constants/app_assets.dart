@@ -22,5 +22,6 @@ class AppAssets {
   static const String profileSvg = 'assets/icons/Profile.svg';
   static const String confirmSvg = 'assets/images/Sticker.svg';
   static const String searchSvg = 'assets/icons/search-normal.svg';
+  static const String lockSvg = 'assets/icons/lock.svg';
   static const String loadingJson = 'assets/images/Bible.json';
 }

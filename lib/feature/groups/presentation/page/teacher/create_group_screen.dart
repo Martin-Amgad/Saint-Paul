@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
@@ -27,13 +29,11 @@ class CreateGroupScreen extends StatefulWidget {
 
 class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final searchController = TextEditingController();
-  final groupNameController = TextEditingController();
   final ValueNotifier<String> searchNotifier = ValueNotifier('');
 
   String searchText = '';
   String? selectedYear;
   List<String> selectedStudentIds = [];
-  int groupTotalTayo = 0;
 
   @override
   void initState() {
@@ -44,7 +44,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   @override
   void dispose() {
     searchController.dispose();
-    groupNameController.dispose();
     searchNotifier.dispose();
     super.dispose();
   }
@@ -65,12 +64,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 title: 'حفظ المجموعة',
                 onPressed: () {
                   if (cubit.formKey.currentState?.validate() ?? false) {
+                    log(
+                      'Creating group with name: ${cubit.groupNameController.text}, selected students: $selectedStudentIds, total tayo: ${cubit.groupTotalTayo}, study level: ${selectedYear ?? 'الكل'}',
+                    );
                     cubit
-                        .createGroup(
-                          selectedStudentIds,
-                          groupTotalTayo,
-                          selectedYear ?? 'الكل',
-                        )
+                        .createGroup(selectedStudentIds, selectedYear ?? 'الكل')
                         .then((message) {
                           if (message != null) {
                             showMyDialoge(
@@ -306,12 +304,18 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         setState(() {
                           if (selectedStudentIds.contains(studentId)) {
                             selectedStudentIds.remove(studentId);
-                            groupTotalTayo -= totalTayo;
+                            cubit.groupTotalTayo -= totalTayo;
                           } else {
                             selectedStudentIds.add(studentId);
-                            groupTotalTayo += totalTayo;
+                            cubit.groupTotalTayo += totalTayo;
                           }
                         });
+                        log(
+                          'Current selected student IDs: $selectedStudentIds',
+                        );
+                        log(
+                          'Current group total tayo: ${cubit.groupTotalTayo}',
+                        );
                       },
                     ),
                   );
@@ -319,8 +323,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 return const SizedBox();
               },
             ),
-
-            // ── Save button ──────────────────────────────────────────
           ],
         ),
       ),

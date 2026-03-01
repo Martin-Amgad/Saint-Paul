@@ -32,6 +32,7 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
   @override
   void initState() {
     super.initState();
+
     filteredGroups = widget.groups;
   }
 

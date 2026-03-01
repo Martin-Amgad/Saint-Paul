@@ -7,7 +7,7 @@ import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 class GroupsRepo {
   static Future<List<GroupModel>> fetchGroups() async {
     try {
-      final snapshot = await FirebaseProvider.fetchGroups();
+      final snapshot = await FirebaseProvider.fetchGroupsByTotalTayo();
 
       log('Fetched groups snapshot: ${snapshot.docs.length} documents');
       try {
@@ -30,7 +30,7 @@ class GroupsRepo {
     }
   }
 
-  static Future<GroupModel?> fetchGroup(String groupId) async {
+  static Future<GroupModel?> fetchGroup(String? groupId) async {
     try {
       final snapshot = await FirebaseProvider.getGroupbyId(groupId);
 
@@ -98,12 +98,22 @@ class GroupsRepo {
     }
   }
 
-  Future<void> deleteGroup(String groupId) async {
+  static Future<void> deleteGroup(String groupId) async {
     try {
       await FirebaseProvider.deleteGroup(groupId);
       log('Group $groupId deleted successfully');
     } on Exception catch (e) {
       log('Error deleting group $groupId: ${e.toString()}');
+      rethrow;
+    }
+  }
+
+  static Future<void> updateGroup(GroupModel group) async {
+    try {
+      await FirebaseProvider.updateGroup(group);
+      log('Group ${group.gid} updated successfully');
+    } on Exception catch (e) {
+      log('Error updating group ${group.gid}: ${e.toString()}');
       rethrow;
     }
   }

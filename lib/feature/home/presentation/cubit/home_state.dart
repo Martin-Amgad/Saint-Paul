@@ -35,3 +35,7 @@ class HomeErrorState extends HomeState {
   final String message;
   HomeErrorState({required this.message});
 }
+
+class HomeGroupUpdateSuccessState extends HomeState {
+  HomeGroupUpdateSuccessState();
+}

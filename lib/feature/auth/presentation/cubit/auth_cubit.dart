@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
+import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/feature/auth/data/repo/auth_repo.dart';
 import 'package:saint_paul/feature/auth/presentation/cubit/auth_state.dart';
@@ -44,6 +45,12 @@ class AuthCubit extends Cubit<AuthState> {
     log(
       'Selected role during registration from local: ${LocalHelper.getUserType()}',
     );
+
+    var snapshot = await FirebaseProvider.getTeacherByID(
+      '28W6AI0V3SGxJI7qHY73',
+    );
+    var teacherData = snapshot.data() as Map<String, dynamic>;
+    adminPin = teacherData['adminPin'] as String?;
     if (pinController.text != adminPin && LocalHelper.getUserType() == 'خادم') {
       emit(AuthErrorState('الرقم السري غير صحيح'));
       return;

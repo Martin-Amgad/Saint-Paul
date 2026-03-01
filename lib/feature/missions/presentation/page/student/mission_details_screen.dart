@@ -5,6 +5,7 @@ import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/components/inputs/form_field.dart';
+import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
@@ -41,33 +42,42 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var reward = widget.mission.reward ?? '0';
+    bool isRewardNumeric = AppRegex.containsOnlyNumbers(reward);
+    var cubit = context.read<MissionCubit>();
     return Scaffold(
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+
         child: widget.isAvailable ?? false
             ? MainButton(
                 title: 'قبول المهمة',
                 onPressed: () {
-                  context.read<MissionCubit>().acceptMission(
-                    widget.mission.mid ?? '',
+                  cubit.acceptMission(widget.mission.mid ?? '');
+                  cubit.fetchMissions();
+                  cubit.updateMission(
+                    widget.mission.copyWith(
+                      enrolledStudents: widget.mission.enrolledStudents! + 1,
+                    ),
                   );
-                  context.read<MissionCubit>().fetchMissions();
                 },
               )
-            : MainButton(
-                title: 'إرسال الحل',
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    context.read<MissionCubit>().submitMission(
-                      widget.mission.mid ?? '',
-                      widget.mission.copyWith(
-                        studentSolution: answerController.text,
-                      ),
-                    );
-                    answerController.clear();
-                  }
-                },
-              ),
+            : null,
+        // : MainButton(
+        //     title: 'إرسال الحل',
+        //     onPressed: () {
+        //       if (_formKey.currentState!.validate()) {
+        //         context.read<MissionCubit>().submitMission(
+        //           widget.mission.mid ?? '',
+        //           widget.mission.copyWith(
+        //             studentSolution: answerController.text,
+        //           ),
+        //         );
+
+        //         answerController.clear();
+        //       }
+        //     },
+        //   ),
       ),
       backgroundColor: AppColors.backgroundColor,
       body: BlocListener<MissionCubit, MissionState>(
@@ -167,7 +177,9 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                         ),
                         const Gap(6),
                         Text(
-                          'المكافأة: ${widget.mission.reward ?? '0'} طايو',
+                          isRewardNumeric
+                              ? 'المكافأة: $reward طايو'
+                              : 'المكافأة: $reward',
                           style: TextStyles.getSize16(
                             color: AppColors.yellowIconColor,
                             fontWeight: FontWeight.w700,
@@ -257,28 +269,28 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                         ),
                       ),
                     ),
-                    Gap(15),
-                    _SectionCard(
-                      icon: Icons.check_circle_outline_rounded,
-                      iconColor: const Color(0xFF8B5CF6),
-                      label: 'حل المهمة',
-                      child: Form(
-                        key: _formKey,
-                        child: widget.isAvailable ?? false
-                            ? Gap(0)
-                            : CustomTextField(
-                                hintText: 'اكتب حل المهمة...',
-                                maxLines: 5,
-                                controller: answerController,
-                                validator: (p0) {
-                                  if (p0 == null || p0.trim().isEmpty) {
-                                    return 'يرجى كتابة حل المهمة';
-                                  }
-                                  return null;
-                                },
-                              ),
-                      ),
-                    ),
+                    // Gap(15),
+                    // _SectionCard(
+                    //   icon: Icons.check_circle_outline_rounded,
+                    //   iconColor: const Color(0xFF8B5CF6),
+                    //   label: 'حل المهمة',
+                    //   child: Form(
+                    //     key: _formKey,
+                    //     child: widget.isAvailable ?? false
+                    //         ? Gap(0)
+                    //         : CustomTextField(
+                    //             hintText: 'اكتب حل المهمة...',
+                    //             maxLines: 5,
+                    //             controller: answerController,
+                    //             validator: (p0) {
+                    //               if (p0 == null || p0.trim().isEmpty) {
+                    //                 return 'يرجى كتابة حل المهمة';
+                    //               }
+                    //               return null;
+                    //             },
+                    //           ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

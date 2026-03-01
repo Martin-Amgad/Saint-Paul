@@ -98,17 +98,7 @@ class StudentModel {
       'submittedMissions': submittedMissions?.map(
         (missionId, missionMap) => MapEntry(
           missionId,
-          (missionMap as Map<String, dynamic>).map((title, details) {
-            final d = Map<String, dynamic>.from(details as Map);
-            return MapEntry(title, {
-              ...d,
-              'currentDate': d['currentDate'] == null
-                  ? null
-                  : d['currentDate'] is Timestamp
-                  ? (d['currentDate'] as Timestamp).millisecondsSinceEpoch
-                  : d['currentDate'],
-            });
-          }),
+          missionMap, // ← just pass it as-is, no nested conversion needed
         ),
       ),
       'groupID': groupID,
@@ -120,11 +110,11 @@ class StudentModel {
     return StudentModel(
       uid: uid,
       name: map['name'] ?? '',
-      motherPhone: map['motherPhone'] ?? ' ',
-      fatherPhone: map['fatherPhone'] ?? ' ',
-      personalPhone: map['personalPhone'] ?? ' ',
-      housePhone: map['housePhone'] ?? ' ',
-      address: map['address'] ?? ' ',
+      motherPhone: map['motherPhone'] ?? '',
+      fatherPhone: map['fatherPhone'] ?? '',
+      personalPhone: map['personalPhone'] ?? '',
+      housePhone: map['housePhone'] ?? '',
+      address: map['address'] ?? '',
       avatarUrl: map['avatarUrl'] ?? '',
       totalTayo: map['totalTayo'] ?? 0,
       birthday: map['birthday'] != null
@@ -163,11 +153,11 @@ class StudentModel {
     return StudentModel(
       uid: uid,
       name: map['name'] ?? '',
-      motherPhone: map['motherPhone'] ?? ' ',
-      fatherPhone: map['fatherPhone'] ?? ' ',
-      personalPhone: map['personalPhone'] ?? ' ',
-      housePhone: map['housePhone'] ?? ' ',
-      address: map['address'] ?? ' ',
+      motherPhone: map['motherPhone'] ?? '',
+      fatherPhone: map['fatherPhone'] ?? '',
+      personalPhone: map['personalPhone'] ?? '',
+      housePhone: map['housePhone'] ?? '',
+      address: map['address'] ?? '',
       avatarUrl: map['avatarUrl'] ?? '',
       totalTayo: map['totalTayo'] ?? 0,
 
@@ -190,7 +180,14 @@ class StudentModel {
           ? List<String>.from(map['acceptedMissions'])
           : const <String>[],
       submittedMissions:
-          map['submittedMissions'] as Map<String, dynamic>? ?? {},
+          (map['submittedMissions'] as Map<String, dynamic>? ?? {}).map(
+            (missionId, missionMap) => MapEntry(
+              missionId,
+              Map<String, dynamic>.from(
+                missionMap as Map,
+              ), // ← just cast it, no nested loop
+            ),
+          ),
       groupID: map['groupID'],
     );
   }

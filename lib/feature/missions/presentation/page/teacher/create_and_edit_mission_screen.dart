@@ -187,8 +187,6 @@ class _CreateAndEditMissionScreenState
                           validator: (p0) {
                             if (p0 == null || p0.isEmpty) {
                               return 'الرجاء ادخال المكافأة';
-                            } else if (int.tryParse(p0) == null) {
-                              return 'الرجاء ادخال رقم صالح';
                             }
                             return null;
                           },

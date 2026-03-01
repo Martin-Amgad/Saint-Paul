@@ -9,7 +9,18 @@ class MissionLoadingState extends MissionState {}
 class MissionsLoadedState extends MissionState {
   final List<MissionModel>? missions;
   final List<String>? acceptedMissions;
-  MissionsLoadedState({this.acceptedMissions, this.missions});
+  final List<String>? submittedMissions;
+
+  MissionsLoadedState({
+    this.acceptedMissions,
+    this.missions,
+    this.submittedMissions,
+  });
+}
+
+class MissionSubmittedLoadedState extends MissionState {
+  final List<String> submittedMissions;
+  MissionSubmittedLoadedState({required this.submittedMissions});
 }
 
 class MissionSuccessState extends MissionState {

@@ -27,6 +27,7 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.backgroundColor,
       body: Column(
         children: [
@@ -86,7 +87,11 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
                         HeaderIconButton(
                           icon: Icons.add_rounded,
                           onTap: () {
-                            pushTo(context, Routes.createMissionScreen);
+                            pushTo(context, Routes.createMissionScreen).then((
+                              _,
+                            ) {
+                              context.read<MissionCubit>().fetchMissions();
+                            });
                           },
                         ),
                       ],
@@ -184,7 +189,12 @@ class _TeacherMissionScreenState extends State<TeacherMissionScreen> {
                 } else if (state is MissionErrorState) {
                   return Center(child: Text(state.message));
                 } else {
-                  return const Center(child: CircularProgressIndicator());
+                  return Column(
+                    children: [
+                      Gap(MediaQuery.of(context).size.height * 0.35),
+                      const Center(child: CircularProgressIndicator()),
+                    ],
+                  );
                 }
               },
             ),

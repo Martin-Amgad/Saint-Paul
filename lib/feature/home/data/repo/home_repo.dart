@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 
@@ -100,51 +101,35 @@ class HomeRepo {
     }
   }
 
-  //   static Future<BookListRsponse?> getNewArrivals() async {
-  //     try {
-  //       var res = await DioProvider.get(endpoint: ApiEndpoints.new_arrivals);
-
-  //       if (res.statusCode == 200) {
-  //         return BookListRsponse.fromJson(res.data);
-  //       } else {
-  //         return null;
-  //       }
-  //     } on Exception catch (e) {
-  //       log(e.toString());
-  //       return null;
-  //     }
-  //   }
-
-  //   static Future<BookListRsponse?> getAllBooks([int pageIndex = 1]) async {
-  //     try {
-  //       var res = await DioProvider.get(
-  //         endpoint: ApiEndpoints.all_products,
-  //         queryParameters: {'page': pageIndex},
-  //       );
-
-  //       if (res.statusCode == 200) {
-  //         return BookListRsponse.fromJson(res.data);
-  //       } else {
-  //         return null;
-  //       }
-  //     } on Exception catch (e) {
-  //       log(e.toString());
-  //       return null;
-  //     }
-  //   }
-
-  //   static Future<SliderResponse?> getSlider() async {
-  //     try {
-  //       var res = await DioProvider.get(endpoint: ApiEndpoints.slider);
-
-  //       if (res.statusCode == 200) {
-  //         return SliderResponse.fromJson(res.data);
-  //       } else {
-  //         return null;
-  //       }
-  //     } on Exception catch (e) {
-  //       log(e.toString());
-  //       return null;
-  //     }
-  //   }
+  static Future<void> updateStudentGroup(
+    String studentGroupId,
+    int changesToTotalTayo,
+  ) async {
+    try {
+      log(
+        'Updating student group with ID: $studentGroupId, changes to total tayo: $changesToTotalTayo',
+      );
+      var snapshot = await FirebaseProvider.getGroupbyId(studentGroupId);
+      if (snapshot.exists) {
+        var group = GroupModel.fromJson(
+          snapshot.data() as Map<String, dynamic>,
+          snapshot.id,
+        );
+        log(
+          'Fetched group: ${group.gid} → ${group.name} with total tayo: ${group.totalTayo}',
+        );
+        await FirebaseProvider.updateGroup(
+          group.copyWith(
+            totalTayo: (group.totalTayo ?? 0) + changesToTotalTayo,
+          ),
+        );
+        log(
+          'Updated group total tayo to: ${(group.totalTayo ?? 0) + changesToTotalTayo}',
+        );
+      }
+    } on Exception catch (e) {
+      log(e.toString());
+      throw Exception('Failed to update student group: ${e.toString()}');
+    }
+  }
 }

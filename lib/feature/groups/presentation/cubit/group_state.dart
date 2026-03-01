@@ -27,7 +27,12 @@ class GroupsLoadedSuccessState extends GroupState {
 class StudentsLoadedSuccessState extends GroupState {
   final List<StudentModel> students;
   final GroupModel? group;
-  StudentsLoadedSuccessState({required this.students, this.group});
+  final int? totalTayo;
+  StudentsLoadedSuccessState({
+    required this.students,
+    this.group,
+    this.totalTayo = 0,
+  });
 }
 
 class GroupDetailsLoadedState extends GroupState {

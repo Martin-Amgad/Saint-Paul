@@ -32,4 +32,8 @@ class AppRegex {
     String pattern = r'^[0-9]+$';
     return RegExp(pattern).hasMatch(value);
   }
+
+  static bool containsOnlyNumbers(String value) {
+    return RegExp(r'^[0-9]+$').hasMatch(value);
+  }
 }

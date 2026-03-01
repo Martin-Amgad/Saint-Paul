@@ -227,15 +227,12 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
 
           // ── List ─────────────────────────────────────────────
           isLoading
-              ? Column(
-                  children: [
-                    Gap(MediaQuery.of(context).size.height * 0.26),
-                    Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primaryColor,
-                      ),
+              ? Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryColor,
                     ),
-                  ],
+                  ),
                 )
               : Expanded(
                   child: filteredStudents.isEmpty

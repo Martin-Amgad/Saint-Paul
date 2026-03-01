@@ -21,6 +21,7 @@ class _StudentMissionScreenState extends State<StudentMissionScreen> {
   int selectedIndex = 0;
   List<MissionModel>? missions;
   List<String>? acceptedMissions;
+  List<String>? submittedMissions;
   List<MissionModel>? myAvailableMissions;
 
   @override
@@ -39,10 +40,12 @@ class _StudentMissionScreenState extends State<StudentMissionScreen> {
             missions = state.missions;
             log('Missions loaded: ${missions?.length ?? 0} missions');
             acceptedMissions = state.acceptedMissions;
+            submittedMissions = state.submittedMissions;
             myAvailableMissions = missions
                 ?.where(
                   (mission) =>
-                      !(acceptedMissions?.contains(mission.mid) ?? false),
+                      !(acceptedMissions?.contains(mission.mid) ?? false) &&
+                      !(submittedMissions?.contains(mission.mid) ?? false),
                 )
                 .toList();
             log(

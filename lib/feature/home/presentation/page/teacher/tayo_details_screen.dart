@@ -13,6 +13,7 @@ import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 
@@ -43,6 +44,9 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
   List<String> tayoRemovedCategories = [];
   final tayoCategoryController = TextEditingController();
 
+  int changedTotalTayo = 0;
+  int confirmedTotalTayo = 0; // ← add here
+
   void checkAndResetTayo() {
     bool changed = false;
     tayo.forEach((key, value) {
@@ -59,7 +63,10 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
     });
     if (changed) {
       context.read<HomeCubit>().updateStudentTakenAt(
-        widget.student.copyWith(tayo: tayo, totalTayo: computeTotalTayo()),
+        widget.student.copyWith(
+          tayo: tayo,
+          totalTayo: (widget.student.totalTayo ?? 0) + changedTotalTayo,
+        ),
       );
     }
   }
@@ -71,17 +78,18 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
     return now.difference(takenTime).inHours >= expireHours;
   }
 
-  int computeTotalTayo() {
-    int total = 0;
-    tayo.forEach((key, value) {
-      total += tayo[key]['count'] as int? ?? 0;
-    });
-    return total;
-  }
+  // int computeTotalTayo() {
+  //   int total = 0;
+  //   tayo.forEach((key, value) {
+  //     total += tayo[key]['count'] as int? ?? 0;
+  //   });
+  //   return total;
+  // }
 
   @override
   void initState() {
     super.initState();
+    confirmedTotalTayo = widget.student.totalTayo ?? 0;
     context.read<HomeCubit>().getStudentTayoDetails(widget.student);
     log('Fetching tayo details for student: ${widget.student.name}');
   }
@@ -102,20 +110,29 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
             tayo: tayo,
             oldTayo: oldTayo,
             mainButtonOnConfirm: () {
-              context.read<HomeCubit>().updateStudent(
+              cubit.updateStudent(
                 widget.student.copyWith(
                   tayo: tayo,
-                  totalTayo: computeTotalTayo(),
+                  totalTayo: (widget.student.totalTayo ?? 0) + changedTotalTayo,
                 ),
                 tayoNewCategories: tayoNewCategories,
                 tayoRemovedCategories: tayoRemovedCategories,
               );
+              cubit.updateStudentGroup(
+                widget.student.groupID ?? '',
+                changedTotalTayo,
+              );
+              setState(() {
+                confirmedTotalTayo += changedTotalTayo;
+                changedTotalTayo = 0; // reset after update
+              });
               pushToBase(context, Routes.mainScreen, extra: 'خادم');
             },
           );
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.backgroundColor,
         // ── Bottom bar ───────────────────────────────────────────────────
         bottomNavigationBar: SafeArea(
@@ -144,13 +161,29 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                       cubit.updateStudent(
                         widget.student.copyWith(
                           tayo: tayo,
-                          totalTayo: computeTotalTayo(),
+                          totalTayo:
+                              (widget.student.totalTayo ?? 0) +
+                              changedTotalTayo,
                         ),
                         tayoNewCategories: tayoNewCategories,
                         tayoRemovedCategories: tayoRemovedCategories,
                       );
                       checkAndResetTayo();
                       oldTayo = Map<String, dynamic>.from(tayo);
+
+                      log('Changes to total tayo: $changedTotalTayo');
+                      log(
+                        'Updating student group with ID: ${widget.student.groupID ?? ''}, changes to total tayo: $changedTotalTayo',
+                      );
+                      log('Student group ID: ${widget.student.groupID ?? ''}');
+                      cubit.updateStudentGroup(
+                        widget.student.groupID ?? '',
+                        changedTotalTayo,
+                      );
+                      setState(() {
+                        confirmedTotalTayo += changedTotalTayo;
+                        changedTotalTayo = 0; // reset after update
+                      });
                     },
                   ),
                 ),
@@ -202,11 +235,22 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                 context.read<HomeCubit>().updateStudent(
                                   widget.student.copyWith(
                                     tayo: tayo,
-                                    totalTayo: computeTotalTayo(),
+                                    totalTayo:
+                                        (widget.student.totalTayo ?? 0) +
+                                        changedTotalTayo,
                                   ),
                                   tayoNewCategories: tayoNewCategories,
                                   tayoRemovedCategories: tayoRemovedCategories,
                                 );
+                                cubit.updateStudentGroup(
+                                  // ← this is missing here
+                                  widget.student.groupID ?? '',
+                                  changedTotalTayo,
+                                );
+                                setState(() {
+                                  confirmedTotalTayo += changedTotalTayo;
+                                  changedTotalTayo = 0; // reset after update
+                                });
                                 pushToBase(
                                   context,
                                   Routes.mainScreen,
@@ -262,7 +306,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                               ),
                             ),
                             Text(
-                              '${computeTotalTayo()}',
+                              '${confirmedTotalTayo + changedTotalTayo}',
                               style: TextStyles.getSize24(
                                 color: AppColors.whiteColor,
                                 fontWeight: FontWeight.w800,
@@ -278,230 +322,203 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
             ),
 
             // ── Tayo list ───────────────────────────────────────────
-            BlocConsumer<HomeCubit, HomeState>(
-              listener: (context, state) {
-                if (state is HomeLoadingState) {
-                  showLoadingDialog(context);
-                } else if (state is HomeErrorState) {
-                  pop(context);
-                  showMyDialoge(context, state.message, type: DialogType.error);
-                } else if (state is HomeSuccessState) {
-                  pop(context);
-                  showMyDialoge(
-                    context,
-                    'تم تحديث بيانات المخدوم بنجاح',
-                    type: DialogType.success,
-                  );
-                } else if (state is HomeSuccessStateForTakenAt) {
-                  log('HomeSuccessStateForTakenAt triggered');
-                } else if (state is HomeTayoLoadSuccessState) {
-                  tayo = Map<String, dynamic>.from(
-                    state.tayo.map(
-                      (key, value) =>
-                          MapEntry(key, Map<String, dynamic>.from(value)),
-                    ),
-                  );
-                  oldTayo = Map<String, dynamic>.from(
-                    state.tayo.map(
-                      (key, value) =>
-                          MapEntry(key, Map<String, dynamic>.from(value)),
-                    ),
-                  );
-                  checkAndResetTayo();
-                  setState(() {});
-                }
-              },
-              builder: (context, state) {
-                if (state is HomeErrorState) {
-                  return Center(child: Text('حدث خطأ: ${state.message}'));
-                } else if (state is HomeLoadingState && tayo.isEmpty) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Gap(MediaQuery.of(context).size.height * 0.3),
-                      const Center(child: CircularProgressIndicator()),
-                    ],
-                  );
-                }
+            Expanded(
+              child: BlocConsumer<HomeCubit, HomeState>(
+                listener: (context, state) {
+                  if (state is HomeLoadingState) {
+                    showLoadingDialog(context);
+                  } else if (state is HomeErrorState) {
+                    pop(context);
+                    showMyDialoge(
+                      context,
+                      state.message,
+                      type: DialogType.error,
+                    );
+                  } else if (state is HomeSuccessState) {
+                    pop(context);
+                    showMyDialoge(
+                      context,
+                      'تم تحديث بيانات المخدوم بنجاح',
+                      type: DialogType.success,
+                    );
+                  } else if (state is HomeSuccessStateForTakenAt) {
+                    log('HomeSuccessStateForTakenAt triggered');
+                  } else if (state is HomeTayoLoadSuccessState) {
+                    tayo = Map<String, dynamic>.from(
+                      state.tayo.map(
+                        (key, value) =>
+                            MapEntry(key, Map<String, dynamic>.from(value)),
+                      ),
+                    );
+                    oldTayo = Map<String, dynamic>.from(
+                      state.tayo.map(
+                        (key, value) =>
+                            MapEntry(key, Map<String, dynamic>.from(value)),
+                      ),
+                    );
+                    checkAndResetTayo();
+                    setState(() {});
+                  }
+                },
+                builder: (context, state) {
+                  if (state is HomeErrorState) {
+                    return Center(child: Text('حدث خطأ: ${state.message}'));
+                  } else if (state is HomeLoadingState && tayo.isEmpty) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Center(child: CircularProgressIndicator()),
+                      ],
+                    );
+                  }
 
-                return Expanded(
-                  child: tayo.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.inbox_rounded,
-                                size: 64,
-                                color: AppColors.accentColor.withValues(
-                                  alpha: 0.2,
-                                ),
-                              ),
-                              const Gap(12),
-                              Text(
-                                'لا توجد بنود بعد',
-                                style: TextStyles.getSize16(
+                  return Expanded(
+                    child: tayo.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.inbox_rounded,
+                                  size: 64,
                                   color: AppColors.accentColor.withValues(
-                                    alpha: 0.4,
+                                    alpha: 0.2,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                          itemCount: tayo.length,
-                          separatorBuilder: (_, _) => const Gap(10),
-                          itemBuilder: (context, index) {
-                            final key = tayo.keys.toList()[index];
-                            int categoryvalue = tayo[key]['count'];
-                            final takenAt = tayo[key]['takenAt'];
-                            final isExpired = isTakenExpired(
-                              takenAt is int ? takenAt : null,
-                            );
+                                const Gap(12),
+                                Text(
+                                  'لا توجد بنود بعد',
+                                  style: TextStyles.getSize16(
+                                    color: AppColors.accentColor.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                            itemCount: tayo.length,
+                            separatorBuilder: (_, _) => const Gap(10),
+                            itemBuilder: (context, index) {
+                              final key = tayo.keys.toList()[index];
+                              int categoryvalue = tayo[key]['count'];
+                              final takenAt = tayo[key]['takenAt'];
+                              final isExpired = isTakenExpired(
+                                takenAt is int ? takenAt : null,
+                              );
 
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: isExpired
-                                    ? AppColors.surfaceColor
-                                    : const Color(
-                                        0xFF22C55E,
-                                      ).withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
+                              return Container(
+                                decoration: BoxDecoration(
                                   color: isExpired
-                                      ? AppColors.primaryColor.withValues(
-                                          alpha: 0.1,
-                                        )
+                                      ? AppColors.surfaceColor
                                       : const Color(
                                           0xFF22C55E,
-                                        ).withValues(alpha: 0.4),
-                                  width: isExpired ? 1 : 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
+                                        ).withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
                                     color: isExpired
-                                        ? Colors.black.withValues(alpha: 0.04)
+                                        ? AppColors.primaryColor.withValues(
+                                            alpha: 0.1,
+                                          )
                                         : const Color(
                                             0xFF22C55E,
-                                          ).withValues(alpha: 0.1),
-                                    blurRadius: isExpired ? 5 : 12,
-                                    offset: const Offset(0, 3),
+                                          ).withValues(alpha: 0.4),
+                                    width: isExpired ? 1 : 1.5,
                                   ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 5, 8, 10),
-                                child: Column(
-                                  children: [
-                                    // Active indicator dot
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 10,
-                                          height: 10,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: isExpired
-                                                ? AppColors.accentColor
-                                                      .withValues(alpha: 0.2)
-                                                : const Color(0xFF22C55E),
-                                          ),
-                                        ),
-                                        const Gap(10),
-                                        // Category name
-                                        Expanded(
-                                          child: Text(
-                                            key,
-                                            style: TextStyles.getSize18(
-                                              color: AppColors.accentColor,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                        // Remove button
-                                        IconButton(
-                                          onPressed: () {
-                                            log('Removing category: $key');
-                                            tayo.remove(key);
-                                            tayoRemovedCategories.add(key);
-                                            log(
-                                              'removed: ${tayoRemovedCategories.toList()}',
-                                            );
-                                            setState(() {});
-                                          },
-                                          icon: Icon(
-                                            Icons.close_rounded,
-                                            size: 18,
-                                            color: AppColors.accentColor
-                                                .withValues(alpha: 0.4),
-                                          ),
-                                        ),
-                                      ],
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isExpired
+                                          ? Colors.black.withValues(alpha: 0.04)
+                                          : const Color(
+                                              0xFF22C55E,
+                                            ).withValues(alpha: 0.1),
+                                      blurRadius: isExpired ? 5 : 12,
+                                      offset: const Offset(0, 3),
                                     ),
-                                    // Counter controls
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryColor
-                                                .withValues(alpha: 0.08),
-                                            borderRadius: BorderRadius.circular(
-                                              24,
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    0,
+                                    5,
+                                    8,
+                                    10,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      // Active indicator dot
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 10,
+                                            height: 10,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: isExpired
+                                                  ? AppColors.accentColor
+                                                        .withValues(alpha: 0.2)
+                                                  : const Color(0xFF22C55E),
                                             ),
                                           ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // Increment
-                                              _CounterButton(
-                                                icon: Icons.add_rounded,
-                                                onTap: () {
-                                                  tayo[key] = {
-                                                    "count": categoryvalue + 1,
-                                                    "takenAt": DateTime.now()
-                                                        .millisecondsSinceEpoch,
-                                                  };
-                                                  log(
-                                                    'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
-                                                  );
-                                                  log(
-                                                    'Current tayo state: $tayo',
-                                                  );
-                                                  log(
-                                                    'Current oldTayo state: $oldTayo',
-                                                  );
-                                                  setState(() {});
-                                                },
+                                          const Gap(10),
+                                          // Category name
+                                          Expanded(
+                                            child: Text(
+                                              key,
+                                              style: TextStyles.getSize18(
+                                                color: AppColors.accentColor,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
                                               ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                    ),
-                                                child: Text(
-                                                  '$categoryvalue',
-                                                  style: TextStyles.getSize18(
-                                                    color:
-                                                        AppColors.accentColor,
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                              ),
-                                              // Decrement
-                                              _CounterButton(
-                                                icon: Icons.remove_rounded,
-                                                onTap: () {
-                                                  if (categoryvalue > 0) {
+                                            ),
+                                          ),
+                                          // Remove button
+                                          IconButton(
+                                            onPressed: () {
+                                              log('Removing category: $key');
+                                              tayo.remove(key);
+                                              tayoRemovedCategories.add(key);
+                                              log(
+                                                'removed: ${tayoRemovedCategories.toList()}',
+                                              );
+                                              setState(() {});
+                                            },
+                                            icon: Icon(
+                                              Icons.close_rounded,
+                                              size: 18,
+                                              color: AppColors.accentColor
+                                                  .withValues(alpha: 0.4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      // Counter controls
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primaryColor
+                                                  .withValues(alpha: 0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                // Increment
+                                                _CounterButton(
+                                                  icon: Icons.add_rounded,
+                                                  onTap: () {
+                                                    changedTotalTayo++;
                                                     tayo[key] = {
-                                                      "takenAt": null,
                                                       "count":
-                                                          categoryvalue - 1,
+                                                          categoryvalue + 1,
+                                                      "takenAt": DateTime.now()
+                                                          .millisecondsSinceEpoch,
                                                     };
                                                     log(
                                                       'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
@@ -512,26 +529,67 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                                     log(
                                                       'Current oldTayo state: $oldTayo',
                                                     );
-                                                    log(
-                                                      'tayo == oldTayo: ${jsonEncode(tayo) == jsonEncode(oldTayo)}',
-                                                    );
                                                     setState(() {});
-                                                  }
-                                                },
-                                              ),
-                                            ],
+                                                  },
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                      ),
+                                                  child: Text(
+                                                    '$categoryvalue',
+                                                    style: TextStyles.getSize18(
+                                                      color:
+                                                          AppColors.accentColor,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ),
+                                                // Decrement
+                                                _CounterButton(
+                                                  icon: Icons.remove_rounded,
+                                                  onTap: () {
+                                                    if (categoryvalue > 0) {
+                                                      changedTotalTayo--;
+
+                                                      tayo[key] = {
+                                                        "takenAt": null,
+                                                        "count":
+                                                            categoryvalue - 1,
+                                                      };
+                                                      log(
+                                                        'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
+                                                      );
+                                                      log(
+                                                        'Current tayo state: $tayo',
+                                                      );
+                                                      log(
+                                                        'Current oldTayo state: $oldTayo',
+                                                      );
+                                                      log(
+                                                        'tayo == oldTayo: ${jsonEncode(tayo) == jsonEncode(oldTayo)}',
+                                                      );
+                                                      setState(() {});
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                );
-              },
+                              );
+                            },
+                          ),
+                  );
+                },
+              ),
             ),
           ],
         ),

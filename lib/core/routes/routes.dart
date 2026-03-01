@@ -204,7 +204,7 @@ class Routes {
         builder: (context, state) {
           return BlocProvider(
             create: (context) => GroupCubit(),
-            child: GroupDetailsScreen(),
+            child: GroupDetailsScreen(group: state.extra as GroupModel?),
           );
         },
       ),

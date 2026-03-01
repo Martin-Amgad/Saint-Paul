@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class FirebaseProvider {
@@ -11,26 +12,32 @@ class FirebaseProvider {
     'Student',
   );
 
+  static final CollectionReference teacherCollection = firebase.collection(
+    'Teacher',
+  );
+
   static final CollectionReference missionCollection = firebase.collection(
     'Mission',
   );
   static final CollectionReference groupCollection = firebase.collection(
     'Group',
   );
+  // TEACHER METHODS
+  static Future<void> createTeacher(TeacherModel teacher) async {
+    await teacherCollection.doc(teacher.uid).set(teacher.toJson());
+  }
 
+  static Future<void> updateTeacher(TeacherModel teacher) async {
+    await teacherCollection.doc(teacher.uid).update(teacher.toUpdateData());
+  }
+
+  static Future<DocumentSnapshot<Object?>> getTeacherByID(String? id) {
+    return teacherCollection.doc(id).get();
+  }
+
+  // STUDENT METHODS
   static Future<void> createStudent(StudentModel student) async {
     await studentCollection.doc(student.uid).set(student.toJson());
-  }
-
-  static Future<void> createMission(MissionModel mission) async {
-    await missionCollection.doc(mission.mid).set(mission.toJson());
-  }
-
-  static Future<String> createGroup(GroupModel group) async {
-    final doc = await groupCollection.add(
-      group.toJson(),
-    ); // ← use add() not set()
-    return doc.id;
   }
 
   static Future<void> updateStudentGroupID(
@@ -38,26 +45,6 @@ class FirebaseProvider {
     String groupId,
   ) async {
     await studentCollection.doc(studentId).update({'groupID': groupId});
-  }
-
-  static Future<void> deleteMission(String missionId) async {
-    await missionCollection.doc(missionId).delete();
-  }
-
-  static Future<void> deleteGroup(String groupId) async {
-    await groupCollection.doc(groupId).delete();
-  }
-
-  static Future<QuerySnapshot> fetchMissions() async {
-    return await missionCollection.get();
-  }
-
-  static Future<QuerySnapshot> fetchGroups() async {
-    return await groupCollection.get();
-  }
-
-  static Future<DocumentSnapshot<Object?>> getGroupbyId(String groupId) async {
-    return await groupCollection.doc(groupId).get();
   }
 
   static Future<QuerySnapshot> getStudentByNameAndTotalTayo(
@@ -82,14 +69,6 @@ class FirebaseProvider {
     await studentCollection.doc(studentId).update({'avatarUrl': avatarUrl});
   }
 
-  static Future<void> updateMission(MissionModel mission) async {
-    await missionCollection.doc(mission.mid).update(mission.toUpdateData());
-  }
-
-  static Future<void> updateGroup(GroupModel group) async {
-    await groupCollection.doc(group.gid).update(group.toUpdateData());
-  }
-
   static Future<void> updateAcceptedMissions(
     String? studentId,
     String mid,
@@ -104,8 +83,17 @@ class FirebaseProvider {
     String mid,
     MissionModel mission,
   ) async {
+    // missionCollection.doc(mid).update({
+    //   'submissions.${studentId}': {
+    //     'title': mission.title,
+    //     'studentSolution': mission.studentSolution,
+    //   },
+    // });
     studentCollection.doc(studentId).update({
-      'submittedMissions.$mid': {'mission.${mission.title}': mission.toJson()},
+      'submittedMissions.$mid': {
+        'title': mission.title,
+        'studentSolution': mission.studentSolution,
+      },
       'acceptedMissions': FieldValue.arrayRemove([mid]),
       'totalTayo': FieldValue.increment(int.parse(mission.reward ?? '0')),
     });
@@ -176,5 +164,46 @@ class FirebaseProvider {
     });
 
     await studentCollection.doc(studentId).update(updates);
+  }
+
+  // MISSION METHODS
+  static Future<void> createMission(MissionModel mission) async {
+    await missionCollection.doc(mission.mid).set(mission.toJson());
+  }
+
+  static Future<void> deleteMission(String missionId) async {
+    await missionCollection.doc(missionId).delete();
+  }
+
+  static Future<QuerySnapshot> fetchMissions() async {
+    return await missionCollection.get();
+  }
+
+  static Future<void> updateMission(MissionModel mission) async {
+    await missionCollection.doc(mission.mid).update(mission.toUpdateData());
+  }
+
+  // GROUP METHODS
+  static Future<String> createGroup(GroupModel group) async {
+    final doc = await groupCollection.add(
+      group.toJson(),
+    ); // ← use add() not set()
+    return doc.id;
+  }
+
+  static Future<void> deleteGroup(String groupId) async {
+    await groupCollection.doc(groupId).delete();
+  }
+
+  static Future<QuerySnapshot> fetchGroupsByTotalTayo() async {
+    return await groupCollection.orderBy('totalTayo', descending: true).get();
+  }
+
+  static Future<DocumentSnapshot<Object?>> getGroupbyId(String? groupId) async {
+    return await groupCollection.doc(groupId ?? '').get();
+  }
+
+  static Future<void> updateGroup(GroupModel group) async {
+    await groupCollection.doc(group.gid).update(group.toUpdateData());
   }
 }

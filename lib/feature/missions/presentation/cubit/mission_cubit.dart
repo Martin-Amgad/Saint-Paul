@@ -58,6 +58,8 @@ class MissionCubit extends Cubit<MissionState> {
       log('Fetching missions...');
       var missions = await MissionRepo.fetchMissions();
       var acceptedMissions = await MissionRepo.fetchAcceptedMissions();
+      final submittedMissions = await MissionRepo.fetchSubmittedMissions();
+
       log(' Fetched missions: ${missions.length}');
       log(
         'First mission title: ${missions.isNotEmpty ? missions[0].title : 'No missions'}',
@@ -72,6 +74,7 @@ class MissionCubit extends Cubit<MissionState> {
         MissionsLoadedState(
           missions: missions,
           acceptedMissions: acceptedMissions,
+          submittedMissions: submittedMissions,
         ),
       );
     } catch (e) {

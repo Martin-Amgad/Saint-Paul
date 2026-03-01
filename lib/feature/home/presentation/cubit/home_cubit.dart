@@ -22,27 +22,6 @@ class HomeCubit extends Cubit<HomeState> {
 
   var formkey = GlobalKey<FormState>();
 
-  //   void getHomeData() async {
-  //     emit(HomeLoadingState());
-
-  //     try {
-  //       var res = await Future.wait([
-  //         HomeRepo.getSlider(),
-  //         HomeRepo.getBestSellers(),
-  //         HomeRepo.getNewArrivals(),
-  //         HomeRepo.getAllBooks(),
-  //       ]);
-
-  //       sliders = (res[0] as SliderResponse).data?.sliders ?? [];
-  //       BestSellers = (res[1] as BookListRsponse).data?.products ?? [];
-  //       NewArrivals = (res[2] as BookListRsponse).data?.products ?? [];
-  //       AllBooks = (res[3] as BookListRsponse).data?.products ?? [];
-  //       emit(HomeSuccesState());
-  //     } on Exception catch (e) {
-  //       log(e.toString());
-  //       emit(HomeErrorState(message: e.toString()));
-  //     }
-  //   }
   void updateStudent(
     StudentModel student, {
     List<String>? tayoNewCategories,
@@ -121,12 +100,12 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void loadStudentControllers(StudentModel? student) {
-    nameController.text = student?.name ?? '';
-    fatherPhoneController.text = student?.fatherPhone ?? '';
-    motherPhoneController.text = student?.motherPhone ?? '';
-    personalPhoneController.text = student?.personalPhone ?? '';
-    housePhoneController.text = student?.housePhone ?? '';
-    addressController.text = student?.address ?? '';
+    nameController.text = (student?.name ?? '').trim();
+    fatherPhoneController.text = (student?.fatherPhone ?? '').trim();
+    motherPhoneController.text = (student?.motherPhone ?? '').trim();
+    personalPhoneController.text = (student?.personalPhone ?? '').trim();
+    housePhoneController.text = (student?.housePhone ?? '').trim();
+    addressController.text = (student?.address ?? '').trim();
     selectedValue = student?.studyLevel;
     birthdayController.text = DateFormat(
       'yyyy-MM-dd',
@@ -155,6 +134,30 @@ class HomeCubit extends Cubit<HomeState> {
         HomeErrorState(
           message:
               'حدث خطأ أثناء تحميل بيانات الطالب. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
+
+  Future<void> updateStudentGroup(
+    String studentGroupId,
+    int changesToTotalTayo,
+  ) async {
+    try {
+      log(
+        'Updating student group with ID: $studentGroupId, changes to total tayo: $changesToTotalTayo',
+      );
+      await HomeRepo.updateStudentGroup(studentGroupId, changesToTotalTayo);
+
+      emit(HomeGroupUpdateSuccessState());
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(HomeErrorState(message: e.toString()));
+    } catch (e) {
+      log(e.toString());
+      emit(
+        HomeErrorState(
+          message: 'حدث خطأ أثناء تحديث المجموعة. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

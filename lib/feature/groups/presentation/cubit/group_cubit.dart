@@ -13,6 +13,7 @@ class GroupCubit extends Cubit<GroupState> {
 
   var formKey = GlobalKey<FormState>();
   var groupNameController = TextEditingController();
+  var groupTotalTayo = 0;
 
   Future<void> deleteGroup(GroupModel group) async {
     emit(GroupLoadingState());
@@ -21,7 +22,7 @@ class GroupCubit extends Cubit<GroupState> {
         (studentId) => FirebaseProvider.updateStudentGroupID(studentId, ''),
       );
       await Future.wait(futures?.toList() ?? []);
-      await FirebaseProvider.deleteGroup(group.gid!);
+      await GroupsRepo.deleteGroup(group.gid ?? '');
       emit(GroupDeleteSuccessState(message: 'تم حذف المجموعة بنجاح.'));
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء حذف المجموعة: ${e.toString()}'));
@@ -30,15 +31,23 @@ class GroupCubit extends Cubit<GroupState> {
 
   Future<String?> createGroup(
     List<String> studentIds,
-    int totalTayo,
     String studyLevel,
   ) async {
     try {
+      groupTotalTayo = 0; // reset after
+      final students = await GroupsRepo.fetchStudentsByIds(studentIds);
+      for (var student in students) {
+        log(
+          'Fetched student: ${student.uid} → ${student.name} with total tayo: ${student.totalTayo}',
+        );
+        groupTotalTayo += student.totalTayo ?? 0;
+      }
+      log('Total tayo for selected students: $groupTotalTayo');
       final groupId = await FirebaseProvider.createGroup(
         GroupModel(
           name: groupNameController.text.trim(),
           students: studentIds,
-          totalTayo: totalTayo,
+          totalTayo: groupTotalTayo,
           studyLevel: studyLevel,
         ),
       );
@@ -78,7 +87,16 @@ class GroupCubit extends Cubit<GroupState> {
     emit(GroupLoadingState());
     try {
       final students = await GroupsRepo.fetchStudentsByIds(ids);
-      emit(StudentsLoadedSuccessState(students: students));
+      for (var student in students) {
+        log('Fetched student: ${student.uid} → ${student.name}');
+        groupTotalTayo += student.totalTayo ?? 0;
+      }
+      emit(
+        StudentsLoadedSuccessState(
+          students: students,
+          totalTayo: groupTotalTayo,
+        ),
+      );
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المخدومين: ${e.toString()}'));
     }
@@ -109,7 +127,74 @@ class GroupCubit extends Cubit<GroupState> {
       final students = await GroupsRepo.fetchStudentsByIds(
         group.students ?? [],
       );
+      emit(
+        StudentsLoadedSuccessState(
+          students: students,
+          group: group,
+          totalTayo: group.totalTayo ?? 0,
+        ),
+      );
+    } catch (e) {
+      emit(GroupErrorState('حدث خطأ أثناء جلب المجموعة: ${e.toString()}'));
+    }
+  }
+
+  Future<void> techersGroupDetails(GroupModel? group) async {
+    emit(GroupLoadingState());
+    try {
+      final students = await GroupsRepo.fetchStudentsByIds(
+        group?.students ?? [],
+      );
       emit(StudentsLoadedSuccessState(students: students, group: group));
+    } catch (e) {
+      emit(GroupErrorState('حدث خطأ أثناء جلب المجموعة: ${e.toString()}'));
+    }
+  }
+
+  Future<void> fetchAndUpdateTotalTayo(GroupModel? group) async {
+    emit(GroupLoadingState());
+    try {
+      final students = await GroupsRepo.fetchStudentsByIds(
+        group?.students ?? [],
+      );
+      log(
+        'Fetched students for group ${group?.gid}: ${students.length} students',
+      );
+      groupTotalTayo = 0; // reset before calculating
+      for (var student in students) {
+        log(
+          'Fetched student: ${student.uid} → ${student.name} with total tayo: ${student.totalTayo}',
+        );
+        groupTotalTayo += student.totalTayo ?? 0;
+      }
+      if (groupTotalTayo != group?.totalTayo) {
+        log(
+          'Updating group total tayo from ${group?.totalTayo} to $groupTotalTayo',
+        );
+        await GroupsRepo.updateGroup(
+          group!.copyWith(totalTayo: groupTotalTayo),
+        );
+        log('Group total tayo updated successfully');
+        log(
+          'Emitting updated group details with new total tayo: $groupTotalTayo',
+        );
+        log(
+          'Group details: ${group.copyWith(totalTayo: groupTotalTayo).toJson()}',
+        );
+        emit(
+          StudentsLoadedSuccessState(
+            students: students,
+            group: group.copyWith(totalTayo: groupTotalTayo),
+          ),
+        );
+      } else {
+        log('No update needed for group total tayo: $groupTotalTayo');
+        log(
+          'Emitting group details with existing total tayo: ${group?.totalTayo}',
+        );
+        log('Group details: ${group?.toJson()}');
+        emit(StudentsLoadedSuccessState(students: students, group: group));
+      }
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعة: ${e.toString()}'));
     }
