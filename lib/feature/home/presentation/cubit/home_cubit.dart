@@ -15,9 +15,8 @@ class HomeCubit extends Cubit<HomeState> {
   var housePhoneController = TextEditingController();
   var addressController = TextEditingController();
   var responsibleTeacherController = TextEditingController();
-  var birthdayController = TextEditingController(
-    text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
-  );
+  var birthdayController = TextEditingController();
+
   String? selectedValue;
 
   var formkey = GlobalKey<FormState>();

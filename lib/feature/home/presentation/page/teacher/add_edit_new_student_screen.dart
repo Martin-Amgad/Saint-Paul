@@ -248,27 +248,33 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           child: CustomTextField(
                             controller: cubit.birthdayController,
                             readOnly: true,
-                            suffixIcon: IconButton(
-                              onPressed: () async {
-                                var selectedDate = await showDatePicker(
-                                  context: context,
-                                  firstDate: DateTime.now().subtract(
-                                    const Duration(days: 365 * 100),
-                                  ),
-                                  lastDate: DateTime.now(),
-                                );
-                                if (selectedDate != null) {
-                                  pickedDate = selectedDate;
-                                  cubit.birthdayController.text = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(selectedDate);
-                                }
-                              },
-                              icon: Icon(
-                                Icons.calendar_month_rounded,
-                                color: AppColors.primaryColor,
-                              ),
+                            hintText: 'تاريخ الميلاد',
+                            onTap: () async {
+                              var selectedDate = await showDatePicker(
+                                context: context,
+                                firstDate: DateTime.now().subtract(
+                                  const Duration(days: 365 * 100),
+                                ),
+                                lastDate: DateTime.now(),
+                              );
+                              if (selectedDate != null) {
+                                pickedDate = selectedDate;
+                                cubit.birthdayController.text = DateFormat(
+                                  'yyyy-MM-dd',
+                                ).format(selectedDate);
+                              }
+                            },
+                            suffixIcon: Icon(
+                              Icons.calendar_month_rounded,
+                              color: AppColors.primaryColor,
                             ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'الرجاء ادخال تاريخ الميلاد';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                         const Gap(16),

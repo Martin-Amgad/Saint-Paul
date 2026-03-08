@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/feature/auth/data/repo/auth_repo.dart';
@@ -16,6 +17,7 @@ class AuthCubit extends Cubit<AuthState> {
   var passwordController = TextEditingController();
   var passwordConfirmationController = TextEditingController();
   var pinController = TextEditingController();
+  var birthdayController = TextEditingController();
   String? selectedValue;
   String? selectedRole;
 
@@ -61,6 +63,7 @@ class AuthCubit extends Cubit<AuthState> {
       name: usernameController.text,
       studyLevel: selectedValue,
       role: selectedRole,
+      birthday: DateTime.tryParse(birthdayController.text),
     );
     log('Attempting to register with email: ${emailController.text}');
     log('Attempting to register with password: ${passwordController.text}');

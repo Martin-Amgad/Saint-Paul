@@ -72,6 +72,7 @@ class AuthRepo {
     required String name,
     String? studyLevel,
     String? role,
+    DateTime? birthday,
   }) async {
     try {
       var credential = await FirebaseAuth.instance
@@ -80,7 +81,12 @@ class AuthRepo {
 
       if (role == 'مخدوم') {
         await FirebaseProvider.createStudent(
-          StudentModel(uid: user.uid, name: name, studyLevel: studyLevel),
+          StudentModel(
+            uid: user.uid,
+            name: name,
+            studyLevel: studyLevel,
+            birthday: birthday,
+          ),
         );
       }
       log('User logged in with email: $email');
@@ -105,6 +111,7 @@ class AuthRepo {
           uid: user.uid,
           name: name,
           studyLevel: studyLevel,
+          birthday: birthday,
         ).toJsonLocal(),
       );
 

@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:intl/intl.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
@@ -27,6 +28,8 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
   final List<String> roles = ['خادم', 'مخدوم'];
+  DateTime? pickedDate;
+
   @override
   initState() {
     super.initState();
@@ -237,7 +240,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   if (cubit.selectedRole == 'مخدوم') ...[
                     Gap(15),
-
                     CustomFormField(
                       label: 'المستوى الدراسي',
                       icon: Icons.school_rounded,
@@ -293,6 +295,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         }).toList(),
                         onChanged: (value) {
                           setState(() => cubit.selectedValue = value);
+                        },
+                      ),
+                    ),
+
+                    const Gap(16),
+                    CustomFormField(
+                      label: 'تاريخ الميلاد',
+                      icon: Icons.cake_rounded,
+                      child: CustomTextField(
+                        controller: cubit.birthdayController,
+                        readOnly: true,
+                        hintText: 'تاريخ الميلاد',
+                        onTap: () async {
+                          var selectedDate = await showDatePicker(
+                            context: context,
+                            firstDate: DateTime.now().subtract(
+                              const Duration(days: 365 * 100),
+                            ),
+                            lastDate: DateTime.now(),
+                          );
+                          if (selectedDate != null) {
+                            pickedDate = selectedDate;
+                            cubit.birthdayController.text = DateFormat(
+                              'yyyy-MM-dd',
+                            ).format(selectedDate);
+                          }
+                        },
+                        suffixIcon: Icon(
+                          Icons.calendar_month_rounded,
+                          color: AppColors.primaryColor,
+                        ),
+
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'الرجاء ادخال تاريخ الميلاد';
+                          }
+                          return null;
                         },
                       ),
                     ),

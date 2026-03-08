@@ -18,6 +18,7 @@ class CustomTextField extends StatefulWidget {
     this.readOnly = false,
     this.maxLines = 1,
     this.isDense = false,
+    this.onTap,
   });
 
   final TextEditingController controller;
@@ -33,6 +34,7 @@ class CustomTextField extends StatefulWidget {
   final bool readOnly;
   final int? maxLines;
   final bool? isDense;
+  final VoidCallback? onTap;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -49,6 +51,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       onChanged: widget.onChanged,
       readOnly: widget.readOnly,
       maxLines: widget.maxLines,
+      onTap: widget.onTap,
       inputFormatters: widget.isPhone || widget.isLandline
           ? [
               FilteringTextInputFormatter.digitsOnly,
