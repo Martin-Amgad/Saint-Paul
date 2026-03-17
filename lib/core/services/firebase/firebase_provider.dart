@@ -179,6 +179,12 @@ class FirebaseProvider {
     return await missionCollection.get();
   }
 
+  static Future<QuerySnapshot> fetchStudentMissions(String studyLevel) async {
+    return await missionCollection
+        .where('missionStudyLevel', isEqualTo: studyLevel)
+        .get();
+  }
+
   static Future<void> updateMission(MissionModel mission) async {
     await missionCollection.doc(mission.mid).update(mission.toUpdateData());
   }

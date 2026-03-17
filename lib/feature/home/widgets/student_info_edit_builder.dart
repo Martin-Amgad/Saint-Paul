@@ -121,6 +121,8 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
 
                     return GestureDetector(
                       onTap: () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+
                         pushTo(
                           context,
                           Routes.addEditNewStudentScreen,

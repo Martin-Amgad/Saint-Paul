@@ -11,7 +11,6 @@ import 'package:saint_paul/feature/home/presentation/page/teacher/birthday_scree
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/missions/presentation/page/student/student_mission_screen.dart';
 import 'package:saint_paul/feature/missions/presentation/page/teacher/teacher_mission_screen.dart';
-import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
 import 'package:saint_paul/feature/profile/presentation/student/student_profile_screen.dart';
 import 'package:saint_paul/feature/profile/presentation/teacher/students_showcase_and_edit_screen.dart';
 

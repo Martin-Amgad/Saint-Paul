@@ -107,6 +107,8 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
                   );
                 },
                 onTap: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+
                   pushTo(context, Routes.groupDetailsScreen, extra: group);
                 },
                 child: Container(

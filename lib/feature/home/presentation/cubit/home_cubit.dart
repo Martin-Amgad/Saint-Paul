@@ -75,7 +75,7 @@ class HomeCubit extends Cubit<HomeState> {
     try {
       var res = await HomeRepo.getStudentTayoDetails(student);
       if (res != null) {
-        log('Student details retrieved successfully: $res');
+        // log('Student details retrieved successfully: $res');
         emit(HomeTayoLoadSuccessState(tayo: res));
       } else {
         log('No student details found for the given student.');

@@ -15,6 +15,7 @@ class MissionCubit extends Cubit<MissionState> {
   var linkController = TextEditingController();
   var expireAfterController = TextEditingController();
   var formKey = GlobalKey<FormState>();
+  String? selectedValue;
 
   Future<void> createMission() async {
     emit(MissionLoadingState());
@@ -26,6 +27,7 @@ class MissionCubit extends Cubit<MissionState> {
         reward: rewardController.text,
         expireAfter: int.tryParse(expireAfterController.text) ?? 0,
         currentDate: DateTime.now(),
+        missionStudyLevel: selectedValue,
       );
       final result = await MissionRepo.createMission(mission);
       emit(MissionSuccessState(message: result));

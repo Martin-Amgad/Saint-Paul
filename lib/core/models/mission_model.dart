@@ -10,6 +10,7 @@ class MissionModel {
   final DateTime? currentDate;
   final String? studentSolution;
   final int? enrolledStudents;
+  final String? missionStudyLevel;
 
   MissionModel({
     this.mid,
@@ -21,6 +22,7 @@ class MissionModel {
     this.currentDate,
     this.studentSolution,
     this.enrolledStudents = 0,
+    this.missionStudyLevel,
   });
 
   factory MissionModel.fromJson(Map<String, dynamic> map, String mid) {
@@ -36,6 +38,7 @@ class MissionModel {
           : null,
       studentSolution: map['studentSolution'] ?? '',
       enrolledStudents: map['enrolledStudents'] ?? 0,
+      missionStudyLevel: map['missionStudyLevel'] ?? '',
     );
   }
 
@@ -52,6 +55,7 @@ class MissionModel {
           : null,
       'studentSolution': studentSolution,
       'enrolledStudents': enrolledStudents,
+      'missionStudyLevel': missionStudyLevel,
     };
   }
 
@@ -65,6 +69,7 @@ class MissionModel {
     DateTime? currentDate,
     String? studentSolution,
     int? enrolledStudents,
+    String? missionStudyLevel,
   }) {
     return MissionModel(
       mid: mid ?? this.mid,
@@ -76,6 +81,7 @@ class MissionModel {
       currentDate: currentDate ?? this.currentDate,
       studentSolution: studentSolution ?? this.studentSolution,
       enrolledStudents: enrolledStudents ?? this.enrolledStudents,
+      missionStudyLevel: missionStudyLevel ?? this.missionStudyLevel,
     );
   }
 
@@ -91,6 +97,8 @@ class MissionModel {
       data['currentDate'] = Timestamp.fromDate(currentDate!);
     if (studentSolution != null) data['studentSolution'] = studentSolution;
     if (enrolledStudents != null) data['enrolledStudents'] = enrolledStudents;
+    if (missionStudyLevel != null)
+      data['missionStudyLevel'] = missionStudyLevel;
     return data;
   }
 }

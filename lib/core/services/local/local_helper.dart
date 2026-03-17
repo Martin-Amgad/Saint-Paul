@@ -14,6 +14,7 @@ class LocalHelper {
   static String KUserType = 'user_type';
   static String KUserGroup = 'user_group';
   static String KIsNewUser = 'isNewUser';
+  static String KStudyLevel = 'user_study_level';
 
   static Future<void> init() async {
     prefrences = await SharedPreferences.getInstance();
@@ -57,6 +58,14 @@ class LocalHelper {
 
   static bool? getIsNewUser() {
     return prefrences.getBool(KIsNewUser);
+  }
+
+  static Future<void> setUserStudyLevel(String studyLevel) async {
+    await prefrences.setString(KStudyLevel, studyLevel);
+  }
+
+  static String? getUserStudyLevel() {
+    return prefrences.getString(KStudyLevel);
   }
 
   // Local storage → use toJsonLocal() and fromJsonLocal()

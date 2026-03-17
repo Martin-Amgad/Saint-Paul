@@ -131,8 +131,10 @@ class StudentList extends StatelessWidget {
 
             return GestureDetector(
               onTap: () {
-                FocusScope.of(context).unfocus();
+                // FocusScope.of(context).unfocus();
                 if (isStudent == true) return;
+
+                FocusManager.instance.primaryFocus?.unfocus();
                 pushTo(context, Routes.tayoDetailsScreen, extra: student);
               },
               child: Container(

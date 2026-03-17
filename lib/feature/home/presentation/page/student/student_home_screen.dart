@@ -63,6 +63,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       },
       builder: (context, state) {
         if (state is StudentYearLoaded) {
+          LocalHelper.setUserStudyLevel(state.year);
+
           selectedYear = state.year;
           log('Student year loaded: $selectedYear');
         } else if (state is HomeStudentLoadedState) {

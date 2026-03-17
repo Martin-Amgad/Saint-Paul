@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
@@ -47,7 +48,18 @@ class MissionRepo {
 
   static Future<List<MissionModel>> fetchMissions() async {
     try {
-      final snapshot = await FirebaseProvider.fetchMissions();
+      final QuerySnapshot<Object?> snapshot;
+
+      if (LocalHelper.getUserType() == 'مخدوم') {
+        log(
+          '⚠️ ⚠️ ⚠️ ⚠️ Fetching missions for student with study level: ${LocalHelper.getUserStudyLevel()}',
+        );
+        snapshot = await FirebaseProvider.fetchStudentMissions(
+          LocalHelper.getUserStudyLevel() ?? '',
+        );
+      } else {
+        snapshot = await FirebaseProvider.fetchMissions();
+      }
 
       log('Fetched missions snapshot: ${snapshot.docs.length} documents');
       try {

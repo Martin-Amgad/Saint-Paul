@@ -26,6 +26,8 @@ class CreateAndEditMissionScreen extends StatefulWidget {
 
 class _CreateAndEditMissionScreenState
     extends State<CreateAndEditMissionScreen> {
+  final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
+
   @override
   void initState() {
     if (widget.missionEdit != null) {
@@ -138,6 +140,65 @@ class _CreateAndEditMissionScreenState
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
+                      CustomFormField(
+                        label: 'المرحلة الدراسية',
+                        icon: Icons.school_rounded,
+                        child: DropdownButtonFormField<String>(
+                          isDense: false,
+                          value: cubit.selectedValue,
+                          hint: Text(
+                            'اختر المرحلة الدراسية',
+                            style: TextStyles.getSize16(
+                              color: AppColors.greyColor,
+                              fontWeight: FontWeight.w500,
+                            ).copyWith(fontFamily: 'Cairo'),
+                          ),
+                          icon: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: AppColors.primaryColor,
+                          ),
+                          dropdownColor: AppColors.primaryColor,
+                          borderRadius: BorderRadius.circular(16),
+                          style: TextStyles.getSize16(
+                            color: AppColors.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 3,
+                            ),
+                          ),
+                          selectedItemBuilder: (context) {
+                            return items.map((item) {
+                              return Text(
+                                item,
+                                style: TextStyles.getSize16(
+                                  color: AppColors.primaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ).copyWith(fontFamily: 'Cairo'),
+                              );
+                            }).toList();
+                          },
+
+                          items: items.map((item) {
+                            return DropdownMenuItem(
+                              value: item,
+                              child: Text(
+                                item,
+                                style: TextStyles.getSize16(
+                                  color: AppColors.whiteColor,
+                                  fontWeight: FontWeight.w500,
+                                ).copyWith(fontFamily: 'Cairo'),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() => cubit.selectedValue = value);
+                          },
+                        ),
+                      ),
+                      Gap(15),
                       CustomFormField(
                         label: 'العنوان',
                         icon: Icons.label_rounded,
