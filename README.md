@@ -8,6 +8,13 @@
 
 ---
 
+
+
+
+
+
+
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -70,8 +77,8 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 | Create Mission | Groups | Create Group | Group Details |
 |----------------|--------|--------------|---------------|
-| ![](docs/screens/create_edit_mission.png) | ![](![WhatsApp Image 2026-03-23 at 3 32 13 AM](https://github.com/user-attachments/assets/1da4e93d-14dc-45f4-87b9-82bf35e2cc82)
-) | ![](docs/screens/create_group.png) | ![](docs/screens/group_details_teacher.png) |
+| ![](docs/screens/create_edit_mission.png) |  <img src="[https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c](https://github.com/user-attachments/assets/1da4e93d-14dc-45f4-87b9-82bf35e2cc82)" alt="Saint Paul Logo" width="100"/>!
+ | ![](docs/screens/create_group.png) | ![](docs/screens/group_details_teacher.png) |
 
 | Students List | Add Student |
 |---------------|-------------|
