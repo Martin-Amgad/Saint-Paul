@@ -17,7 +17,9 @@
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Data Models](#data-models)
+- [Auth and Role Notes](#auth-and-role-notes)
 - [Routing](#routing)
+- [Run Locally](#run-locally)
 - [Notes](#notes)
 
 ---
@@ -28,43 +30,7 @@
 
 The app is Arabic-first with full RTL support using the Cairo font family.
 
----
-
-## Run Locally
-
-Minimum project setup:
-
-- Add Firebase config files:
-  - `android/app/google-services.json`
-  - `ios/Runner/GoogleService-Info.plist`
-- Install packages:
-
-```bash
-flutter pub get
-```
-
-- Run the app:
-
-```bash
-flutter run
-```
-
-Useful build command:
-
-```bash
-flutter build apk --split-per-abi
-```
-
----
-
-## Auth and Role Notes
-
-- Roles are encoded using Firebase Auth `photoURL`:
-  - `1` => Teacher (`خادم`)
-  - `0` => Student (`مخدوم`)
-- Teacher registration is protected by an admin PIN (validated against Firestore).
-- Email reset password is active.
-- OTP/new-password screens exist, but the full OTP route flow is currently commented out in router.
+> **Note:** The app currently supports the preparatory year only. Support for additional school years is planned for future releases.
 
 ---
 
@@ -87,7 +53,7 @@ flutter build apk --split-per-abi
 
 ### 🔐 Auth
 - Email/password login and registration via Firebase Auth
-- Forgot password support (email reset is active; OTP/new-password screens exist but are not fully wired)
+- Forgot password support (email reset is availabe)
 - Role-based routing (teacher vs. student) after sign-in
 
 ---
@@ -110,11 +76,11 @@ flutter build apk --split-per-abi
 
 | Create Mission | Groups | Group Details | Create Group |
 |----------------|--------|---------------|--------------|
-| <img src="https://github.com/user-attachments/assets/4efcb9b4-0874-4d8b-909b-2a625e238124" width="160"/> | <img src="https://github.com/user-attachments/assets/d6ef76d3-1927-4183-8301-0de625daf303" width="180"/> | <img src="https://github.com/user-attachments/assets/5610cc6b-40ec-48aa-92dc-f8997b6ff3d8" width="180"/> | <img src="https://github.com/user-attachments/assets/9200dee5-0975-45e3-b30b-d9d3e30d0ae0" width="180"/> |
+| <img src="https://github.com/user-attachments/assets/4efcb9b4-0874-4d8b-909b-2a625e238124" width="180"/> | <img src="https://github.com/user-attachments/assets/d6ef76d3-1927-4183-8301-0de625daf303" width="180"/> | <img src="https://github.com/user-attachments/assets/5610cc6b-40ec-48aa-92dc-f8997b6ff3d8" width="180"/> | <img src="https://github.com/user-attachments/assets/9200dee5-0975-45e3-b30b-d9d3e30d0ae0" width="180"/> |
 
 | Student Profiles | Add Student | Edit Student |
-|-------------|-----------------|-----------------|
-| <img src="https://github.com/user-attachments/assets/63b8cb70-d05f-46df-95f5-df850719b111" width="180"/>  |<img src="https://github.com/user-attachments/assets/4afc546f-657d-4ab2-b059-c489b7932a41" width="180"/> | <img src="https://github.com/user-attachments/assets/e8f9a6fd-7d84-4859-94b7-4eeb6eb2def4" width="180"/>|
+|-----------------|-------------|--------------|
+| <img src="https://github.com/user-attachments/assets/63b8cb70-d05f-46df-95f5-df850719b111" width="180"/> | <img src="https://github.com/user-attachments/assets/4afc546f-657d-4ab2-b059-c489b7932a41" width="180"/> | <img src="https://github.com/user-attachments/assets/e8f9a6fd-7d84-4859-94b7-4eeb6eb2def4" width="180"/> |
 
 ---
 
@@ -142,6 +108,7 @@ flutter build apk --split-per-abi
 | Local Storage | `shared_preferences` |
 | UI | Arabic-first RTL, Cairo font, `flutter_svg`, `lottie`, `google_nav_bar` |
 | Images | `cached_network_image`, `image_picker` |
+| Image Storage | Cloudinary (student avatar uploads) |
 | Links | `url_launcher` |
 | Localization | `flutter_localizations` (Arabic + English) |
 
@@ -208,7 +175,7 @@ lib/
 ### StudentModel
 Tracks everything about a student: contact info, study level, responsible teacher, group membership, Tayo attendance scores, accepted/submitted missions, and earned badge keys.
 
-**Tayo categories tracked per student:**
+**Current Tayo categories tracked per student:**
 - Attending Mass
 - Attending Mass before the teacher
 - Staying quiet during Mass
@@ -225,11 +192,19 @@ Represents a student group with a teacher-managed membership list.
 
 ---
 
+## Auth and Role Notes
+
+- Roles are encoded using Firebase Auth `photoURL`:
+  - `1` → Teacher (`خادم`)
+  - `0` → Student (`مخدوم`)
+- Teacher registration is protected by an admin PIN validated against Firestore.
+- Email reset password is active.
+
+---
+
 ## Routing
 
 All routes are defined in `lib/core/routes/routes.dart` using **GoRouter**. Role-based navigation (teacher vs. student) is handled after authentication via the `mainScreen` route, which receives the user's role as an `extra` parameter.
-
-Key routes:
 
 | Route | Screen |
 |-------|--------|
@@ -241,19 +216,42 @@ Key routes:
 | `/teacherHomeScreen` | Teacher Home |
 | `/studentHomeScreen` | Student Home |
 | `/studentShowcaseAndEditScreen` | Students Showcase and Edit |
-| `/addNewStudentScreen` | Add/Edit Student |
+| `/addNewStudentScreen` | Add / Edit Student |
 | `/teacherMissionScreen` | Teacher Missions |
 | `/createMissionScreen` | Create / Edit Mission |
 | `/studentMissionScreen` | Student Missions |
 | `/missionDetailsScreen` | Mission Details |
-| `/studentMissionsList` | Student Missions List (teacher preview route) |
+| `/studentMissionsList` | Student Missions List (teacher preview) |
 | `/groupShowcaseScreen` | Groups List |
 | `/createGroupScreen` | Create Group |
 | `/groupDetailsScreen` | Group Details |
 | `/studentProfileScreen` | Student Profile |
 | `/badgesScreen` | Badges |
 | `/tayoDetailsScreen` | Tayo / Attendance Detail |
-| `/confirmScreen` | Password Changed |
+
+---
+
+## Run Locally
+
+Make sure you have a Firebase project with **Authentication** and **Cloud Firestore** enabled, then add your config files:
+
+- `android/app/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
+
+Student avatar uploads use **Cloudinary**. You'll need a Cloudinary account and must configure your upload URL and unsigned upload preset in the app before image uploads will work.
+
+Then install packages and run:
+
+```bash
+flutter pub get
+flutter run
+```
+
+To build a release APK:
+
+```bash
+flutter build apk --split-per-abi
+```
 
 ---
 
