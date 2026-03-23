@@ -148,7 +148,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
               );
               cubit.updateStudentGroup(
                 widget.student.groupID ?? '',
-                (widget.student.totalTayo ?? 0) + changedTotalTayo,
+                changedTotalTayo,
               );
               setState(() {
                 confirmedTotalTayo += changedTotalTayo;
@@ -216,7 +216,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                       log('Student group ID: ${widget.student.groupID ?? ''}');
                       cubit.updateStudentGroup(
                         widget.student.groupID ?? '',
-                        (widget.student.totalTayo ?? 0) + changedTotalTayo,
+                        changedTotalTayo,
                       );
                       setState(() {
                         confirmedTotalTayo += changedTotalTayo;
@@ -281,10 +281,8 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                   tayoRemovedCategories: tayoRemovedCategories,
                                 );
                                 cubit.updateStudentGroup(
-                                  // ← this is missing here
                                   widget.student.groupID ?? '',
-                                  (widget.student.totalTayo ?? 0) +
-                                      changedTotalTayo,
+                                  changedTotalTayo,
                                 );
                                 setState(() {
                                   confirmedTotalTayo += changedTotalTayo;
