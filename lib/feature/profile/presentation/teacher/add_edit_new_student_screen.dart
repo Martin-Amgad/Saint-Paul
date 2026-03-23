@@ -373,6 +373,29 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                             },
                           ),
                         ),
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'صورة المخدوم (رابط)',
+                          icon: Icons.home_rounded,
+                          child: CustomTextField(
+                            hintText: 'ادخل رابط صورة المخدوم',
+                            controller: cubit.avatarUrlController,
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                cubit.avatarUrlController.clear();
+                                setState(() {
+                                  cubit.avatarUrlController.text = '';
+                                });
+                              },
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: AppColors.primaryColor.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
 
                         const Gap(20),
                       ],

@@ -105,6 +105,22 @@ class MissionCubit extends Cubit<MissionState> {
     }
   }
 
+  Future<String> removeFromAcceptedMissions(String mid) async {
+    emit(MissionLoadingState());
+    try {
+      final result = await MissionRepo.removeFromAcceptMission(mid);
+      emit(MissionSuccessState(message: result));
+      return 'تم إلغاء قبول المهمة بنجاح.';
+    } catch (e) {
+      emit(
+        MissionErrorState(
+          message: 'حدث خطأ أثناء إلغاء قبول المهمة. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+      return 'حدث خطأ أثناء إلغاء قبول المهمة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
   Future<String> submitMission(String mid, MissionModel mission) async {
     emit(MissionLoadingState());
     try {

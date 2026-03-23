@@ -75,14 +75,14 @@ class HomeRepo {
   static Future<String?> loadStudentYear(String? id) async {
     try {
       if (id == null || id.isEmpty) {
-        return 'ثالثة اعدادي';
+        return ' ';
       }
       final snapshot = await FirebaseProvider.getStudentByID(id);
       final data = snapshot.data() as Map<String, dynamic>? ?? {};
       return data['studyLevel'] as String?;
     } on Exception catch (e) {
       log(e.toString());
-      return 'ثالثة اعدادي';
+      return ' ';
     }
   }
 

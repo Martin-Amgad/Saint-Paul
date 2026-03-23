@@ -130,8 +130,22 @@ class MissionRepo {
   static Future<String?> acceptMission(String mid) async {
     try {
       final userId = LocalHelper.getUserId();
-      await FirebaseProvider.updateAcceptedMissions(userId, mid);
+      await FirebaseProvider.addToAcceptedMissions(userId, mid);
       return 'تم قبول المهمة بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.';
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  static Future<String?> removeFromAcceptMission(String mid) async {
+    try {
+      final userId = LocalHelper.getUserId();
+      await FirebaseProvider.removeFromAcceptedMissions(userId, mid);
+      return 'تم إلغاء قبول المهمة بنجاح.';
     } on Exception catch (e) {
       log(e.toString());
       return 'حدث خطأ أثناء قبول المهمة. الرجاء المحاولة مرة أخرى.';

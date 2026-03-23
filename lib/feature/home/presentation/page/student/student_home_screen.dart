@@ -57,19 +57,20 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<HomeCubit, HomeState>(
       listener: (context, state) {
-        if (state is HomeErrorState) {
-          showMyDialoge(context, state.message, type: DialogType.error);
-        }
-      },
-      builder: (context, state) {
         if (state is StudentYearLoaded) {
           LocalHelper.setUserStudyLevel(state.year);
-
           selectedYear = state.year;
           log('Student year loaded: $selectedYear');
         } else if (state is HomeStudentLoadedState) {
           LocalHelper.setUserData(state.studentData?.toJsonLocal());
+        } else if (state is HomeErrorState) {
+          showMyDialoge(context, state.message, type: DialogType.error);
         }
+      },
+      builder: (context, state) {
+        final effectiveSelectedYear = (selectedYear ?? '').trim();
+        final isYearLoaded = effectiveSelectedYear.isNotEmpty;
+
         return Scaffold(
           backgroundColor: AppColors.backgroundColor,
           body: Column(
@@ -172,7 +173,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               // ── Student list ────────────────────────────────────────
               BlocBuilder<HomeCubit, HomeState>(
                 builder: (context, state) {
-                  if (state is HomeLoadingState) {
+                  if (state is HomeLoadingState || !isYearLoaded) {
                     return Column(
                       children: [
                         Gap(MediaQuery.of(context).size.height * 0.21),
@@ -187,7 +188,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       textDirection: TextDirection.rtl,
                       child: StudentList(
                         searchText: searchText,
-                        filterSelection: selectedYear ?? '',
+                        filterSelection: effectiveSelectedYear,
                         isStudent: true,
                       ),
                     ),

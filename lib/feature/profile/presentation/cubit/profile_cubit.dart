@@ -49,4 +49,19 @@ class ProfileCubit extends Cubit<ProfileState> {
       return null;
     }
   }
+
+  Future<void> deleteStudent(String studentId) async {
+    try {
+      emit(ProfileLoadingState());
+      await ProfileRepo.deleteStudent(studentId);
+      emit(ProfileDeletedState());
+    } catch (e) {
+      log(e.toString());
+      emit(
+        ProfileErrorState(
+          message: 'حدث خطأ أثناء حذف الطالب. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
 }

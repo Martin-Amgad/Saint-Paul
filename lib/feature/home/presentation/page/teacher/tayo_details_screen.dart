@@ -13,7 +13,6 @@ import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
-import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 
@@ -94,7 +93,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
 
   @override
   void initState() {
-    int tempTotalTayo = 0;
+    // int tempTotalTayo = 0;
     super.initState();
     confirmedTotalTayo = widget.student.totalTayo ?? 0;
     context.read<HomeCubit>().getStudentTayoDetails(widget.student);
@@ -135,6 +134,10 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
             tayo: tayo,
             oldTayo: oldTayo,
             mainButtonOnConfirm: () {
+              log('User confirmed to save changes. Updating student data.');
+              log(
+                'Updating student with tayo: $tayo, changes to total tayo: $changedTotalTayo',
+              );
               cubit.updateStudent(
                 widget.student.copyWith(
                   tayo: tayo,
@@ -145,7 +148,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
               );
               cubit.updateStudentGroup(
                 widget.student.groupID ?? '',
-                changedTotalTayo,
+                (widget.student.totalTayo ?? 0) + changedTotalTayo,
               );
               setState(() {
                 confirmedTotalTayo += changedTotalTayo;
@@ -183,6 +186,13 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                         tayoNewCategories,
                         tayoRemovedCategories,
                       );
+                      log(
+                        'User confirmed to save changes. Updating student data.',
+                      );
+
+                      log(
+                        'Before updating student total tayo: ${widget.student.totalTayo ?? 99999}, changes to total tayo: $changedTotalTayo',
+                      );
                       cubit.updateStudent(
                         widget.student.copyWith(
                           tayo: tayo,
@@ -192,6 +202,9 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                         ),
                         tayoNewCategories: tayoNewCategories,
                         tayoRemovedCategories: tayoRemovedCategories,
+                      );
+                      log(
+                        'After updating student total tayo: ${widget.student.totalTayo ?? 99999}, changes to total tayo: $changedTotalTayo',
                       );
                       checkAndResetTayo();
                       oldTayo = Map<String, dynamic>.from(tayo);
@@ -203,7 +216,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                       log('Student group ID: ${widget.student.groupID ?? ''}');
                       cubit.updateStudentGroup(
                         widget.student.groupID ?? '',
-                        changedTotalTayo,
+                        (widget.student.totalTayo ?? 0) + changedTotalTayo,
                       );
                       setState(() {
                         confirmedTotalTayo += changedTotalTayo;
@@ -270,7 +283,8 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                 cubit.updateStudentGroup(
                                   // ← this is missing here
                                   widget.student.groupID ?? '',
-                                  changedTotalTayo,
+                                  (widget.student.totalTayo ?? 0) +
+                                      changedTotalTayo,
                                 );
                                 setState(() {
                                   confirmedTotalTayo += changedTotalTayo;
@@ -366,6 +380,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                       'تم تحديث بيانات المخدوم بنجاح',
                       type: DialogType.success,
                     );
+                    pop(context);
                   } else if (state is HomeSuccessStateForTakenAt) {
                     log('HomeSuccessStateForTakenAt triggered');
                   } else if (state is HomeTayoLoadSuccessState) {
@@ -586,7 +601,12 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                                 onTap: () {
                                                   if (categoryvalue > 0) {
                                                     changedTotalTayo--;
-
+                                                    log(
+                                                      'Decrementing category: $key, new count will be ${categoryvalue - 1}',
+                                                    );
+                                                    log(
+                                                      'Changed total tayo after decrement: $changedTotalTayo',
+                                                    );
                                                     tayo[key] = {
                                                       "takenAt": null,
                                                       "count":

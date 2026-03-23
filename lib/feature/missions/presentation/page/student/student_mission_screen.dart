@@ -175,6 +175,8 @@ class _StudentMissionScreenState extends State<StudentMissionScreen> {
                               ],
                             );
                           }
+                          log('Accepted missions: $acceptedMissions');
+
                           return Expanded(
                             child: selectedIndex == 0
                                 ? AvailableMissionsBuilder(

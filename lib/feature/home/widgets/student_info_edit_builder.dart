@@ -3,13 +3,17 @@ import 'dart:developer';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
 class StudentInfoEditbuilder extends StatefulWidget {
   const StudentInfoEditbuilder({
@@ -120,6 +124,21 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
                     final student = filteredStudents[index];
 
                     return GestureDetector(
+                      onLongPress: () async {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        await showChangesNotSavedDialog(
+                          context,
+                          title: 'هل أنت متأكد؟',
+                          content:
+                              'سيتم حذف المخدوم نهائيا ولن تتمكن من استرجاعه مرة أخرى.',
+                          mainButtonText: 'حذف',
+                          mainButtonOnConfirm: () {
+                            ProfileCubit().deleteStudent(student.uid!);
+                            pop(context);
+                          },
+                          secondaryButtonText: 'إلغاء',
+                        );
+                      },
                       onTap: () {
                         FocusManager.instance.primaryFocus?.unfocus();
 

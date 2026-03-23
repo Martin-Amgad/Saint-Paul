@@ -11,6 +11,7 @@ import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_state.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
@@ -40,6 +41,7 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
 
   @override
   void initState() {
+    var cubit = context.read<MissionCubit>();
     for (var mission in widget.missions ?? []) {
       log('Mission: ${mission.title}, Days Left: ${daysLeft(mission)}');
 
@@ -47,7 +49,8 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
           ?.where((m) => daysLeft(m) >= 0)
           .toList();
       if (daysLeft(mission) < 0) {
-        context.read<MissionCubit>().deleteMission(mission.mid ?? '');
+        cubit.deleteMission(mission.mid ?? '');
+        cubit.removeFromAcceptedMissions(mission.mid ?? '');
       }
     }
     super.initState();
@@ -58,11 +61,11 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
     return BlocListener<MissionCubit, MissionState>(
       listener: (context, state) {
         if (state is MissionDeleteSuccessState) {
-          showMyDialoge(
-            context,
-            state.message ?? 'تم حذف المهمة بنجاح.',
-            type: DialogType.success,
-          );
+          // showMyDialoge(
+          //   context,
+          //   state.message ?? 'تم حذف المهمة بنجاح.',
+          //   type: DialogType.success,
+          // );
         } else if (state is MissionErrorState) {
           showMyDialoge(context, state.message, type: DialogType.error);
         }

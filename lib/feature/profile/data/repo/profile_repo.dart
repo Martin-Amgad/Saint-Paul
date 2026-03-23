@@ -50,4 +50,17 @@ class ProfileRepo {
       return null;
     }
   }
+
+  static Future<String?> deleteStudent(String studentId) async {
+    try {
+      await FirebaseProvider.studentCollection.doc(studentId).delete();
+      return 'تم حذف المخدوم بنجاح.';
+    } on Exception catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء حذف المخدوم. الرجاء المحاولة مرة أخرى.';
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء حذف المخدوم. الرجاء المحاولة مرة أخرى.';
+    }
+  }
 }

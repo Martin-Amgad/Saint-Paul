@@ -12,7 +12,7 @@ import 'package:saint_paul/feature/groups/presentation/page/teacher/create_group
 import 'package:saint_paul/feature/groups/presentation/page/teacher/groups_showcase_screen.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
-import 'package:saint_paul/feature/home/presentation/page/teacher/add_edit_new_student_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/add_edit_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
 import 'package:saint_paul/feature/missions/widgets/student_missions_list.dart';

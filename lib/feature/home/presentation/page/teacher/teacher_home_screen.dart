@@ -282,8 +282,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       children: [
                         FilteredChip(
                           label: 'الكل',
-                          selected: selectedYear == null,
-                          onTap: () => setState(() => selectedYear = null),
+                          selected: selectedYear == 'الكل',
+                          onTap: () => setState(() => selectedYear = 'الكل'),
                         ),
                         const Gap(8),
                         FilteredChip(
@@ -322,7 +322,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               textDirection: TextDirection.rtl,
               child: StudentList(
                 searchText: searchText,
-                filterSelection: selectedYear ?? '',
+                filterSelection: selectedYear ?? 'الكل',
               ),
             ),
           ),

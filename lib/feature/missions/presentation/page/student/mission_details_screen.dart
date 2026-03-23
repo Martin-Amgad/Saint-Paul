@@ -32,7 +32,6 @@ class MissionDetailsScreen extends StatefulWidget {
 
 class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
   final answerController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
   int daysLeft(MissionModel m) {
     if (m.currentDate == null || m.expireAfter == null) return 0;

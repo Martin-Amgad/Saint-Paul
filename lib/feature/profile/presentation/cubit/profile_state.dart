@@ -18,6 +18,8 @@ class ProfileLoadedState extends ProfileState {
   ProfileLoadedState({this.message, this.studentData});
 }
 
+class ProfileDeletedState extends ProfileState {}
+
 class ProfileErrorState extends ProfileState {
   final String message;
   ProfileErrorState({required this.message});

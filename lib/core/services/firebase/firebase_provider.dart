@@ -22,7 +22,8 @@ class FirebaseProvider {
   static final CollectionReference groupCollection = firebase.collection(
     'Group',
   );
-  // TEACHER METHODS
+
+  // TEACHER METHODS ////////////////////////////////////////////////////////////
   static Future<void> createTeacher(TeacherModel teacher) async {
     await teacherCollection.doc(teacher.uid).set(teacher.toJson());
   }
@@ -35,7 +36,7 @@ class FirebaseProvider {
     return teacherCollection.doc(id).get();
   }
 
-  // STUDENT METHODS
+  // STUDENT METHODS ////////////////////////////////////////////////////////////
   static Future<void> createStudent(StudentModel student) async {
     await studentCollection.doc(student.uid).set(student.toJson());
   }
@@ -69,12 +70,21 @@ class FirebaseProvider {
     await studentCollection.doc(studentId).update({'avatarUrl': avatarUrl});
   }
 
-  static Future<void> updateAcceptedMissions(
+  static Future<void> addToAcceptedMissions(
     String? studentId,
     String mid,
   ) async {
     studentCollection.doc(studentId).update({
       "acceptedMissions": FieldValue.arrayUnion([mid]),
+    });
+  }
+
+  static Future<void> removeFromAcceptedMissions(
+    String? studentId,
+    String mid,
+  ) async {
+    studentCollection.doc(studentId).update({
+      "acceptedMissions": FieldValue.arrayRemove([mid]),
     });
   }
 
@@ -166,7 +176,11 @@ class FirebaseProvider {
     await studentCollection.doc(studentId).update(updates);
   }
 
-  // MISSION METHODS
+  static Future<void> deleteStudent(String studentId) async {
+    await studentCollection.doc(studentId).delete();
+  }
+
+  // MISSION METHODS ////////////////////////////////////////////////////////////
   static Future<void> createMission(MissionModel mission) async {
     await missionCollection.doc(mission.mid).set(mission.toJson());
   }
@@ -189,7 +203,7 @@ class FirebaseProvider {
     await missionCollection.doc(mission.mid).update(mission.toUpdateData());
   }
 
-  // GROUP METHODS
+  // GROUP METHODS //////////////////////////////////////////////////////////////
   static Future<String> createGroup(GroupModel group) async {
     final doc = await groupCollection.add(
       group.toJson(),
