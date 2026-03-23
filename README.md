@@ -30,6 +30,44 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 ---
 
+## Run Locally
+
+Minimum project setup:
+
+- Add Firebase config files:
+  - `android/app/google-services.json`
+  - `ios/Runner/GoogleService-Info.plist`
+- Install packages:
+
+```bash
+flutter pub get
+```
+
+- Run the app:
+
+```bash
+flutter run
+```
+
+Useful build command:
+
+```bash
+flutter build apk --split-per-abi
+```
+
+---
+
+## Auth and Role Notes
+
+- Roles are encoded using Firebase Auth `photoURL`:
+  - `1` => Teacher (`خادم`)
+  - `0` => Student (`مخدوم`)
+- Teacher registration is protected by an admin PIN (validated against Firestore).
+- Email reset password is active.
+- OTP/new-password screens exist, but the full OTP route flow is currently commented out in router.
+
+---
+
 ## Features
 
 ### 👨‍🏫 Teacher Side
@@ -49,7 +87,7 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 ### 🔐 Auth
 - Email/password login and registration via Firebase Auth
-- Forgot password flow (email → OTP → new password)
+- Forgot password support (email reset is active; OTP/new-password screens exist but are not fully wired)
 - Role-based routing (teacher vs. student) after sign-in
 
 ---
@@ -137,7 +175,7 @@ lib/
 │
 ├── core/
 │   ├── constants/             # App-wide constants
-│   ├── extensions/            # Dart extensions
+│   ├── extentions/            # Dart extensions
 │   ├── models/                # Shared data models
 │   │   ├── student_model.dart
 │   │   ├── teacher_model.dart
@@ -200,15 +238,22 @@ Key routes:
 | `/login` | Login |
 | `/Register` | Register |
 | `/mainScreen` | Main Nav (role-aware) |
+| `/teacherHomeScreen` | Teacher Home |
+| `/studentHomeScreen` | Student Home |
+| `/studentShowcaseAndEditScreen` | Students Showcase and Edit |
+| `/addNewStudentScreen` | Add/Edit Student |
 | `/teacherMissionScreen` | Teacher Missions |
 | `/createMissionScreen` | Create / Edit Mission |
 | `/studentMissionScreen` | Student Missions |
 | `/missionDetailsScreen` | Mission Details |
+| `/studentMissionsList` | Student Missions List (teacher preview route) |
 | `/groupShowcaseScreen` | Groups List |
+| `/createGroupScreen` | Create Group |
 | `/groupDetailsScreen` | Group Details |
 | `/studentProfileScreen` | Student Profile |
 | `/badgesScreen` | Badges |
 | `/tayoDetailsScreen` | Tayo / Attendance Detail |
+| `/confirmScreen` | Password Changed |
 
 ---
 
