@@ -1,25 +1,24 @@
 # Saint Paul
 
-Saint Paul is a Flutter app for teachers and students to manage missions, groups, profiles, and leaderboard progress.
+Saint Paul is a Flutter app for church student follow-up, with dedicated experiences for teachers and students.
 
-## Quick Overview
+## What This App Does
 
-- Roles: Teacher and Student
-- Backend: Firebase Authentication + Cloud Firestore
-- State management: Cubit (flutter_bloc)
-- Routing: go_router
-- Language support: Arabic (primary) and English
+- Teacher side: manage students, missions, groups, and rankings 🧑‍🏫
+- Student side: follow missions, check profile, and track leaderboard progress 🎯
+- Live updates from Firestore for leaderboard and related lists ⚡
 
-## Features
+## Quick Tech Snapshot
 
-- Authentication (login, register, reset password)
-- Real-time leaderboard by total tayo
-- Mission management (create, edit, delete, accept, submit)
-- Group management (create groups, assign students, group details)
-- Student profile and badges
+- Flutter + Dart
+- Cubit (`flutter_bloc`)
+- Firebase Authentication + Cloud Firestore
+- `go_router` for navigation
+- Arabic-first UI with localization support
 
 ## Project Structure
 
+```text
 lib/
   core/
   feature/
@@ -32,54 +31,41 @@ lib/
     splash/
     welcome/
   components/
+```
 
-## Setup
+## Setup (Project Only)
 
-Prerequisites:
+Make sure Firebase is connected for this project, and these files exist:
 
-- Flutter SDK
-- Firebase project with Auth and Firestore enabled
-- Platform config files:
-  - android/app/google-services.json
-  - ios/Runner/GoogleService-Info.plist
+- `android/app/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
 
-Install:
+Then run:
 
+```bash
 flutter pub get
+```
 
-Optional (regenerate Firebase options):
+Optional (if needed):
 
+```bash
 flutterfire configure
+```
 
 ## Common Commands
 
-Run:
-
+```bash
 flutter run
-
-Analyze:
-
 flutter analyze
-
-Test:
-
 flutter test
-
-Build APK:
-
 flutter build apk
-
-Build split APKs:
-
 flutter build apk --split-per-abi
-
-Build Android App Bundle:
-
 flutter build appbundle
+```
 
-## Simple Architecture Diagram
+## Architecture (Simple)
 
-mermaid
+```mermaid
 flowchart TD
   UI[Flutter UI] --> Cubit[Cubit]
   Cubit --> Repo[Repositories]
@@ -88,12 +74,13 @@ flowchart TD
   Firebase --> Store[Cloud Firestore]
   Store --> Stream[Realtime Streams]
   Stream --> UI
+```
 
 ## Screenshots Placeholders
 
-Add screenshots under docs/screens with these names:
+Put screenshots in `docs/screens` using these names.
 
-App entry and auth:
+### App Entry and Auth
 
 ![Splash](docs/screens/splash.png)
 ![Welcome](docs/screens/welcome.png)
@@ -104,7 +91,7 @@ App entry and auth:
 ![New Password](docs/screens/new_password.png)
 ![Password Changed](docs/screens/password_changed.png)
 
-Teacher:
+### Teacher Screens
 
 ![Teacher Home](docs/screens/teacher_home.png)
 ![Tayo Details](docs/screens/tayo_details.png)
@@ -117,7 +104,7 @@ Teacher:
 ![Students Showcase Edit](docs/screens/students_showcase_edit.png)
 ![Add Edit Student](docs/screens/add_edit_student.png)
 
-Student:
+### Student Screens
 
 ![Student Home](docs/screens/student_home.png)
 ![Student Missions](docs/screens/student_missions.png)
@@ -128,5 +115,5 @@ Student:
 
 ## Notes
 
-- Leaderboards are stream-based, so updates appear in real time.
-- Main routes are defined in lib/core/routes/routes.dart.
+- Leaderboard-related screens use Firestore streams, so updates appear in near real-time.
+- Main route map lives in `lib/core/routes/routes.dart`.
