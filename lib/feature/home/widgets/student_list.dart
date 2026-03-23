@@ -33,6 +33,7 @@ class StudentList extends StatelessWidget {
     List<StudentModel> allStudents;
     List<StudentModel> allStudentsWithYear;
     List<StudentModel> filteredStudents;
+    int rankCounter = 4;
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseProvider.streamedSortStudentsByTotalTayo(),
@@ -71,7 +72,7 @@ class StudentList extends StatelessWidget {
         filteredStudents = searchText.isEmpty && filterSelection == 'الكل'
             ? allStudents
             : allStudents.where((student) {
-                final name = student.name ?? '';
+                final name = student.name?.toLowerCase() ?? '';
                 final studyLevel = student.studyLevel ?? '';
                 final matchesSearch = name.contains(searchText);
                 final matchesFilter = filterSelection == 'الكل'
@@ -188,7 +189,7 @@ class StudentList extends StatelessWidget {
                                 color: rankColor,
                               )
                             : Text(
-                                '${allStudentsWithYear.indexOf(filteredStudents[index]) + 1}',
+                                '${rankCounter++}',
                                 style: TextStyles.getSize16(
                                   color: AppColors.primaryColor,
                                   fontWeight: FontWeight.w700,

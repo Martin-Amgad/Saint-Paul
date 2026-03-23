@@ -138,6 +138,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
               log(
                 'Updating student with tayo: $tayo, changes to total tayo: $changedTotalTayo',
               );
+              removeCommonElements(tayoNewCategories, tayoRemovedCategories);
               cubit.updateStudent(
                 widget.student.copyWith(
                   tayo: tayo,
@@ -270,6 +271,10 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                               tayo: tayo,
                               oldTayo: oldTayo,
                               mainButtonOnConfirm: () {
+                                removeCommonElements(
+                                  tayoNewCategories,
+                                  tayoRemovedCategories,
+                                );
                                 context.read<HomeCubit>().updateStudent(
                                   widget.student.copyWith(
                                     tayo: tayo,

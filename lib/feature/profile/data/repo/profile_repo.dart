@@ -53,7 +53,8 @@ class ProfileRepo {
 
   static Future<String?> deleteStudent(String studentId) async {
     try {
-      await FirebaseProvider.studentCollection.doc(studentId).delete();
+      await FirebaseProvider.deleteStudent(studentId);
+
       return 'تم حذف المخدوم بنجاح.';
     } on Exception catch (e) {
       log(e.toString());

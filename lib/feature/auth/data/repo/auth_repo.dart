@@ -75,19 +75,29 @@ class AuthRepo {
     DateTime? birthday,
   }) async {
     try {
+      var tayo = await FirebaseProvider.getDefaultTayo();
+      if (tayo.isEmpty) {
+        return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
+      }
       var credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       User user = credential.user!;
 
       if (role == 'مخدوم') {
-        await FirebaseProvider.createStudent(
-          StudentModel(
-            uid: user.uid,
-            name: name,
-            studyLevel: studyLevel,
-            birthday: birthday,
-          ),
-        );
+        try {
+          await FirebaseProvider.createStudent(
+            StudentModel(
+              uid: user.uid,
+              name: name,
+              studyLevel: studyLevel,
+              birthday: birthday,
+              tayo: tayo,
+            ),
+          );
+        } on Exception catch (_) {
+          await user.delete();
+          return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
+        }
       }
       log('User logged in with email: $email');
       log('User UID: ${user.uid}');
@@ -112,6 +122,7 @@ class AuthRepo {
           name: name,
           studyLevel: studyLevel,
           birthday: birthday,
+          tayo: tayo,
         ).toJsonLocal(),
       );
 

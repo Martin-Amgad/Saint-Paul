@@ -321,7 +321,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: StudentList(
-                searchText: searchText,
+                searchText: searchText.toLowerCase(),
                 filterSelection: selectedYear ?? 'الكل',
               ),
             ),

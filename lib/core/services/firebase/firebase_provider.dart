@@ -21,6 +21,9 @@ class FirebaseProvider {
   static final CollectionReference groupCollection = firebase.collection(
     'Group',
   );
+  static final CollectionReference configCollection = firebase.collection(
+    'config',
+  );
 
   // TEACHER METHODS ////////////////////////////////////////////////////////////
   static Future<void> createTeacher(TeacherModel teacher) async {
@@ -36,6 +39,24 @@ class FirebaseProvider {
   }
 
   // STUDENT METHODS ////////////////////////////////////////////////////////////
+
+  static Map<String, dynamic> updateTayoMethod(
+    List<String>? tayoNewCategories,
+    List<String>? tayoRemovedCategories,
+  ) {
+    Map<String, dynamic> updates = {};
+
+    for (var key in tayoNewCategories ?? []) {
+      updates['tayo.$key.count'] = 0;
+      updates['tayo.$key.takenAt'] = null;
+    }
+
+    for (var key in tayoRemovedCategories ?? []) {
+      updates['tayo.$key'] = FieldValue.delete();
+    }
+    return updates;
+  }
+
   static Future<void> createStudent(StudentModel student) async {
     await studentCollection.doc(student.uid).set(student.toJson());
   }
@@ -112,6 +133,11 @@ class FirebaseProvider {
     return studentCollection.doc(id).get();
   }
 
+  static Future<Map<String, dynamic>> getDefaultTayo() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('tayo') as Map<String, dynamic>;
+  }
+
   static Future<QuerySnapshot> getAllStudents() {
     return studentCollection.get();
   }
@@ -137,27 +163,52 @@ class FirebaseProvider {
       return;
     }
 
+    await configCollection
+        .doc('defaults')
+        .update(updateTayoMethod(tayoNewCategories, tayoRemovedCategories));
+
     final snapshot = await studentCollection.get();
 
+    // final defaultsTayo = await FirebaseProvider.getDefaultTayo();
+
+    // final futures = snapshot.docs.map((doc) async {
+    //   Map<String, dynamic> currentTayo = Map<String, dynamic>.from(
+    //     doc.get('tayo') ?? {},
+    //   );
+
+    //   Map<String, dynamic> updates = {};
+
+    //   // add keys that are in defaults but missing in student
+    //   for (var key in defaultsTayo.keys) {
+    //     if (!currentTayo.containsKey(key)) {
+    //       updates['tayo.$key'] = {'count': 0, 'takenAt': null};
+    //     }
+    //   }
+
+    //   // remove keys that are not in defaults
+    //   // for (var key in currentTayo.keys) {
+    //   //   if (!defaultsTayo.containsKey(key)) {
+    //   //     updates['tayo.$key'] = FieldValue.delete();
+    //   //   }
+    //   // }
+
+    //   if (updates.isEmpty) return;
+
+    //   return doc.reference.update(updates);
+    // });
+
+    // await Future.wait(futures);
+
     final futures = snapshot.docs.map((doc) {
-      Map<String, dynamic> updates = {};
-
-      for (var key in tayoNewCategories ?? []) {
-        updates['tayo.$key.count'] = 0;
-        updates['tayo.$key.takenAt'] = null;
-      }
-
-      for (var key in tayoRemovedCategories ?? []) {
-        updates['tayo.$key'] = FieldValue.delete();
-      }
+      Map<String, dynamic> updates = updateTayoMethod(
+        tayoNewCategories,
+        tayoRemovedCategories,
+      );
 
       return doc.reference.update(updates);
     });
 
     await Future.wait(futures);
-
-    tayoNewCategories?.clear();
-    tayoRemovedCategories?.clear();
   }
 
   static Future<void> updateCurrentStudentTayo(
