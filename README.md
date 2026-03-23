@@ -1,19 +1,12 @@
 # Saint Paul — Church Student Follow-Up App
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c" alt="Saint Paul Logo" width="100"/>
+  <img src="https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c" alt="Saint Paul Logo" width="300"/>
 </p>
 
 > A Flutter mobile app for tracking and engaging church youth students — built for both teachers and students, powered by Firebase in real time.
 
 ---
-
-
-
-
-
-
-
 
 ## Table of Contents
 
@@ -67,32 +60,35 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 | Splash | Welcome | Login | Register |
 |--------|---------|-------|----------|
-| ![]() | ![](docs/screens/welcome.png) | ![](docs/screens/login.png) | ![](docs/screens/register.png) |
+| <img src="https://github.com/user-attachments/assets/f6bfc2de-d9c3-4b0b-8df7-630245fb7046" width="180"/> | <img src="https://github.com/user-attachments/assets/7d8c23e2-55a2-49a4-91ec-5e62b12884b4" width="180"/> | <img src="https://github.com/user-attachments/assets/e9775a07-ace5-4d85-b2be-d2d841506bd1" width="180"/> | <img src="https://github.com/user-attachments/assets/e362622d-3302-411d-95fd-545055e3f9ee" width="180"/> |
+
+---
 
 ### Teacher Screens
 
-| Home | Student Detail | Birthdays | Missions |
-|------|---------------|-----------|----------|
-| ![](docs/screens/teacher_home.png) | ![](docs/screens/tayo_details.png) | ![](docs/screens/birthday.png) | ![](docs/screens/teacher_missions.png) |
+| Home | Tayo Details | Birthdays | Missions |
+|------|--------------|-----------|----------|
+| <img src="https://github.com/user-attachments/assets/ba8e1798-faa1-4c42-9203-9f7d32c5c57f" width="180"/> | <img src="https://github.com/user-attachments/assets/9e585371-0be4-49fe-ba8c-7a0e4d82170e" width="180"/> | <img src="https://github.com/user-attachments/assets/1661432d-177d-4999-be22-2d270bf6097f" width="180"/> | <img src="https://github.com/user-attachments/assets/bc32ca7e-ceec-4200-88cf-b8bf642b36d7" width="180"/> |
 
-| Create Mission | Groups | Create Group | Group Details |
-|----------------|--------|--------------|---------------|
-| ![](docs/screens/create_edit_mission.png) |  <img src="[https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c](https://github.com/user-attachments/assets/1da4e93d-14dc-45f4-87b9-82bf35e2cc82)" alt="Saint Paul Logo" width="100"/>!
- | ![](docs/screens/create_group.png) | ![](docs/screens/group_details_teacher.png) |
+| Create Mission | Groups | Group Details | Create Group |
+|----------------|--------|---------------|--------------|
+| <img src="https://github.com/user-attachments/assets/4efcb9b4-0874-4d8b-909b-2a625e238124" width="160"/> | <img src="https://github.com/user-attachments/assets/d6ef76d3-1927-4183-8301-0de625daf303" width="180"/> | <img src="https://github.com/user-attachments/assets/5610cc6b-40ec-48aa-92dc-f8997b6ff3d8" width="180"/> | <img src="https://github.com/user-attachments/assets/9200dee5-0975-45e3-b30b-d9d3e30d0ae0" width="180"/> |
 
-| Students List | Add Student |
-|---------------|-------------|
-| ![](docs/screens/students_showcase_edit.png) | ![](docs/screens/add_edit_student.png) |
+| Student Profiles | Add Student | Edit Student |
+|-------------|-----------------|-----------------|
+| <img src="https://github.com/user-attachments/assets/63b8cb70-d05f-46df-95f5-df850719b111" width="180"/>  |<img src="https://github.com/user-attachments/assets/4afc546f-657d-4ab2-b059-c489b7932a41" width="180"/> | <img src="https://github.com/user-attachments/assets/e8f9a6fd-7d84-4859-94b7-4eeb6eb2def4" width="180"/>|
+
+---
 
 ### Student Screens
 
-| Home | Missions | Mission Detail | Group |
-|------|----------|----------------|-------|
-| ![](docs/screens/student_home.png) | ![](docs/screens/student_missions.png) | ![](docs/screens/mission_details.png) | ![](docs/screens/group_details_student.png) |
+| Home | Missions | Mission Details | Group Details |
+|------|----------|-----------------|---------------|
+| <img src="https://github.com/user-attachments/assets/5a9e0705-4d9c-4180-b2cf-13172375c1d2" width="180"/> | <img src="https://github.com/user-attachments/assets/e9a08f53-62bf-4c41-8b42-fa13a9471408" width="180"/> | <img src="https://github.com/user-attachments/assets/4bdc9a32-73cb-44da-b326-8f767567cec8" width="180"/> | <img src="https://github.com/user-attachments/assets/785119ab-8968-4572-ae66-dfa8f0905b9b" width="180"/> |
 
 | Profile | Badges |
 |---------|--------|
-| ![](docs/screens/student_profile.png) | ![](docs/screens/badges.png) |
+| <img src="https://github.com/user-attachments/assets/661be14c-9fc0-454b-a783-5c38519c03b1" width="180"/> | <img src="https://github.com/user-attachments/assets/937669a7-8ad5-4727-b85f-e65bae6c8872" width="180"/> |
 
 ---
 
@@ -166,7 +162,6 @@ lib/
     ├── splash/                # Splash screen
     └── welcome/               # Welcome / onboarding screen
 ```
-
 
 ---
 
