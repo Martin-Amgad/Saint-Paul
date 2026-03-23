@@ -180,7 +180,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                                 return;
                               }
-                              cubit.resetPassword(cubit.emailController.text);
+                              cubit.sendResetPasswordEmail(
+                                cubit.emailController.text,
+                              );
                             },
                             child: Text(
                               'نسيت كلمة المرور؟',

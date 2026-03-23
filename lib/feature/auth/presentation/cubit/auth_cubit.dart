@@ -81,14 +81,18 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> resetPassword(String email) async {
+  Future<void> sendResetPasswordEmail(String email) async {
     emit(AuthloadingState());
 
     var response = await AuthRepo.resetPassword(email);
     if (response != null) {
       emit(AuthResetPasswordSuccessState(response));
     } else {
-      emit(AuthErrorState('reset password Failed'));
+      emit(
+        AuthErrorState(
+          ' حدث خطأ أثناء إرسال بريد استعادة كلمة المرور. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
     }
   }
 
