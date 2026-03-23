@@ -1,12 +1,19 @@
 # Saint Paul — Church Student Follow-Up App
 
 <p align="center">
-  <img src="assets/icons/app_icon.png" alt="Saint Paul Logo" width="100"/>
+  <img src="https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c" alt="Saint Paul Logo" width="100"/>
 </p>
 
 > A Flutter mobile app for tracking and engaging church youth students — built for both teachers and students, powered by Firebase in real time.
 
 ---
+
+
+
+
+
+
+
 
 ## Table of Contents
 
@@ -16,8 +23,6 @@
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Available Scripts](#available-scripts)
 - [Data Models](#data-models)
 - [Routing](#routing)
 - [Notes](#notes)
@@ -62,11 +67,7 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 | Splash | Welcome | Login | Register |
 |--------|---------|-------|----------|
-| ![](docs/screens/splash.png) | ![](docs/screens/welcome.png) | ![](docs/screens/login.png) | ![](docs/screens/register.png) |
-
-| Forgot Password | OTP | New Password | Confirmed |
-|----------------|-----|--------------|-----------|
-| ![](docs/screens/email_forgot_password.png) | ![](docs/screens/otp.png) | ![](docs/screens/new_password.png) | ![](docs/screens/password_changed.png) |
+| ![]() | ![](docs/screens/welcome.png) | ![](docs/screens/login.png) | ![](docs/screens/register.png) |
 
 ### Teacher Screens
 
@@ -76,7 +77,8 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 | Create Mission | Groups | Create Group | Group Details |
 |----------------|--------|--------------|---------------|
-| ![](docs/screens/create_edit_mission.png) | ![](docs/screens/groups_showcase.png) | ![](docs/screens/create_group.png) | ![](docs/screens/group_details_teacher.png) |
+| ![](docs/screens/create_edit_mission.png) |  <img src="[https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c](https://github.com/user-attachments/assets/1da4e93d-14dc-45f4-87b9-82bf35e2cc82)" alt="Saint Paul Logo" width="100"/>!
+ | ![](docs/screens/create_group.png) | ![](docs/screens/group_details_teacher.png) |
 
 | Students List | Add Student |
 |---------------|-------------|
@@ -165,75 +167,6 @@ lib/
     └── welcome/               # Welcome / onboarding screen
 ```
 
----
-
-## Getting Started
-
-### Prerequisites
-
-- Flutter SDK `^3.8.1`
-- Dart SDK `^3.8.1`
-- A Firebase project with **Authentication** and **Cloud Firestore** enabled
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Martin-Amgad/Saint-Paul.git
-cd Saint-Paul
-```
-
-### 2. Add Firebase config files
-
-Place your Firebase config files in the correct locations:
-
-```
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
-```
-
-> If you need to regenerate these, run:
-> ```bash
-> flutterfire configure
-> ```
-
-### 3. Install dependencies
-
-```bash
-flutter pub get
-```
-
-### 4. Run the app
-
-```bash
-flutter run
-```
-
----
-
-## Available Scripts
-
-```bash
-# Run the app (debug)
-flutter run
-
-# Analyze code for issues
-flutter analyze
-
-# Run tests
-flutter test
-
-# Build Android APK (single file)
-flutter build apk
-
-# Build Android APK (split by ABI — smaller file sizes)
-flutter build apk --split-per-abi
-
-# Build Android App Bundle (for Play Store)
-flutter build appbundle
-
-# Build for iOS
-flutter build ios
-```
 
 ---
 
