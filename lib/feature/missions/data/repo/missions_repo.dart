@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
-import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 
@@ -51,12 +50,11 @@ class MissionRepo {
       final QuerySnapshot<Object?> snapshot;
 
       if (LocalHelper.getUserType() == 'مخدوم') {
+        final userStudyLevel = LocalHelper.getUserStudyLevel() ?? '';
         log(
-          '⚠️ ⚠️ ⚠️ ⚠️ Fetching missions for student with study level: ${LocalHelper.getUserStudyLevel()}',
+          'Fetching missions for student with study level: "$userStudyLevel" (includes "الكل")',
         );
-        snapshot = await FirebaseProvider.fetchStudentMissions(
-          LocalHelper.getUserStudyLevel() ?? '',
-        );
+        snapshot = await FirebaseProvider.fetchStudentMissions(userStudyLevel);
       } else {
         snapshot = await FirebaseProvider.fetchMissions();
       }
@@ -70,6 +68,11 @@ class MissionRepo {
             doc.id,
           );
         }).toList();
+        for (final mission in missions) {
+          log(
+            'Fetched mission: ${mission.title} | missionStudyLevel: ${mission.missionStudyLevel}',
+          );
+        }
         log('Parsed missions: ${missions.length} missions');
 
         missions.sort((a, b) => daysLeft(b).compareTo(daysLeft(a)));

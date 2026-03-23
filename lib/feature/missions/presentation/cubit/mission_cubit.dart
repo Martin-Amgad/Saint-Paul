@@ -143,6 +143,7 @@ class MissionCubit extends Cubit<MissionState> {
     linkController.text = mission?.link ?? '';
     rewardController.text = mission?.reward ?? '';
     expireAfterController.text = mission?.expireAfter.toString() ?? '';
+    selectedValue = mission?.missionStudyLevel;
   }
 
   Future<void> updateMission(MissionModel missionEdit) async {

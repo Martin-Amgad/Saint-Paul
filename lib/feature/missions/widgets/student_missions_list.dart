@@ -11,7 +11,6 @@ import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
-import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_state.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
@@ -45,9 +44,13 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
     for (var mission in widget.missions ?? []) {
       log('Mission: ${mission.title}, Days Left: ${daysLeft(mission)}');
 
-      filteredMissions = widget.missions
-          ?.where((m) => daysLeft(m) >= 0)
-          .toList();
+      filteredMissions = widget.missions?.where((m) {
+        log(
+          'Mission study level: ${m.missionStudyLevel}, User study level: ${LocalHelper.getUserStudyLevel()}',
+        );
+
+        return daysLeft(m) >= 0;
+      }).toList();
       if (daysLeft(mission) < 0) {
         cubit.deleteMission(mission.mid ?? '');
         cubit.removeFromAcceptedMissions(mission.mid ?? '');
@@ -75,6 +78,12 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
         itemCount: filteredMissions?.length ?? 0,
         separatorBuilder: (_, _) => const Gap(12),
         itemBuilder: (context, index) {
+          log(
+            'Building mission card for: ${filteredMissions?[index].title}, Days Left: ${daysLeft(filteredMissions![index])}',
+          );
+          log(
+            'Mission study level: ${filteredMissions?[index].missionStudyLevel}, User study level: ${LocalHelper.getUserStudyLevel()}',
+          );
           var reward = filteredMissions?[index].reward ?? '0';
           bool isRewardNumeric = AppRegex.containsOnlyNumbers(reward);
           if (daysLeft(filteredMissions![index]) < 0) {

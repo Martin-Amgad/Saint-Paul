@@ -26,7 +26,12 @@ class CreateAndEditMissionScreen extends StatefulWidget {
 
 class _CreateAndEditMissionScreenState
     extends State<CreateAndEditMissionScreen> {
-  final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
+  final List<String> items = [
+    'الكل',
+    'اولي اعدادي',
+    'تانيه اعدادي',
+    'ثالثة اعدادي',
+  ];
 
   @override
   void initState() {
@@ -57,6 +62,7 @@ class _CreateAndEditMissionScreenState
                     expireAfter:
                         int.tryParse(cubit.expireAfterController.text) ?? 0,
                     currentDate: DateTime.now(),
+                    missionStudyLevel: cubit.selectedValue,
                   ),
                 );
               }

@@ -3,7 +3,6 @@ import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/models/teacher_model.dart';
-import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class FirebaseProvider {
   static final FirebaseFirestore firebase = FirebaseFirestore.instance;
@@ -194,8 +193,13 @@ class FirebaseProvider {
   }
 
   static Future<QuerySnapshot> fetchStudentMissions(String studyLevel) async {
+    final normalizedStudyLevel = studyLevel.trim();
+    final levels = normalizedStudyLevel.isEmpty
+        ? <String>['الكل']
+        : <String>[normalizedStudyLevel, 'الكل'];
+
     return await missionCollection
-        .where('missionStudyLevel', isEqualTo: studyLevel)
+        .where('missionStudyLevel', whereIn: levels)
         .get();
   }
 
