@@ -30,7 +30,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   ValueNotifier<String> searchNotifier = ValueNotifier('');
 
   String searchText = '';
-  String? selectedYear;
+  String? selectedYear = 'الكل';
 
   List<StudentModel> allStudents = [];
   List<StudentModel> filteredStudents = [];
