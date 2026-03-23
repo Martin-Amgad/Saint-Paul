@@ -260,4 +260,3 @@ flutter build apk --split-per-abi
 - **Real-time leaderboard**: The home screen and Tayo-related lists use Firestore streams, so data updates appear without requiring a refresh.
 - **Arabic-first**: The app defaults to `ar` locale with RTL layout and the Cairo font family. English is also supported as a fallback locale.
 - **Offline caching**: `shared_preferences` is used to cache student data locally for faster loads.
-- **Forgot password**: The OTP and new-password routes are currently commented out in the router — these screens exist but the flow is not fully wired up yet.
