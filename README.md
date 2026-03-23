@@ -72,7 +72,7 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 | Home | Tayo Details | Birthdays | Missions |
 |------|--------------|-----------|----------|
-| <img src="https://github.com/user-attachments/assets/ba8e1798-faa1-4c42-9203-9f7d32c5c57f" width="180"/> | <img src="https://github.com/user-attachments/assets/9e585371-0be4-49fe-ba8c-7a0e4d82170e" width="180"/> | <img src="https://github.com/user-attachments/assets/1661432d-177d-4999-be22-2d270bf6097f" width="180"/> | <img src="https://github.com/user-attachments/assets/bc32ca7e-ceec-4200-88cf-b8bf642b36d7" width="180"/> |
+| <img src="https://github.com/user-attachments/assets/d8fc37e3-2545-4584-8ad2-17b956ede436" width="180"/> | <img src="https://github.com/user-attachments/assets/9e585371-0be4-49fe-ba8c-7a0e4d82170e" width="180"/> | <img src="https://github.com/user-attachments/assets/1661432d-177d-4999-be22-2d270bf6097f" width="180"/> | <img src="https://github.com/user-attachments/assets/bc32ca7e-ceec-4200-88cf-b8bf642b36d7" width="180"/> |
 
 | Create Mission | Groups | Group Details | Create Group |
 |----------------|--------|---------------|--------------|
