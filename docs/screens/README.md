@@ -1,17 +1,24 @@
 # Screenshots Folder
 
-Add screen images here using the file names referenced in the root README.
+Drop your screenshots directly into these folders:
+
+- `docs/screens/branding/` (logo, app mark)
+- `docs/screens/auth/` (welcome, login, register)
+- `docs/screens/teacher/` (teacher flow screens)
+- `docs/screens/student/` (student flow screens)
 
 Recommended format:
 
 - PNG
 - Width: 1080px (or device-native equivalent)
 - Portrait screenshots for page views
-- Keep names stable so README image links do not break
 
-Example:
+Suggested names:
 
-- splash.png
-- login.png
-- teacher_home.png
-- student_profile.png
+- `branding/logo.png`
+- `auth/splash.png`
+- `auth/login.png`
+- `teacher/home.png`
+- `teacher/create_mission.png`
+- `student/home.png`
+- `student/profile.png`

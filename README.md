@@ -43,6 +43,8 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 - Organize students into **groups** and manage group details
 - View birthday reminders and student contact info
 - See a leaderboard of top students in real time
+- Create new badge definitions from teacher home (name + image)
+- Manage student badges in student edit/profile flows
 
 ### 🎯 Student Side
 - Browse available and completed missions
@@ -50,11 +52,16 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 - View personal profile, Tayo score, and earned **badges**
 - See group membership and group leaderboard
 - Real-time score and ranking updates
+- View badge progress with earned vs. locked badges
 
 ### 🔐 Auth
 - Email/password login and registration via Firebase Auth
-- Forgot password support (email reset is availabe)
+- Forgot password support (email reset is available)
 - Role-based routing (teacher vs. student) after sign-in
+
+### ⚙️ App Control (Remote Flags)
+- Force app update via Firestore config flag
+- Put app in maintenance mode via Firestore config flag
 
 ---
 
@@ -65,6 +72,8 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 | Splash | Welcome | Login | Register |
 |--------|---------|-------|----------|
 | <img src="https://github.com/user-attachments/assets/f6bfc2de-d9c3-4b0b-8df7-630245fb7046" width="180"/> | <img src="https://github.com/user-attachments/assets/7d8c23e2-55a2-49a4-91ec-5e62b12884b4" width="180"/> | <img src="https://github.com/user-attachments/assets/e9775a07-ace5-4d85-b2be-d2d841506bd1" width="180"/> | <img src="https://github.com/user-attachments/assets/e362622d-3302-411d-95fd-545055e3f9ee" width="180"/> |
+| Auth Extra 1 | Auth Extra 2 | Auth Extra 3 | Auth Extra 4 |
+| <img src="docs/screens/auth/extra_1.png" width="180"/> | <img src="docs/screens/auth/extra_2.png" width="180"/> | <img src="docs/screens/auth/extra_3.png" width="180"/> | <img src="docs/screens/auth/extra_4.png" width="180"/> |
 
 ---
 
@@ -82,6 +91,10 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 |-----------------|-------------|--------------|
 | <img src="https://github.com/user-attachments/assets/63b8cb70-d05f-46df-95f5-df850719b111" width="180"/> | <img src="https://github.com/user-attachments/assets/4afc546f-657d-4ab2-b059-c489b7932a41" width="180"/> | <img src="https://github.com/user-attachments/assets/e8f9a6fd-7d84-4859-94b7-4eeb6eb2def4" width="180"/> |
 
+| Teacher Extra 1 | Teacher Extra 2 | Teacher Extra 3 | Teacher Extra 4 |
+|-----------------|-----------------|-----------------|-----------------|
+| <img src="docs/screens/teacher/extra_1.png" width="180"/> | <img src="docs/screens/teacher/extra_2.png" width="180"/> | <img src="docs/screens/teacher/extra_3.png" width="180"/> | <img src="docs/screens/teacher/extra_4.png" width="180"/> |
+
 ---
 
 ### Student Screens
@@ -93,6 +106,10 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 | Profile | Badges |
 |---------|--------|
 | <img src="https://github.com/user-attachments/assets/661be14c-9fc0-454b-a783-5c38519c03b1" width="180"/> | <img src="https://github.com/user-attachments/assets/937669a7-8ad5-4727-b85f-e65bae6c8872" width="180"/> |
+
+| Student Extra 1 | Student Extra 2 | Student Extra 3 | Student Extra 4 |
+|-----------------|-----------------|-----------------|-----------------|
+| <img src="docs/screens/student/extra_1.png" width="180"/> | <img src="docs/screens/student/extra_2.png" width="180"/> | <img src="docs/screens/student/extra_3.png" width="180"/> | <img src="docs/screens/student/extra_4.png" width="180"/> |
 
 ---
 
@@ -108,7 +125,7 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 | Local Storage | `shared_preferences` |
 | UI | Arabic-first RTL, Cairo font, `flutter_svg`, `lottie`, `google_nav_bar` |
 | Images | `cached_network_image`, `image_picker` |
-| Image Storage | Cloudinary (student avatar uploads) |
+| Image Storage | Cloudinary (student avatars + badge images) |
 | Links | `url_launcher` |
 | Localization | `flutter_localizations` (Arabic + English) |
 
@@ -173,7 +190,7 @@ lib/
 ## Data Models
 
 ### StudentModel
-Tracks everything about a student: contact info, study level, responsible teacher, group membership, Tayo attendance scores, accepted/submitted missions, and earned badge keys.
+Tracks everything about a student: contact info, study level, responsible teacher, group membership, Tayo attendance scores, accepted/submitted missions, and earned badges via `myBadges` (`Map<String, String>` badge-name-to-image-url).
 
 **Current Tayo categories tracked per student:**
 - Attending Mass
@@ -239,6 +256,32 @@ Make sure you have a Firebase project with **Authentication** and **Cloud Firest
 - `ios/Runner/GoogleService-Info.plist`
 
 Student avatar uploads use **Cloudinary**. You'll need a Cloudinary account and must configure your upload URL and unsigned upload preset in the app before image uploads will work.
+
+Badge image uploads also use **Cloudinary** through the same upload flow.
+
+### Firestore Config Requirements
+
+The app reads operational defaults from `config/defaults`:
+
+- `tayo`: map of default Tayo categories
+- `badges`: map of badge name to image URL
+- `updateAvailable`: bool (force update screen when true)
+- `appUnderMaintenance`: bool (maintenance screen when true)
+
+Example shape:
+
+```json
+{
+  "tayo": {
+    "Attending Mass": {"count": 0, "takenAt": null}
+  },
+  "badges": {
+    "بطل الانتظام": "https://.../consistencyChampion.png"
+  },
+  "updateAvailable": false,
+  "appUnderMaintenance": false
+}
+```
 
 Then install packages and run:
 
