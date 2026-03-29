@@ -8,13 +8,15 @@ class CustomFormField extends StatelessWidget {
   const CustomFormField({
     super.key,
     required this.label,
-    required this.icon,
+    this.icon,
     required this.child,
+    this.pngPicture,
   });
 
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final Widget child;
+  final String? pngPicture;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,14 @@ class CustomFormField extends StatelessWidget {
                 color: AppColors.primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: AppColors.primaryColor, size: 16),
+              child: pngPicture != null
+                  ? Image.asset(
+                      pngPicture!,
+                      width: 16,
+                      height: 16,
+                      color: AppColors.primaryColor,
+                    )
+                  : Icon(icon, color: AppColors.primaryColor, size: 16),
             ),
             const Gap(8),
             Text(

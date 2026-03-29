@@ -8,6 +8,9 @@ class AppAssets {
   static const String consistencyChampion =
       'assets/images/consistencyChampion.png';
 
+  static const String addBadgeIcon = 'assets/icons/add_badge.png';
+  static const String addFilledBadgeIcon = 'assets/icons/add_badge_filled.png';
+
   static const String arrowBack =
       'assets/icons/arabic_back-removebg-preview.png';
   static const String bookmarkSvg = 'assets/icons/Bookmark.svg';

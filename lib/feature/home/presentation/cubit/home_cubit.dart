@@ -166,4 +166,54 @@ class HomeCubit extends Cubit<HomeState> {
       );
     }
   }
+
+  Future<String?> uploadBadgeImageToCloudinary(
+    String path,
+    String badgeName,
+  ) async {
+    try {
+      log('Starting image update with path: $path');
+      final newUrl = await HomeRepo.uploadBadgeImageToCloudinary(
+        badgeName,
+        path,
+      );
+
+      log('New image URL: $newUrl');
+      return newUrl; // ← just return the URL, screen handles the rest
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
+
+  Future<void> createBadgeInConfig(String badgeName, String url) async {
+    try {
+      var currentBadges = await HomeRepo.getCurrentBadges();
+      log(
+        ' /////////////////////////////// Current badges in config: $currentBadges',
+      );
+      if (currentBadges.containsKey(badgeName)) {
+        log('Badge with name "$badgeName" already exists in config.');
+        emit(
+          HomeErrorState(
+            message:
+                'هناك شارة موجودة بالفعل بهذا الاسم. الرجاء اختيار اسم آخر.',
+          ),
+        );
+        return;
+      }
+      await HomeRepo.createBadgeInConfig(badgeName, url);
+      emit(HomeBadgeCreationSuccessState());
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(HomeErrorState(message: e.toString()));
+    } catch (e) {
+      log(e.toString());
+      emit(
+        HomeErrorState(
+          message: 'حدث خطأ أثناء إضافة الشارة. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
 }

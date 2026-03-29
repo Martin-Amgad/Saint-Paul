@@ -36,6 +36,10 @@ class HomeErrorState extends HomeState {
   HomeErrorState({required this.message});
 }
 
+class HomeBadgeCreationSuccessState extends HomeState {
+  HomeBadgeCreationSuccessState();
+}
+
 class HomeGroupUpdateSuccessState extends HomeState {
   HomeGroupUpdateSuccessState();
 }

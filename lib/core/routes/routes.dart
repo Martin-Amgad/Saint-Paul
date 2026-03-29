@@ -3,7 +3,6 @@ import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/feature/auth/presentation/cubit/auth_cubit.dart';
-import 'package:saint_paul/feature/auth/presentation/page/forget_password/password_changed_screen.dart';
 import 'package:saint_paul/feature/auth/presentation/page/login/login_screen.dart';
 import 'package:saint_paul/feature/auth/presentation/page/register/register_screen%20.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
@@ -12,6 +11,7 @@ import 'package:saint_paul/feature/groups/presentation/page/teacher/create_group
 import 'package:saint_paul/feature/groups/presentation/page/teacher/groups_showcase_screen.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
+import 'package:saint_paul/feature/home/widgets/add_new_badge_bottom_sheet.dart';
 import 'package:saint_paul/feature/profile/presentation/teacher/add_edit_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
@@ -27,6 +27,7 @@ import 'package:saint_paul/feature/profile/presentation/student/student_profile_
 import 'package:saint_paul/feature/profile/presentation/teacher/students_showcase_and_edit_screen.dart';
 import 'package:saint_paul/feature/main/nav_bar.dart';
 import 'package:saint_paul/feature/splash/splash_screen.dart';
+import 'package:saint_paul/feature/splash/app_blocked_screen.dart';
 import 'package:saint_paul/feature/welcome/welcom_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,26 +58,11 @@ class Routes {
   static const String groupShowcaseScreen = '/groupShowcaseScreen';
   static const String createGroupScreen = '/createGroupScreen';
   static const String groupDetailsScreen = '/groupDetailsScreen';
+  static const String appBlockedScreen = '/appBlockedScreen';
 
   static final routes = GoRouter(
     routes: [
-      GoRoute(path: splash, builder: (context, state) => SplashScreen()),
-      GoRoute(path: welcome, builder: (context, state) => WelcomScreen()),
-      GoRoute(
-        path: login,
-        builder: (context, state) => BlocProvider(
-          create: (context) => AuthCubit(),
-          child: LoginScreen(),
-        ),
-      ),
-      GoRoute(
-        path: register,
-        builder: (context, state) => BlocProvider(
-          create: (context) => AuthCubit(),
-          child: RegisterScreen(),
-        ),
-      ),
-
+      //Main Screen /////////////////////////////////////////////
       GoRoute(
         path: mainScreen,
         builder: (context, state) => MultiBlocProvider(
@@ -89,15 +75,24 @@ class Routes {
           child: MainAppScreen(role: state.extra as String?),
         ),
       ),
-
+      //Auth Cubit Screens ////////////////////////////////////////
       GoRoute(
-        path: addEditNewStudentScreen,
+        path: login,
         builder: (context, state) => BlocProvider(
-          create: (context) => HomeCubit(),
-          child: AddEditNewStudentScreen(student: state.extra as StudentModel?),
+          create: (context) => AuthCubit(),
+          child: LoginScreen(),
         ),
       ),
 
+      GoRoute(
+        path: register,
+        builder: (context, state) => BlocProvider(
+          create: (context) => AuthCubit(),
+          child: RegisterScreen(),
+        ),
+      ),
+
+      //Profile Cubit Screens ////////////////////////////////////////
       GoRoute(
         path: studentShowcaseAndEditScreen,
         builder: (context, state) => BlocProvider(
@@ -114,6 +109,7 @@ class Routes {
         ),
       ),
 
+      //Mission Cubit Screens ////////////////////////////////////////
       GoRoute(
         path: studentMissionScreen,
         builder: (context, state) => BlocProvider(
@@ -156,6 +152,7 @@ class Routes {
           );
         },
       ),
+
       GoRoute(
         path: studentMissionsList,
         builder: (context, state) {
@@ -174,12 +171,7 @@ class Routes {
         },
       ),
 
-      GoRoute(
-        path: badgesScreen,
-        builder: (context, state) =>
-            BadgesScreen(earnedBadgeKeys: state.extra as List<String>),
-      ),
-
+      //Group Cubit Screens ////////////////////////////////////////
       GoRoute(
         path: groupShowcaseScreen,
         builder: (context, state) {
@@ -199,6 +191,7 @@ class Routes {
           );
         },
       ),
+
       GoRoute(
         path: groupDetailsScreen,
         builder: (context, state) {
@@ -209,33 +202,13 @@ class Routes {
         },
       ),
 
-      // GoRoute(
-      //   path: emailScreen,
-      //   builder: (context, state) => BlocProvider(
-      //     create: (context) => AuthCubit(),
-      //     child: EmailScreen(),
-      //   ),
-      // ),
-      // GoRoute(
-      //   path: otpScreen,
-      //   builder: (context, state) =>
-      //       BlocProvider(create: (context) => AuthCubit(), child: OTPScreen()),
-      // ),
-      // GoRoute(
-      //   path: newPasswordScreen,
-      //   builder: (context, state) => BlocProvider(
-      //     create: (context) => AuthCubit(),
-      //     child: NewPasswordScreen(),
-      //   ),
-      // ),
+      //Home Cubit Screens ////////////////////////////////////////
       GoRoute(
-        path: confirmScreen,
-        builder: (context, state) => PasswordChangedScreen(),
-      ),
-
-      GoRoute(
-        path: teacherHomeScreen,
-        builder: (context, state) => TeacherHomeScreen(),
+        path: addEditNewStudentScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => HomeCubit(),
+          child: AddEditNewStudentScreen(student: state.extra as StudentModel?),
+        ),
       ),
 
       GoRoute(
@@ -257,6 +230,30 @@ class Routes {
           child: TayoDetailsScreen(student: state.extra as StudentModel),
         ),
       ),
+
+      //No Cubit Screens ////////////////////////////////////////
+      GoRoute(path: splash, builder: (context, state) => SplashScreen()),
+
+      GoRoute(path: welcome, builder: (context, state) => WelcomScreen()),
+
+      GoRoute(
+        path: appBlockedScreen,
+        builder: (context, state) =>
+            AppBlockedScreen(reason: state.extra as AppBlockedReason),
+      ),
+
+      GoRoute(
+        path: teacherHomeScreen,
+        builder: (context, state) => TeacherHomeScreen(),
+      ),
+
+      GoRoute(
+        path: badgesScreen,
+        builder: (context, state) =>
+            BadgesScreen(earnedBadges: state.extra as Map<String, String>),
+      ),
     ],
   );
 }
+
+class AddNewBadgeBottomSheet {}

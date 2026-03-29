@@ -15,6 +15,8 @@ class LocalHelper {
   static String KUserGroup = 'user_group';
   static String KIsNewUser = 'isNewUser';
   static String KStudyLevel = 'user_study_level';
+  static String KallBadges = 'all_badges';
+  static String KmyBadges = 'my_badges';
 
   static Future<void> init() async {
     prefrences = await SharedPreferences.getInstance();
@@ -86,6 +88,52 @@ class LocalHelper {
         jsonDecode(dataString),
         LocalHelper.getUserId() ?? '',
       );
+    }
+    return null;
+  }
+
+  static Future<void> setAllBadges(Map<String, dynamic> badges) async {
+    try {
+      String dataString = jsonEncode(badges);
+      await prefrences.setString(KallBadges, dataString);
+      log('✅ All badges saved successfully');
+    } catch (e) {
+      log('❌ setAllBadges failed: $e');
+    }
+  }
+
+  static Map<String, String>? getAllBadges() {
+    try {
+      String? dataString = prefrences.getString(KallBadges);
+      if (dataString != null) {
+        Map<String, dynamic> badgesMap = jsonDecode(dataString);
+        return badgesMap.map((key, value) => MapEntry(key, value.toString()));
+      }
+    } catch (e) {
+      log('❌ getAllBadges failed: $e');
+    }
+    return null;
+  }
+
+  static Future<void> setMyBadges(Map<String, dynamic> myBadges) async {
+    try {
+      String dataString = jsonEncode(myBadges);
+      await prefrences.setString(KmyBadges, dataString);
+      log('✅ My badges saved successfully');
+    } catch (e) {
+      log('❌ setMyBadges failed: $e');
+    }
+  }
+
+  static Map<String, String>? getMyBadges() {
+    try {
+      String? dataString = prefrences.getString(KmyBadges);
+      if (dataString != null) {
+        Map<String, dynamic> badgesMap = jsonDecode(dataString);
+        return badgesMap.map((key, value) => MapEntry(key, value.toString()));
+      }
+    } catch (e) {
+      log('❌ getMyBadges failed: $e');
     }
     return null;
   }

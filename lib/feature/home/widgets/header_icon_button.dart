@@ -8,10 +8,12 @@ class HeaderIconButton extends StatelessWidget {
     this.icon,
     this.svgAsset,
     required this.onTap,
+    this.pngAsset,
   });
 
   final IconData? icon;
   final String? svgAsset;
+  final String? pngAsset;
   final VoidCallback onTap;
 
   @override
@@ -33,6 +35,13 @@ class HeaderIconButton extends StatelessWidget {
                   AppColors.whiteColor,
                   BlendMode.srcIn,
                 ),
+              )
+            : pngAsset != null
+            ? Image.asset(
+                pngAsset!,
+                width: 20,
+                height: 20,
+                color: AppColors.whiteColor,
               )
             : Icon(icon, color: AppColors.whiteColor, size: 20),
       ),

@@ -1,8 +1,11 @@
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:saint_paul/core/extentions/image_uploader.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class HomeRepo {
   static Future<String?> updatStudent(
@@ -130,6 +133,42 @@ class HomeRepo {
     } on Exception catch (e) {
       log(e.toString());
       throw Exception('Failed to update student group: ${e.toString()}');
+    }
+  }
+
+  static Future<String?> uploadBadgeImageToCloudinary(
+    String badgeName,
+    String path,
+  ) async {
+    try {
+      final cloudinaryUrl = await uploadImageToCloudinary(File(path));
+      if (cloudinaryUrl == null) return null;
+      log('Cloudinary URL: $cloudinaryUrl');
+
+      return cloudinaryUrl; // ← return URL not Arabic string
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
+
+  static Future<Map<String, String>> getCurrentBadges() async {
+    try {
+      final badges = await FirebaseProvider.getBadges();
+      log('Fetched badges from Firebase: $badges');
+      return badges;
+    } catch (e) {
+      log(e.toString());
+      return <String, String>{};
+    }
+  }
+
+  static Future<void> createBadgeInConfig(String badgeName, String url) async {
+    try {
+      await FirebaseProvider.createBadge(badgeName, url);
+    } on Exception catch (e) {
+      log(e.toString());
+      throw Exception('Failed to update badge in Firebase: ${e.toString()}');
     }
   }
 }

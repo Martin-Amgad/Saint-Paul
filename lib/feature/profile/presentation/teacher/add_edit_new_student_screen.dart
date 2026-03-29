@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart' hide FormField;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -5,10 +8,12 @@ import 'package:intl/intl.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
+import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
@@ -27,12 +32,34 @@ class AddEditNewStudentScreen extends StatefulWidget {
 
 class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
   final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
+  final List<String> availableBadges = [];
+  final Map<String, String> myBadges = {};
+  Map<String, String> allBadges = {};
+  String? selectedBadge;
 
   DateTime? pickedDate;
   @override
   void initState() {
     context.read<HomeCubit>().loadStudentControllers(widget.student);
+
+    if (widget.student != null) {
+      myBadges.addAll(widget.student!.myBadges ?? {});
+    }
+    getAllBadges();
     super.initState();
+  }
+
+  Future<void> getAllBadges() async {
+    allBadges = await FirebaseProvider.getBadges();
+    if (mounted) {
+      setState(() {
+        for (var key in allBadges.keys) {
+          if (!myBadges.containsKey(key)) {
+            availableBadges.add(key);
+          }
+        }
+      });
+    }
   }
 
   @override
@@ -49,6 +76,12 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
             onPressed: () async {
               if (cubit.formkey.currentState?.validate() ?? false) {
                 if (widget.student != null) {
+                  if (selectedBadge != null &&
+                      allBadges[selectedBadge] != null) {
+                    myBadges[selectedBadge!] = allBadges[selectedBadge]!;
+                  }
+                  log('myBadges being sent: $myBadges');
+                  log('student myBadges: ${widget.student!.myBadges}');
                   cubit.updateStudent(
                     widget.student!.copyWith(
                       name: cubit.nameController.text.trim(),
@@ -63,6 +96,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           .responsibleTeacherController
                           .text
                           .trim(),
+                      myBadges: myBadges,
                     ),
                   );
                   return;
@@ -396,8 +430,178 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                             ),
                           ),
                         ),
+                        if (availableBadges.isNotEmpty) ...[
+                          const Gap(16),
 
-                        const Gap(20),
+                          CustomFormField(
+                            label: ' أضافة وسام',
+                            icon: Icons.school_rounded,
+                            child: DropdownButtonFormField<String>(
+                              isDense: false,
+                              value: selectedBadge,
+                              hint: Text(
+                                ' أضافة وسام',
+                                style: TextStyles.getSize16(
+                                  color: AppColors.greyColor,
+                                  fontWeight: FontWeight.w500,
+                                ).copyWith(fontFamily: 'Cairo'),
+                              ),
+                              icon: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: AppColors.primaryColor,
+                              ),
+                              dropdownColor: AppColors.primaryColor,
+                              borderRadius: BorderRadius.circular(16),
+                              style: TextStyles.getSize16(
+                                color: AppColors.primaryColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 3,
+                                ),
+                              ),
+                              selectedItemBuilder: (context) {
+                                return availableBadges.map((item) {
+                                  return Text(
+                                    item,
+                                    style: TextStyles.getSize16(
+                                      color: AppColors.primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                    ).copyWith(fontFamily: 'Cairo'),
+                                  );
+                                }).toList();
+                              },
+
+                              items: availableBadges.map((item) {
+                                return DropdownMenuItem(
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: TextStyles.getSize16(
+                                      color: AppColors.whiteColor,
+                                      fontWeight: FontWeight.w500,
+                                    ).copyWith(fontFamily: 'Cairo'),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value == null) return;
+                                final url = allBadges[value] ?? '';
+                                setState(() {
+                                  myBadges[value] = url;
+                                  availableBadges.remove(
+                                    value,
+                                  ); // remove from dropdown
+                                  selectedBadge =
+                                      null; // reset dropdown to hint
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+
+                        const Gap(16),
+                        CustomFormField(
+                          label: 'الأوسمة',
+                          pngPicture: AppAssets.addFilledBadgeIcon,
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.22,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: myBadges.length,
+                              separatorBuilder:
+                                  (BuildContext context, int index) {
+                                    return Gap(10);
+                                  },
+                              itemBuilder: (BuildContext context, int index) {
+                                final badgeName = myBadges.keys.toList()[index];
+                                'Badge Name';
+                                final badgeImage = myBadges[badgeName];
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    children: [
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            height:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.height *
+                                                0.15,
+                                            width:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.3,
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: AppColors
+                                                  .darkYellowIconColor
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child:
+                                                badgeImage != null &&
+                                                    badgeImage.isNotEmpty
+                                                ? CachedNetworkImage(
+                                                    imageUrl: badgeImage,
+                                                    fit: BoxFit.contain,
+                                                  )
+                                                : Icon(
+                                                    Icons
+                                                        .image_not_supported_outlined,
+                                                    color: AppColors
+                                                        .primaryColor
+                                                        .withValues(alpha: 0.3),
+                                                    size: 32,
+                                                  ),
+                                          ),
+                                          Positioned(
+                                            top: 2,
+                                            left: 2,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  myBadges.remove(badgeName);
+                                                  availableBadges.add(
+                                                    badgeName,
+                                                  );
+                                                });
+                                              },
+                                              child: Icon(
+                                                Icons.close,
+                                                color: AppColors.primaryColor
+                                                    .withValues(alpha: 0.7),
+                                                size: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const Gap(5),
+                                      Text(
+                                        badgeName,
+                                        style: TextStyles.getSize16(
+                                          color: AppColors.accentColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

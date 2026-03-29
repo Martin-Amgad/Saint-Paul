@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
@@ -39,7 +41,6 @@ class FirebaseProvider {
   }
 
   // STUDENT METHODS ////////////////////////////////////////////////////////////
-
   static Map<String, dynamic> updateTayoMethod(
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
@@ -133,11 +134,6 @@ class FirebaseProvider {
     return studentCollection.doc(id).get();
   }
 
-  static Future<Map<String, dynamic>> getDefaultTayo() async {
-    final doc = await configCollection.doc('defaults').get();
-    return doc.get('tayo') as Map<String, dynamic>;
-  }
-
   static Future<QuerySnapshot> getAllStudents() {
     return studentCollection.get();
   }
@@ -154,6 +150,9 @@ class FirebaseProvider {
     return await studentCollection.orderBy('birthday', descending: true).get();
   }
 
+  ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   static Future<void> updateTayoInAllDocuments(
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
@@ -163,52 +162,25 @@ class FirebaseProvider {
       return;
     }
 
-    await configCollection
-        .doc('defaults')
-        .update(updateTayoMethod(tayoNewCategories, tayoRemovedCategories));
+    final updates = updateTayoMethod(tayoNewCategories, tayoRemovedCategories);
 
+    // update config doc
+    await configCollection.doc('defaults').update(updates);
+
+    // update all student docs in batches of 500
     final snapshot = await studentCollection.get();
+    final docs = snapshot.docs;
 
-    // final defaultsTayo = await FirebaseProvider.getDefaultTayo();
+    for (int i = 0; i < docs.length; i += 500) {
+      final batch = FirebaseFirestore.instance.batch();
+      final chunk = docs.sublist(i, (i + 500).clamp(0, docs.length));
 
-    // final futures = snapshot.docs.map((doc) async {
-    //   Map<String, dynamic> currentTayo = Map<String, dynamic>.from(
-    //     doc.get('tayo') ?? {},
-    //   );
+      for (final doc in chunk) {
+        batch.update(doc.reference, updates);
+      }
 
-    //   Map<String, dynamic> updates = {};
-
-    //   // add keys that are in defaults but missing in student
-    //   for (var key in defaultsTayo.keys) {
-    //     if (!currentTayo.containsKey(key)) {
-    //       updates['tayo.$key'] = {'count': 0, 'takenAt': null};
-    //     }
-    //   }
-
-    //   // remove keys that are not in defaults
-    //   // for (var key in currentTayo.keys) {
-    //   //   if (!defaultsTayo.containsKey(key)) {
-    //   //     updates['tayo.$key'] = FieldValue.delete();
-    //   //   }
-    //   // }
-
-    //   if (updates.isEmpty) return;
-
-    //   return doc.reference.update(updates);
-    // });
-
-    // await Future.wait(futures);
-
-    final futures = snapshot.docs.map((doc) {
-      Map<String, dynamic> updates = updateTayoMethod(
-        tayoNewCategories,
-        tayoRemovedCategories,
-      );
-
-      return doc.reference.update(updates);
-    });
-
-    await Future.wait(futures);
+      await batch.commit();
+    }
   }
 
   static Future<void> updateCurrentStudentTayo(
@@ -280,5 +252,57 @@ class FirebaseProvider {
 
   static Future<void> updateGroup(GroupModel group) async {
     await groupCollection.doc(group.gid).update(group.toUpdateData());
+  }
+
+  // defaults METHODS //////////////////////////////////////////////////////////////
+  static Future<Map<String, dynamic>> getDefaultTayo() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('tayo') as Map<String, dynamic>;
+  }
+
+  static Future<bool> checkIfUpdateAvailable() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('updateAvailable') as bool? ?? false;
+  }
+
+  static Future<bool> checkIfAppUnderMaintenance() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('appUnderMaintenance') as bool? ?? false;
+  }
+
+  static Future<void> createBadge(
+    String badgeName,
+    String badgeCloudinaryUrl,
+  ) async {
+    await configCollection.doc('defaults').update({
+      'badges.$badgeName': badgeCloudinaryUrl, // just the URL, no nested map
+    });
+  }
+
+  static Future<Map<String, String>> getBadges() async {
+    final doc = await configCollection.doc('defaults').get();
+    return Map<String, String>.from(doc.get('badges') as Map? ?? {});
+  }
+
+  static Future<void> migrateListToMap() async {
+    final snapshot = await studentCollection.get();
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final badges = data['missionBadges']; // read from old name
+
+      if (badges is List) {
+        final badgesAsMap = {
+          for (final badge in badges) badge.toString(): true,
+        };
+        batch.update(doc.reference, {
+          'myBadges': badgesAsMap, // write to new name
+          'missionBadges': FieldValue.delete(), // delete old field
+        });
+      }
+    }
+
+    await batch.commit();
   }
 }

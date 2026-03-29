@@ -178,19 +178,27 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
                                 backgroundColor: AppColors.primaryColor
                                     .withValues(alpha: 0.08),
                                 child: ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: student.avatarUrl ?? '',
-                                    width: 70,
-                                    height: 70,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (context, url, error) {
-                                      return const Icon(
-                                        Icons.person_rounded,
-                                        color: AppColors.primaryColor,
-                                        size: 30,
-                                      );
-                                    },
-                                  ),
+                                  child:
+                                      student.avatarUrl != null &&
+                                          student.avatarUrl!.isNotEmpty
+                                      ? CachedNetworkImage(
+                                          imageUrl: student.avatarUrl ?? '',
+                                          width: 70,
+                                          height: 70,
+                                          fit: BoxFit.cover,
+                                          errorWidget: (context, url, error) {
+                                            return const Icon(
+                                              Icons.person_rounded,
+                                              color: AppColors.primaryColor,
+                                              size: 30,
+                                            );
+                                          },
+                                        )
+                                      : const Icon(
+                                          Icons.person_rounded,
+                                          color: AppColors.primaryColor,
+                                          size: 30,
+                                        ),
                                 ),
                               ),
 

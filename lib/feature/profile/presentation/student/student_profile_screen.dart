@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -31,12 +30,12 @@ class StudentProfileScreen extends StatefulWidget {
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
   StudentModel? studentDataLocal;
-  StudentModel? studentDataNew;
   String avatarUrlLocal = '';
   String pathLocal = '';
-  List<String>? badgesLocal = [];
+  Map<String, String> badgesLocal = {};
   int totalTayoLocal = 0;
   bool _isUploadingImage = false;
+
   Future<void> _handleImageUpload(
     BuildContext context,
     ProfileCubit cubit, {
@@ -58,18 +57,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _isUploadingImage = true;
     });
 
-    pop(context); // close bottom sheet after picking
+    pop(context);
 
     try {
       final newUrl = await cubit.updateStudentImage(pickedPath);
 
-      if (mounted) {
+      if (mounted && newUrl != null) {
+        // ── Write new URL back to local storage ──────────────────
+        final currentData = LocalHelper.getUserData();
+        if (currentData != null) {
+          await LocalHelper.setUserData(
+            currentData.copyWith(avatarUrl: newUrl).toJsonLocal(),
+          );
+        }
+        // ─────────────────────────────────────────────────────────
+
         setState(() {
           _isUploadingImage = false;
-          if (newUrl != null) {
-            avatarUrlLocal = newUrl;
-            pathLocal = '';
-          }
+          avatarUrlLocal = newUrl;
+          pathLocal = '';
         });
       }
     } catch (e) {
@@ -93,10 +99,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     if (localData != null) {
       studentDataLocal = localData;
       avatarUrlLocal = localData.avatarUrl ?? '';
-      badgesLocal = localData.missionBadges ?? [];
+      badgesLocal = localData.myBadges ?? {};
       totalTayoLocal = localData.totalTayo ?? 0;
     }
-    // 2. Then fetch from Firestore to sync
+
     context.read<ProfileCubit>().loadStudentData(LocalHelper.getUserId());
   }
 
@@ -110,37 +116,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           if (state is ProfileErrorState) {
             showMyDialoge(context, state.message, type: DialogType.error);
           } else if (state is ProfileLoadedState) {
-            final newData = state.studentData;
-            if (newData == null) return;
-            log('Profile loaded from Firebase: ${newData.toJsonLocal()}');
-            // Cache to local storage
-            await LocalHelper.setUserData(newData.toJsonLocal());
-            LocalHelper.getUserData()
-                ?.toJsonLocal(); // to verify it was saved correctly
-
-            // Only update each field if it changed
-            setState(() {
-              if (newData.totalTayo != studentDataLocal?.totalTayo) {
-                totalTayoLocal = newData.totalTayo ?? 0;
-              }
-              if (newData.avatarUrl != studentDataLocal?.avatarUrl) {
-                avatarUrlLocal = newData.avatarUrl ?? '';
-              }
-              if (newData.missionBadges != studentDataLocal?.missionBadges) {
-                badgesLocal = newData.missionBadges ?? [];
-              }
-              if (newData.name != studentDataLocal?.name) {
-                studentDataLocal = newData;
-              }
-              if (newData.studyLevel != studentDataLocal?.studyLevel) {
-                studentDataLocal = newData;
-              }
-              // Update the reference so future comparisons are against latest data
-              studentDataLocal = newData;
-            });
-
-            if (state.message != null) {
-              showMyDialoge(context, state.message!, type: DialogType.success);
+            final freshData = state.studentData;
+            if (freshData == null) return;
+            await LocalHelper.setUserData(freshData.toJsonLocal());
+            if (mounted) {
+              setState(() {
+                badgesLocal = freshData.myBadges ?? {};
+                totalTayoLocal = freshData.totalTayo ?? 0;
+                avatarUrlLocal = freshData.avatarUrl ?? '';
+                studentDataLocal = freshData;
+              });
             }
           }
         },
@@ -221,9 +206,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             color: AppColors.whiteColor.withValues(alpha: 0.15),
                           ),
                           child: ClipOval(
-                            child: pathLocal.isNotEmpty
-                                ? // local file path starts with /
-                                  Image.file(File(pathLocal), fit: BoxFit.cover)
+                            child: _isUploadingImage
+                                ? const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.whiteColor,
+                                    ),
+                                  )
+                                : pathLocal.isNotEmpty
+                                ? Image.file(File(pathLocal), fit: BoxFit.cover)
                                 : avatarUrlLocal.isNotEmpty
                                 ? CachedNetworkImage(
                                     imageUrl: avatarUrlLocal,
@@ -260,39 +251,54 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                               onPressed: () {
                                 showModalBottomSheet(
                                   context: context,
-                                  builder: (context) {
-                                    return Container(
-                                      width: double.infinity,
-                                      padding: EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.backgroundColor,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          MainButton(
-                                            title: 'Upload from Camera',
-                                            onPressed: () => _handleImageUpload(
-                                              context,
-                                              cubit,
-                                              fromCamera: true,
-                                            ), // ✅
+                                  backgroundColor: AppColors.backgroundColor,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(32),
+                                    ),
+                                  ),
+                                  builder: (context) => Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      24,
+                                      20,
+                                      32,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 40,
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.accentColor
+                                                .withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(
+                                              2,
+                                            ),
                                           ),
-                                          Gap(15),
-                                          MainButton(
-                                            title: 'Upload from Gallery',
-                                            onPressed: () => _handleImageUpload(
-                                              context,
-                                              cubit,
-                                              fromCamera: false,
-                                            ), // ✅
+                                        ),
+                                        const Gap(20),
+                                        MainButton(
+                                          title: 'التقاط صورة',
+                                          onPressed: () => _handleImageUpload(
+                                            context,
+                                            cubit,
+                                            fromCamera: true,
                                           ),
-                                          Gap(15),
-                                        ],
-                                      ),
-                                    );
-                                  },
+                                        ),
+                                        const Gap(12),
+                                        MainButton(
+                                          title: 'اختيار من المعرض',
+                                          onPressed: () => _handleImageUpload(
+                                            context,
+                                            cubit,
+                                            fromCamera: false,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 );
                               },
                               padding: EdgeInsets.zero,
@@ -444,6 +450,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           Spacer(),
                           IconButton(
                             onPressed: () {
+                              log(
+                                'Navigating to badges screen with badges: $badgesLocal',
+                              );
                               pushTo(
                                 context,
                                 Routes.badgesScreen,
@@ -463,15 +472,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         height: 150,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: badgesLocal?.length ?? 0,
+                          itemCount: badgesLocal.length,
                           separatorBuilder: (BuildContext context, int index) {
                             return Gap(10);
                           },
                           itemBuilder: (BuildContext context, int index) {
-                            final badgeName =
-                                badgesLocal?[index] ?? 'Badge Name';
-                            final badgeImage =
-                                badgeModel[badgeName]; // to get badge image from name
+                            final badgeName = badgesLocal.keys.toList()[index];
+                            'Badge Name';
+                            final badgeImage = badgesLocal[badgeName];
                             return Container(
                               decoration: BoxDecoration(
                                 color: AppColors.primaryColor.withValues(
@@ -491,10 +499,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                           .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: Image.asset(
-                                      badgeImage ?? AppAssets.tayoKing,
-                                      fit: BoxFit.contain,
-                                    ),
+                                    child:
+                                        badgeImage != null &&
+                                            badgeImage.isNotEmpty
+                                        ? CachedNetworkImage(
+                                            imageUrl: badgeImage,
+                                            fit: BoxFit.contain,
+                                          )
+                                        : Icon(
+                                            Icons.image_not_supported_outlined,
+                                            color: AppColors.primaryColor
+                                                .withValues(alpha: 0.3),
+                                            size: 32,
+                                          ),
                                   ),
                                   const Gap(12),
                                   Text(
@@ -518,18 +535,5 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> uploadImage(bool isCamera) async {
-    // Pick image locally first
-    final imagePicker = ImagePicker();
-    final pickedImage = await imagePicker.pickImage(
-      source: isCamera ? ImageSource.camera : ImageSource.gallery,
-    );
-
-    if (pickedImage != null) {
-      // Show local image immediately
-      setState(() => pathLocal = pickedImage.path);
-    }
   }
 }

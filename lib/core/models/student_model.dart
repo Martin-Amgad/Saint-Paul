@@ -14,7 +14,7 @@ class StudentModel {
   final String? avatarUrl;
   final int? totalTayo;
   final Map<String, dynamic>? tayo;
-  final List<String>? missionBadges;
+  final Map<String, String>? myBadges;
   final List<String>? acceptedMissions;
   final Map<String, dynamic>? submittedMissions;
   final String? groupID;
@@ -41,7 +41,7 @@ class StudentModel {
       'مفتحش الموبيل و الفقرة شغالة': {'count': 0, 'takenAt': null},
       'اجابة علي سؤال في الدرس': {'count': 0, 'takenAt': null},
     },
-    this.missionBadges = const [],
+    this.myBadges = const {},
     this.acceptedMissions = const [],
     this.submittedMissions = const {},
     this.groupID,
@@ -62,7 +62,7 @@ class StudentModel {
       'studyLevel': studyLevel,
       'responsibleTeacher': responsibleTeacher,
       'tayo': tayo,
-      'missionBadges': missionBadges,
+      'myBadges': myBadges,
       'acceptedMissions': acceptedMissions,
       'submittedMissions': submittedMissions,
       'groupID': groupID,
@@ -93,14 +93,9 @@ class StudentModel {
               : value['takenAt'],
         }),
       ),
-      'missionBadges': missionBadges,
+      'myBadges': myBadges,
       'acceptedMissions': acceptedMissions,
-      'submittedMissions': submittedMissions?.map(
-        (missionId, missionMap) => MapEntry(
-          missionId,
-          missionMap, // ← just pass it as-is, no nested conversion needed
-        ),
-      ),
+      'submittedMissions': submittedMissions,
       'groupID': groupID,
     };
   }
@@ -124,9 +119,9 @@ class StudentModel {
       studyLevel: map['studyLevel'] ?? '',
       responsibleTeacher: map['responsibleTeacher'] ?? 'لا يوجد',
       tayo: map['tayo'] as Map<String, dynamic>? ?? {},
-      missionBadges: map['missionBadges'] is List
-          ? List<String>.from(map['missionBadges'])
-          : const <String>[],
+      myBadges: map['myBadges'] is Map
+          ? Map<String, String>.from(map['myBadges'] as Map)
+          : const <String, String>{},
       acceptedMissions: map['acceptedMissions'] is List
           ? List<String>.from(map['acceptedMissions'])
           : const <String>[],
@@ -173,9 +168,9 @@ class StudentModel {
               : value['takenAt'],
         }),
       ),
-      missionBadges: map['missionBadges'] is List
-          ? List<String>.from(map['missionBadges'])
-          : const <String>[],
+      myBadges: map['myBadges'] is Map
+          ? Map<String, String>.from(map['myBadges'] as Map)
+          : const <String, String>{},
       acceptedMissions: map['acceptedMissions'] is List
           ? List<String>.from(map['acceptedMissions'])
           : const <String>[],
@@ -206,7 +201,7 @@ class StudentModel {
     String? studyLevel,
     String? responsibleTeacher,
     Map<String, dynamic>? tayo,
-    List<String>? missionBadges,
+    Map<String, String>? myBadges,
     List<String>? acceptedMissions,
     Map<String, dynamic>? submittedMissions,
     String? groupID,
@@ -225,7 +220,7 @@ class StudentModel {
       studyLevel: studyLevel ?? this.studyLevel,
       responsibleTeacher: responsibleTeacher ?? this.responsibleTeacher,
       tayo: tayo ?? this.tayo,
-      missionBadges: missionBadges ?? this.missionBadges,
+      myBadges: myBadges ?? this.myBadges,
       acceptedMissions: acceptedMissions ?? this.acceptedMissions,
       submittedMissions: submittedMissions ?? this.submittedMissions,
       groupID: groupID ?? this.groupID,
@@ -250,7 +245,7 @@ class StudentModel {
       data['responsibleTeacher'] = responsibleTeacher;
     }
     if (tayo != null) data['tayo'] = tayo;
-    if (missionBadges != null) data['missionBadges'] = missionBadges;
+    if (myBadges != null) data['myBadges'] = myBadges;
     if (acceptedMissions != null) {
       data['acceptedMissions'] = acceptedMissions;
     }

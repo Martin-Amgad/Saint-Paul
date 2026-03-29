@@ -108,17 +108,26 @@ class StudentGroupListBuilder extends StatelessWidget {
                             alpha: 0.08,
                           ),
                           child: ClipOval(
-                            child: CachedNetworkImage(
-                              imageUrl: student.avatarUrl ?? '',
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => const Icon(
-                                Icons.person_rounded,
-                                color: AppColors.primaryColor,
-                                size: 30,
-                              ),
-                            ),
+                            child:
+                                student.avatarUrl != null &&
+                                    student.avatarUrl!.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: student.avatarUrl ?? '',
+                                    width: 60,
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(
+                                          Icons.person_rounded,
+                                          color: AppColors.primaryColor,
+                                          size: 30,
+                                        ),
+                                  )
+                                : const Icon(
+                                    Icons.person_rounded,
+                                    color: AppColors.primaryColor,
+                                    size: 30,
+                                  ),
                           ),
                         ),
                         if (isSelected)

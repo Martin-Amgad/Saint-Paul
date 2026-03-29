@@ -1,33 +1,88 @@
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
-import 'package:saint_paul/core/constants/app_assets.dart';
-import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 
 // Full badge model — all possible badges
-final Map<String, String> badgeModel = {
-  'ملك التايـو': AppAssets.tayoKing,
-  'بطل الانتظام': AppAssets.consistencyChampion,
-  'فارس المهمات': AppAssets.missionMaster,
-  'البطل الصامت': AppAssets.silentKing,
-  'نجم المعرفة': AppAssets.smartstar,
-};
+// 'ملك التايـو': AppAssets.tayoKing,
+// 'بطل الانتظام': AppAssets.consistencyChampion,
+// 'فارس المهمات': AppAssets.missionMaster,
+// 'البطل الصامت': AppAssets.silentKing,
+// 'نجم المعرفة': AppAssets.smartstar,
 
-class BadgesScreen extends StatelessWidget {
-  const BadgesScreen({super.key, required this.earnedBadgeKeys});
+class BadgesScreen extends StatefulWidget {
+  const BadgesScreen({super.key, required this.earnedBadges});
 
   // Only the keys the student has earned
-  final List<String> earnedBadgeKeys;
+  final Map<String, String> earnedBadges;
+
+  @override
+  State<BadgesScreen> createState() => _BadgesScreenState();
+}
+
+class _BadgesScreenState extends State<BadgesScreen> {
+  Map<String, String> allBadges = LocalHelper.getAllBadges() ?? {};
+
+  @override
+  void initState() {
+    getConfigBadges();
+    super.initState();
+  }
+
+  Future<void> getConfigBadges() async {
+    try {
+      final localBadges = LocalHelper.getAllBadges() ?? {};
+      final firestoreBadges = await FirebaseProvider.getBadges();
+      log('Fetched badges from Firestore: ${firestoreBadges}');
+      log('Fetched badges from local storage: ${localBadges}');
+      log('Earned badges: ${widget.earnedBadges}');
+
+      if (!mounted) return;
+
+      if (localBadges.length != firestoreBadges.length) {
+        log(
+          'Firestore badges differ from local badges. Updating local badges.',
+        );
+        await LocalHelper.setAllBadges(firestoreBadges);
+        setState(() {
+          allBadges = firestoreBadges;
+        });
+      } else {
+        log(
+          'Firestore badges are the same as earned badges. No update needed.',
+        );
+        setState(() {
+          allBadges = localBadges;
+        });
+      }
+    } catch (e) {
+      log('❌ getConfigBadges failed: $e');
+      // fallback to local if firestore fails
+      final localBadges = LocalHelper.getAllBadges() ?? {};
+      setState(() => allBadges = localBadges);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final earnedBadges = badgeModel.entries
-        .where((e) => earnedBadgeKeys.contains(e.key))
-        .toList();
-    final lockedBadges = badgeModel.entries
-        .where((e) => !earnedBadgeKeys.contains(e.key))
+    // final widget.earnedBadges = widget.widget.earnedBadges.entries
+    //     .where((e) => allBadges.containsKey(e.key))
+    //     .toList();
+    // log('Earned badges: ${widget.earnedBadges.map((e) => e.key).toList()}');
+    // log('All badges: ${allBadges.keys.toList()}');
+    // log('Earned badge keys: ${widget.widget.earnedBadges.keys.toList()}');
+    // log(
+    //   'Earned badges from all badges: ${allBadges.entries.where((e) => widget.widget.earnedBadges.keys.contains(e.key)).map((e) => e.key).toList()}',
+    // );
+    final lockedBadges = allBadges.entries
+        .where((e) => !widget.earnedBadges.keys.contains(e.key))
         .toList();
 
     return Scaffold(
@@ -118,7 +173,7 @@ class BadgesScreen extends StatelessWidget {
                       ),
                       const Gap(8),
                       Text(
-                        '${earnedBadges.length} من ${badgeModel.length} أوسمة',
+                        '${widget.earnedBadges.length} من ${allBadges.length} أوسمة',
                         style: TextStyles.getSize16(
                           color: AppColors.whiteColor.withValues(alpha: 0.85),
                           fontWeight: FontWeight.w600,
@@ -135,7 +190,9 @@ class BadgesScreen extends StatelessWidget {
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerRight,
-                          widthFactor: earnedBadges.length / badgeModel.length,
+                          widthFactor: allBadges.isNotEmpty
+                              ? (widget.earnedBadges.length / allBadges.length)
+                              : 0.0,
                           child: Container(
                             decoration: BoxDecoration(
                               color: AppColors.darkYellowIconColor,
@@ -159,7 +216,7 @@ class BadgesScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Earned badges
-                  if (earnedBadges.isNotEmpty) ...[
+                  if (widget.earnedBadges.isNotEmpty) ...[
                     _SectionLabel(
                       icon: Icons.check_circle_rounded,
                       color: AppColors.darkYellowIconColor,
@@ -176,11 +233,11 @@ class BadgesScreen extends StatelessWidget {
                             crossAxisSpacing: 12,
                             childAspectRatio: 0.85,
                           ),
-                      itemCount: earnedBadges.length,
+                      itemCount: widget.earnedBadges.length,
                       itemBuilder: (context, index) {
                         return _BadgeCard(
-                          name: earnedBadges[index].key,
-                          assetPath: earnedBadges[index].value,
+                          name: widget.earnedBadges.keys.toList()[index],
+                          assetPath: widget.earnedBadges.values.toList()[index],
                           isEarned: true,
                         );
                       },
@@ -342,11 +399,10 @@ class _BadgeCard extends StatelessWidget {
                         1,
                         0,
                       ]),
-                child: Image.asset(
-                  assetPath,
-                  width: 60,
-                  height: 60,
-                  opacity: AlwaysStoppedAnimation(isEarned ? 1.0 : 0.3),
+                child: CachedNetworkImage(
+                  imageUrl: assetPath,
+                  width: 48,
+                  height: 48,
                 ),
               ),
               if (!isEarned)
