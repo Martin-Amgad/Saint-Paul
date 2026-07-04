@@ -8,6 +8,7 @@ import 'package:saint_paul/feature/auth/presentation/page/register/register_scre
 import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
 import 'package:saint_paul/feature/groups/presentation/page/student/group_details_screen.dart';
 import 'package:saint_paul/feature/groups/presentation/page/teacher/create_group_screen.dart';
+import 'package:saint_paul/feature/groups/presentation/page/teacher/group_points_screen.dart';
 import 'package:saint_paul/feature/groups/presentation/page/teacher/groups_showcase_screen.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
@@ -59,6 +60,7 @@ class Routes {
   static const String createGroupScreen = '/createGroupScreen';
   static const String groupDetailsScreen = '/groupDetailsScreen';
   static const String appBlockedScreen = '/appBlockedScreen';
+  static const String groupPointsScreen = '/groupPointsScreen';
 
   static final routes = GoRouter(
     routes: [
@@ -201,7 +203,15 @@ class Routes {
           );
         },
       ),
-
+      GoRoute(
+        path: groupPointsScreen,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => GroupCubit(),
+            child: GroupPointsScreen(group: state.extra as GroupModel?),
+          );
+        },
+      ),
       //Home Cubit Screens ////////////////////////////////////////
       GoRoute(
         path: addEditNewStudentScreen,

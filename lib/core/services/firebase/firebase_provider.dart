@@ -84,6 +84,42 @@ class FirebaseProvider {
     await studentCollection.doc(student.uid).update(student.toUpdateData());
   }
 
+  //   static Future<void> updateStudentWithHistory(
+  //   StudentModel student,
+  //   List<TayoHistoryChange> historyChanges,
+  // ) async {
+  //   final batch = firebase.batch();
+
+  //   // Update student
+  //   batch.update(
+  //     studentCollection.doc(student.uid),
+  //     student.toUpdateData(),
+  //   );
+
+  //   final historyCollection = studentCollection
+  //       .doc(student.uid)
+  //       .collection('history');
+
+  //   final teacher = LocalHelper.getTeacherData();
+
+  //   for (final change in historyChanges) {
+  //     final historyDoc = historyCollection.doc();
+
+  //     batch.set(
+  //       historyDoc,
+  //       TayoHistoryModel(
+  //         category: change.category,
+  //         change: change.change,
+  //         createdAt: DateTime.now(), // or FieldValue.serverTimestamp() if your model supports it
+  //         teacherId: teacher.uid,
+  //         teacherName: teacher.name,
+  //       ).toJson(),
+  //     );
+  //   }
+
+  //   await batch.commit();
+  // }
+
   static Future<void> updateStudentImage(
     String? studentId,
     String avatarUrl,
@@ -152,6 +188,7 @@ class FirebaseProvider {
 
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  ////////////////⚠️⚠️⚠️⚠️⚠️Tayo UPDATE METHODS⚠️⚠️⚠️⚠️⚠️
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   static Future<void> updateTayoInAllDocuments(
     List<String>? tayoNewCategories,
@@ -242,8 +279,8 @@ class FirebaseProvider {
     await groupCollection.doc(groupId).delete();
   }
 
-  static Future<QuerySnapshot> fetchGroupsByTotalTayo() async {
-    return await groupCollection.orderBy('totalTayo', descending: true).get();
+  static Future<QuerySnapshot> fetchGroupsByTotalPoints() async {
+    return await groupCollection.orderBy('totalPoints', descending: true).get();
   }
 
   static Future<DocumentSnapshot<Object?>> getGroupbyId(String? groupId) async {
@@ -254,21 +291,92 @@ class FirebaseProvider {
     await groupCollection.doc(group.gid).update(group.toUpdateData());
   }
 
-  // defaults METHODS //////////////////////////////////////////////////////////////
-  static Future<Map<String, dynamic>> getDefaultTayo() async {
-    final doc = await configCollection.doc('defaults').get();
-    return doc.get('tayo') as Map<String, dynamic>;
+  static Future<void> updateGroupPoints({
+    required String groupId,
+    required int changeInPoints,
+  }) async {
+    final docRef = groupCollection.doc(groupId);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+
+      if (!snapshot.exists) {
+        throw Exception('Group not found');
+      }
+
+      final data = snapshot.data()! as Map<String, dynamic>;
+
+      final currentPoints = data['totalPoints'] ?? 0;
+
+      transaction.update(docRef, {
+        'totalPoints': currentPoints + changeInPoints,
+      });
+    });
   }
 
-  static Future<bool> checkIfUpdateAvailable() async {
-    final doc = await configCollection.doc('defaults').get();
-    return doc.get('updateAvailable') as bool? ?? false;
+  static Future<DocumentSnapshot<Object?>> getGroupByID(String groupId) async {
+    return await groupCollection.doc(groupId).get();
   }
 
-  static Future<bool> checkIfAppUnderMaintenance() async {
-    final doc = await configCollection.doc('defaults').get();
-    return doc.get('appUnderMaintenance') as bool? ?? false;
+  ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  ///////////////⚠️⚠️⚠️⚠️⚠️POINTS UPDATE METHODS⚠️⚠️⚠️⚠️⚠️
+  ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  static Future<void> updatePointsInAllGroups(
+    List<String>? pointNewCategories,
+    List<String>? pointRemovedCategories,
+  ) async {
+    if ((pointNewCategories?.isEmpty ?? true) &&
+        (pointRemovedCategories?.isEmpty ?? true)) {
+      return;
+    }
+
+    final updates = updatePointMethod(
+      pointNewCategories,
+      pointRemovedCategories,
+    );
+
+    // Update config document if needed
+    await configCollection.doc('defaults').update(updates);
+
+    // Update all group documents in batches of 500
+    final snapshot = await groupCollection.get();
+    final docs = snapshot.docs;
+
+    for (int i = 0; i < docs.length; i += 500) {
+      final batch = FirebaseFirestore.instance.batch();
+      final chunk = docs.sublist(i, (i + 500).clamp(0, docs.length));
+
+      for (final doc in chunk) {
+        batch.update(doc.reference, updates);
+      }
+
+      await batch.commit();
+    }
   }
+
+  static Map<String, dynamic> updatePointMethod(
+    List<String>? pointNewCategories,
+    List<String>? pointRemovedCategories,
+  ) {
+    final Map<String, dynamic> updates = {};
+
+    for (final category in pointNewCategories ?? []) {
+      updates['points.$category'] = {'count': 0, 'takenAt': null};
+    }
+
+    for (final category in pointRemovedCategories ?? []) {
+      updates['points.$category'] = FieldValue.delete();
+    }
+
+    return updates;
+  }
+
+  static Future<Map<String, dynamic>> getDefaultPoints() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('points') as Map<String, dynamic>;
+  }
+  // Badge Methods //////////////////////////////////////////////////////////////
 
   static Future<void> createBadge(
     String badgeName,
@@ -304,5 +412,21 @@ class FirebaseProvider {
     }
 
     await batch.commit();
+  }
+
+  // defaults METHODS //////////////////////////////////////////////////////////////
+  static Future<Map<String, dynamic>> getDefaultTayo() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('tayo') as Map<String, dynamic>;
+  }
+
+  static Future<bool> checkIfUpdateAvailable() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('updateAvailable') as bool? ?? false;
+  }
+
+  static Future<bool> checkIfAppUnderMaintenance() async {
+    final doc = await configCollection.doc('defaults').get();
+    return doc.get('appUnderMaintenance') as bool? ?? false;
   }
 }

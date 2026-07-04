@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/core/models/group_model.dart';
-import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/feature/groups/data/repo/groups_repo.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
@@ -14,6 +13,7 @@ class GroupCubit extends Cubit<GroupState> {
   var formKey = GlobalKey<FormState>();
   var groupNameController = TextEditingController();
   var groupTotalTayo = 0;
+  int groupTotalPoints = 0;
 
   Future<void> deleteGroup(GroupModel group) async {
     emit(GroupLoadingState());
@@ -29,36 +29,66 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  Future<void> updateGroup(
+    GroupModel group, {
+    List<String>? pointNewCategories,
+    List<String>? pointRemovedCategories,
+  }) async {
+    emit(GroupLoadingState());
+    try {
+      var res = await GroupsRepo.updateGroup(
+        group,
+        pointNewCategories: pointNewCategories,
+        pointRemovedCategories: pointRemovedCategories,
+      );
+      groupTotalTayo = group.totalPoints ?? 0;
+      emit(GroupSuccessState(message: res));
+    } catch (e) {
+      emit(GroupErrorState('حدث خطأ أثناء تحديث المجموعة: ${e.toString()}'));
+    }
+  }
+
   Future<String?> createGroup(
     List<String> studentIds,
     String studyLevel,
   ) async {
     try {
       groupTotalTayo = 0; // reset after
+
       final students = await GroupsRepo.fetchStudentsByIds(studentIds);
+
       for (var student in students) {
         log(
           'Fetched student: ${student.uid} → ${student.name} with total tayo: ${student.totalTayo}',
         );
         groupTotalTayo += student.totalTayo ?? 0;
       }
+
       log('Total tayo for selected students: $groupTotalTayo');
+
+      final defaultPoints = await FirebaseProvider.getDefaultPoints();
+
       final groupId = await FirebaseProvider.createGroup(
         GroupModel(
           name: groupNameController.text.trim(),
           students: studentIds,
           totalTayo: groupTotalTayo,
           studyLevel: studyLevel,
+          points: defaultPoints,
         ),
       );
+
       final futures = studentIds.map(
         (id) => FirebaseProvider.updateStudentGroupID(id, groupId),
       );
+
       await Future.wait(futures);
+
       return 'تم إنشاء المجموعة بنجاح.';
     } on Exception catch (e) {
       return 'حدث خطأ أثناء إنشاء المجموعة: ${e.toString()}';
     } catch (e) {
+      log('Unexpected error during group creation: $e');
       return 'حدث خطأ غير متوقع أثناء إنشاء المجموعة.';
     }
   }
@@ -70,6 +100,22 @@ class GroupCubit extends Cubit<GroupState> {
       emit(GroupsLoadedSuccessState(groups: res));
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعات: ${e.toString()}'));
+    }
+  }
+
+  Future<void> fetchGroup(String groupId) async {
+    log("fetchGroup START");
+    emit(GroupLoadingState());
+
+    try {
+      final group = await GroupsRepo.fetchGroup(groupId);
+      log("fetchGroup FINISHED");
+      log(">>> EMITTING GroupLoadedState");
+      emit(GroupLoadedState(group: group ?? GroupModel()));
+      log(">>> GroupLoadedState emitted");
+    } catch (e) {
+      log("fetchGroup ERROR: $e");
+      emit(GroupErrorState(e.toString()));
     }
   }
 
@@ -102,7 +148,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
-  Future<void> fetchStudentGroup(String? studentId) async {
+  Future<void> fetchAndCheckStudentGroup(String? studentId) async {
     if (studentId == null || studentId.isEmpty) {
       emit(GroupNotAssignedState());
       return;
@@ -143,13 +189,17 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
-  Future<void> techersGroupDetails(GroupModel? group) async {
+  Future<void> teachersGroupDetails(GroupModel? group) async {
     emit(GroupLoadingState());
     try {
       final students = await GroupsRepo.fetchStudentsByIds(
         group?.students ?? [],
       );
-      emit(StudentsLoadedSuccessState(students: students, group: group));
+      final newGroup = await GroupsRepo.fetchGroup(group?.gid);
+      log(
+        'Fetched students for group ${group?.gid}: Total Points = ${newGroup?.totalPoints}',
+      );
+      emit(StudentsLoadedSuccessState(students: students, group: newGroup));
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعة: ${e.toString()}'));
     }
@@ -201,6 +251,56 @@ class GroupCubit extends Cubit<GroupState> {
       }
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعة: ${e.toString()}'));
+    }
+  }
+
+  Future<void> updateTotalPoints(GroupModel? group, int changeInPoints) async {
+    if (changeInPoints == 0) return;
+
+    try {
+      await GroupsRepo.updateGroupPoints(
+        groupId: group!.gid!,
+        changeInPoints: changeInPoints,
+      );
+    } catch (e) {
+      emit(GroupErrorState('حدث خطأ أثناء تحديث النقاط: $e'));
+    }
+  }
+
+  void updateGroupTakenAt(
+    GroupModel group, {
+    List<String>? pointNewCategories,
+    List<String>? pointRemovedCategories,
+  }) async {
+    try {
+      await GroupsRepo.updateGroupTakenAt(group);
+      emit(GroupSuccessState(message: 'تم تحديث بيانات المجموعة بنجاح.'));
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(GroupErrorState(e.toString()));
+    } catch (e) {
+      log(e.toString());
+      emit(
+        GroupErrorState(
+          'حدث خطأ أثناء تحديث بيانات المخدوم. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
+
+  void getGroupPointsDetails(GroupModel group) async {
+    emit(GroupLoadingState());
+    try {
+      var res = await GroupsRepo.getGroupPointsDetails(group);
+      if (res != null) {
+        log('Group details retrieved successfully: $res');
+        emit(GroupPointsLoadSuccessState(point: res));
+      } else {
+        log('No student details found for the given student.');
+      }
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(GroupErrorState(e.toString()));
     }
   }
 }

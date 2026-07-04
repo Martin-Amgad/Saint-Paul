@@ -5,13 +5,21 @@ class GroupState {}
 
 class GroupInitialState extends GroupState {}
 
-class GroupSuccessState extends GroupState {}
+class GroupSuccessState extends GroupState {
+  final String? message;
+  GroupSuccessState({this.message});
+}
 
 class GroupLoadingState extends GroupState {}
 
 class GroupErrorState extends GroupState {
   final String message;
   GroupErrorState(this.message);
+}
+
+class GroupLoadedState extends GroupState {
+  final GroupModel group;
+  GroupLoadedState({required this.group});
 }
 
 class GroupDeleteSuccessState extends GroupState {
@@ -46,3 +54,13 @@ class GroupDetailsErrorState extends GroupState {
 }
 
 class GroupNotAssignedState extends GroupState {}
+
+class GroupPointsLoadSuccessState extends GroupState {
+  final Map<String, dynamic> point;
+  GroupPointsLoadSuccessState({this.point = const {}});
+}
+
+class GroupSuccessStateForTakenAt extends GroupState {
+  final String? message;
+  GroupSuccessStateForTakenAt({this.message});
+}

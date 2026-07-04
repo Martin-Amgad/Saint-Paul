@@ -7,7 +7,7 @@ import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 class GroupsRepo {
   static Future<List<GroupModel>> fetchGroups() async {
     try {
-      final snapshot = await FirebaseProvider.fetchGroupsByTotalTayo();
+      final snapshot = await FirebaseProvider.fetchGroupsByTotalPoints();
 
       log('Fetched groups snapshot: ${snapshot.docs.length} documents');
       try {
@@ -108,13 +108,70 @@ class GroupsRepo {
     }
   }
 
-  static Future<void> updateGroup(GroupModel group) async {
+  static Future<String?> updateGroup(
+    GroupModel group, {
+    List<String>? pointNewCategories,
+    List<String>? pointRemovedCategories,
+  }) async {
+    try {
+      log('Updating group with ID: ${group.gid}');
+      log('New Point Categories: $pointNewCategories');
+      log('Removed Point Categories: $pointRemovedCategories');
+      // THEN update all documents with additions/removals
+      if ((pointNewCategories?.isEmpty ?? true) &&
+          (pointRemovedCategories?.isEmpty ?? true)) {
+        await FirebaseProvider.updateGroup(group);
+        return 'تم تحديث بيانات المجموعة بنجاح.';
+      }
+      await FirebaseProvider.updatePointsInAllGroups(
+        pointNewCategories,
+        pointRemovedCategories,
+      );
+      await FirebaseProvider.updateGroup(group);
+      pointNewCategories = [];
+      pointRemovedCategories = [];
+
+      return 'تم تحديث بيانات المجموعة بنجاح.';
+    } on Exception catch (e) {
+      throw Exception('Failed to update group: ${e.toString()}');
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث بيانات المجموعة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  static Future<void> updateGroupPoints({
+    required String groupId,
+    required int changeInPoints,
+  }) {
+    return FirebaseProvider.updateGroupPoints(
+      groupId: groupId,
+      changeInPoints: changeInPoints,
+    );
+  }
+
+  static Future<String?> updateGroupTakenAt(GroupModel group) async {
     try {
       await FirebaseProvider.updateGroup(group);
-      log('Group ${group.gid} updated successfully');
+      return 'تم تحديث بيانات المجموعة بنجاح.';
     } on Exception catch (e) {
-      log('Error updating group ${group.gid}: ${e.toString()}');
-      rethrow;
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث بيانات المجموعة. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getGroupPointsDetails(
+    GroupModel group,
+  ) async {
+    try {
+      final snapshot = await FirebaseProvider.getGroupByID(group.gid ?? '');
+
+      final data = ((snapshot.data()) as Map<String, dynamic>?) ?? {};
+
+      return data['points'] as Map<String, dynamic>? ?? {};
+    } on Exception catch (e) {
+      log(e.toString());
+      return null;
     }
   }
 }

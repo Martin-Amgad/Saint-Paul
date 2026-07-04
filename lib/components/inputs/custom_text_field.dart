@@ -19,6 +19,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines = 1,
     this.isDense = false,
     this.onTap,
+    this.errorStyle,
   });
 
   final TextEditingController controller;
@@ -35,6 +36,7 @@ class CustomTextField extends StatefulWidget {
   final int? maxLines;
   final bool? isDense;
   final VoidCallback? onTap;
+  final TextStyle? errorStyle;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -68,6 +70,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       decoration: InputDecoration(
         isDense: widget.isDense,
         hintText: widget.hintText,
+        errorStyle: widget.errorStyle,
         suffixIcon: widget.isPassword
             ? Padding(
                 padding: EdgeInsetsGeometry.only(right: 8),

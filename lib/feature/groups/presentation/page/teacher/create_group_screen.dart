@@ -57,13 +57,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: BlocBuilder<GroupCubit, GroupState>(
           builder: (context, state) {
-            if (state is GroupLoadingState) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is StudentsLoadedSuccessState) {
+            if (state is StudentsLoadedSuccessState) {
               return MainButton(
                 title: 'حفظ المجموعة',
                 onPressed: () {
-                  if (cubit.formKey.currentState?.validate() ?? false) {
+                  if ((cubit.formKey.currentState?.validate() ?? true) &&
+                      selectedStudentIds.isNotEmpty) {
                     log(
                       'Creating group with name: ${cubit.groupNameController.text}, selected students: $selectedStudentIds, total tayo: ${cubit.groupTotalTayo}, study level: ${selectedYear ?? 'الكل'}',
                     );
@@ -79,6 +78,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                             pop(context);
                           }
                         });
+                  } else if (selectedStudentIds.isEmpty) {
+                    showMyDialoge(
+                      context,
+                      'يرجى اختيار مخدوم واحد على الأقل',
+                      type: DialogType.error,
+                    );
                   }
                 },
               );
@@ -157,8 +162,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         padding: EdgeInsets.only(left: 8.0, right: 8),
                         child: Icon(
                           Icons.group_rounded,
-                          color: AppColors.whiteColor,
+                          color: AppColors.primaryColor,
                         ),
+                      ),
+                      errorStyle: TextStyles.getSize12(
+                        color: AppColors.whiteColor.withValues(alpha: 0.8),
                       ),
                       validator: (p0) {
                         if (p0 == null || p0.trim().isEmpty) {
@@ -292,7 +300,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               },
               builder: (context, state) {
                 if (state is GroupLoadingState) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Column(
+                    children: [
+                      // the gap size is according to the user phone dimensions, so it will be responsive
+                      Gap(MediaQuery.of(context).size.height * 0.2),
+                      Center(child: CircularProgressIndicator()),
+                    ],
+                  );
                 } else if (state is StudentsLoadedSuccessState) {
                   return Expanded(
                     child: StudentGroupListBuilder(
@@ -301,6 +315,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       students: state.students,
                       selectedStudentIds: selectedStudentIds,
                       onStudentToggled: (studentId, totalTayo) {
+                        log(
+                          'Current selected student IDs: $selectedStudentIds',
+                        );
                         setState(() {
                           if (selectedStudentIds.contains(studentId)) {
                             selectedStudentIds.remove(studentId);

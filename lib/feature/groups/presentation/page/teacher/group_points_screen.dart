@@ -1,54 +1,43 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
-import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
-import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
-import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
-import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
+import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
+import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
+import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
 
-void removeCommonElements(
-  List<String> tayoNewCategories,
-  List<String> tayoRemovedCategories,
-) {
-  final set1 = tayoNewCategories.toSet();
-  final set2 = tayoRemovedCategories.toSet();
-  final common = set1.intersection(set2);
-  tayoNewCategories.removeWhere((item) => common.contains(item));
-  tayoRemovedCategories.removeWhere((item) => common.contains(item));
-}
+class GroupPointsScreen extends StatefulWidget {
+  const GroupPointsScreen({super.key, this.group});
 
-class TayoDetailsScreen extends StatefulWidget {
-  const TayoDetailsScreen({super.key, required this.student});
-  final StudentModel student;
+  final GroupModel? group;
 
   @override
-  State<TayoDetailsScreen> createState() => _TayoDetailsScreenState();
+  State<GroupPointsScreen> createState() => _GroupPointsScreenState();
 }
 
-class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
+class _GroupPointsScreenState extends State<GroupPointsScreen> {
   bool isLoading = true;
-  Map<String, dynamic> tayo = {};
-  Map<String, dynamic> oldTayo = {};
-  List<String> tayoNewCategories = [];
-  List<String> tayoRemovedCategories = [];
-  final tayoCategoryController = TextEditingController();
+  Map<String, dynamic> point = {};
+  Map<String, dynamic> oldPoint = {};
+  List<String> pointNewCategories = [];
+  List<String> pointRemovedCategories = [];
+  final pointCategoryController = TextEditingController();
 
-  int changedTotalTayo = 0;
-  int confirmedTotalTayo = 0; // ← add here
+  int changedTotalPoint = 0;
+  int confirmedTotalPoint = 0; // ← add here
 
-  void checkAndResetTayo() {
+  void checkAndResetPoint() {
     bool changed = false;
-    tayo.forEach((key, value) {
+    point.forEach((key, value) {
       if (value is Map && value["takenAt"] != null) {
         final takenAt = value["takenAt"];
         final takenAtMillis = takenAt is int
@@ -61,16 +50,16 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
       }
     });
     if (changed) {
-      oldTayo = Map<String, dynamic>.from(
-        // ← sync oldTayo here
-        tayo.map(
+      oldPoint = Map<String, dynamic>.from(
+        // ← sync oldPoint here
+        point.map(
           (key, value) => MapEntry(key, Map<String, dynamic>.from(value)),
         ),
       );
-      context.read<HomeCubit>().updateStudentTakenAt(
-        widget.student.copyWith(
-          tayo: tayo,
-          totalTayo: (widget.student.totalTayo ?? 0) + changedTotalTayo,
+      context.read<GroupCubit>().updateGroupTakenAt(
+        widget.group!.copyWith(
+          points: point,
+          totalPoints: (confirmedTotalPoint) + changedTotalPoint,
         ),
       );
     }
@@ -83,80 +72,64 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
     return now.difference(takenTime).inHours >= expireHours;
   }
 
-  // int computeTotalTayo() {
-  //   int total = 0;
-  //   tayo.forEach((key, value) {
-  //     total += tayo[key]['count'] as int? ?? 0;
-  //   });
-  //   return total;
-  // }
-
   @override
   void initState() {
-    // int tempTotalTayo = 0;
     super.initState();
-    confirmedTotalTayo = widget.student.totalTayo ?? 0;
-    context.read<HomeCubit>().getStudentTayoDetails(widget.student);
-    // log('Fetching tayo details for student: ${widget.student.name}');
-    // log('Initial student data: ${widget.student.toJson()}');
-    // log('Initial total tayo: ${widget.student.totalTayo}');
-    // log('Initial confirmed total tayo: $confirmedTotalTayo');
-    // log('Initial changed total tayo: $changedTotalTayo');
-    // log('Initial tayo state: $tayo');
-    // log('Initial oldTayo state: $oldTayo');
-    // log('Initial tayo == oldTayo: ${jsonEncode(tayo) == jsonEncode(oldTayo)}');
-    // log('Initial tayoNewCategories: $tayoNewCategories');
-    // log('Initial tayoRemovedCategories: $tayoRemovedCategories');
-    // log('Initial isLoading: $isLoading');
-    // log('Initial widget.student.tayo: ${widget.student.tayo}');
-    // log('Initial widget.student.totalTayo: ${widget.student.totalTayo}');
+    log("its showtime bitches");
+    confirmedTotalPoint = widget.group?.totalPoints ?? 0;
+    log("1 after showtime bitches");
+    log("the show's confirmedTotalPoint is $confirmedTotalPoint");
+
+    context.read<GroupCubit>().getGroupPointsDetails(widget.group!);
+    log("did we succeed papa?");
+    log("yes my son");
   }
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<HomeCubit>();
-
+    final cubit = context.read<GroupCubit>();
     return PopScope(
       canPop: false, // always block, handle manually
       onPopInvokedWithResult: (didPop, result) async {
-        //   log('Back navigation triggered. didPop: $didPop, result: $result');
+        log('Back navigation triggered. didPop: $didPop, result: $result');
         if (didPop) return;
-        if (jsonEncode(tayo) == jsonEncode(oldTayo)) {
+        if (jsonEncode(point) == jsonEncode(oldPoint)) {
           pop(context); // no changes, pop manually
         } else {
           log('Unsaved changes detected. Showing confirmation dialog.');
-          log('Current tayo: $tayo');
-          log('Old tayo: $oldTayo');
-          log('tayo == oldTayo: ${jsonEncode(tayo) == jsonEncode(oldTayo)}');
-          log('Changed total tayo: $changedTotalTayo');
+          log('Current Point: $point');
+          log('Old Point: $oldPoint');
+          log(
+            'Point == oldPoint: ${jsonEncode(point) == jsonEncode(oldPoint)}',
+          );
+          log('Changed total Point: $changedTotalPoint');
           await showChangesNotSavedDialog(
             context,
-            tayo: tayo,
-            oldTayo: oldTayo,
+            tayo: point,
+            oldTayo: oldPoint,
             mainButtonOnConfirm: () {
               log('User confirmed to save changes. Updating student data.');
               log(
-                'Updating student with tayo: $tayo, changes to total tayo: $changedTotalTayo',
+                'Updating student with Point: $point, changes to total Point: $changedTotalPoint',
               );
-              removeCommonElements(tayoNewCategories, tayoRemovedCategories);
-              cubit.updateStudent(
-                newStudent: widget.student.copyWith(
-                  tayo: tayo,
-                  totalTayo: (widget.student.totalTayo ?? 0) + changedTotalTayo,
+              removeCommonElements(pointNewCategories, pointRemovedCategories);
+              cubit.updateGroup(
+                widget.group!.copyWith(
+                  points: point,
+                  totalPoints: (confirmedTotalPoint) + changedTotalPoint,
                 ),
-                oldStudent: widget.student,
-                tayoNewCategories: tayoNewCategories,
-                tayoRemovedCategories: tayoRemovedCategories,
+                pointNewCategories: pointNewCategories,
+                pointRemovedCategories: pointRemovedCategories,
               );
-              cubit.updateStudentGroup(
-                widget.student.groupID ?? '',
-                changedTotalTayo,
-              );
+              // cubit.updateStudentGroup(
+              //   widget.student.groupID ?? '',
+              //   changedTotalPoint,
+              // );
               setState(() {
-                confirmedTotalTayo += changedTotalTayo;
-                changedTotalTayo = 0; // reset after update
+                confirmedTotalPoint += changedTotalPoint;
+                changedTotalPoint = 0; // reset after update
               });
-              pushToBase(context, Routes.mainScreen, extra: 'خادم');
+              // pushToBase(context, Routes.mainScreen, extra: 'خادم');
             },
           );
         }
@@ -173,7 +146,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                 Expanded(
                   child: MainButton(
                     title: 'اضف بند جديد',
-                    onPressed: () => addNewTayoItemBottomSheet(context),
+                    onPressed: () => addNewPointItemBottomSheet(context),
                     bgcolor: AppColors.secondaryColor.withValues(alpha: 0.15),
                     textColor: AppColors.primaryColor,
                     borderColor: AppColors.primaryColor.withValues(alpha: 0.4),
@@ -185,45 +158,47 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                     title: 'تاكيد',
                     onPressed: () {
                       removeCommonElements(
-                        tayoNewCategories,
-                        tayoRemovedCategories,
+                        pointNewCategories,
+                        pointRemovedCategories,
                       );
                       log(
                         'User confirmed to save changes. Updating student data.',
                       );
 
-                      log(
-                        'Before updating student total tayo: ${widget.student.totalTayo ?? 99999}, changes to total tayo: $changedTotalTayo',
-                      );
-                      cubit.updateStudent(
-                        newStudent: widget.student.copyWith(
-                          tayo: tayo,
-                          totalTayo:
-                              (widget.student.totalTayo ?? 0) +
-                              changedTotalTayo,
+                      // log(
+                      //   'Before updating student total Point: ${widget.student.totalPoint ?? 99999}, changes to total Point: $changedTotalPoint',
+                      // );
+                      cubit.updateGroup(
+                        widget.group!.copyWith(
+                          points: point,
+                          totalPoints:
+                              (confirmedTotalPoint) + changedTotalPoint,
                         ),
-                        oldStudent: widget.student,
-                        tayoNewCategories: tayoNewCategories,
-                        tayoRemovedCategories: tayoRemovedCategories,
+                        pointNewCategories: pointNewCategories,
+                        pointRemovedCategories: pointRemovedCategories,
                       );
                       log(
-                        'After updating student total tayo: ${widget.student.totalTayo ?? 99999}, changes to total tayo: $changedTotalTayo',
+                        'After updating student total Point: ${widget.group?.totalPoints ?? 99999}, changes to total Point: $changedTotalPoint',
                       );
-                      checkAndResetTayo();
-                      oldTayo = Map<String, dynamic>.from(tayo);
+                      checkAndResetPoint();
+                      oldPoint = Map<String, dynamic>.from(point);
 
-                      log('Changes to total tayo: $changedTotalTayo');
+                      log('Changes to total Point: $changedTotalPoint');
                       log(
-                        'Updating student group with ID: ${widget.student.groupID ?? ''}, changes to total tayo: $changedTotalTayo',
+                        'Updating student group with ID: ${widget.group?.gid ?? ''}, changes to total Point: $changedTotalPoint',
                       );
-                      log('Student group ID: ${widget.student.groupID ?? ''}');
-                      cubit.updateStudentGroup(
-                        widget.student.groupID ?? '',
-                        changedTotalTayo,
-                      );
+                      log('Student group ID: ${widget.group?.gid ?? ''}');
+
+                      //I DONT KNOW WHAT THE FUCK THIS IS FOR!!!!!!!!!!!!!!!!!!!!!!!!!!
+                      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                      // cubit.updateStudentGroup(
+                      //   widget.group?.gid ?? '',
+                      //   changedTotalPoint,
+                      // );
+
                       setState(() {
-                        confirmedTotalTayo += changedTotalTayo;
-                        changedTotalTayo = 0; // reset after update
+                        confirmedTotalPoint += changedTotalPoint;
+                        changedTotalPoint = 0; // reset after update
                       });
                     },
                   ),
@@ -265,41 +240,43 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                     children: [
                       CustomBackButton(
                         onTap: () async {
-                          if (jsonEncode(tayo) == jsonEncode(oldTayo)) {
-                            pop(context); // no changes, pop manually
+                          if (jsonEncode(point) == jsonEncode(oldPoint)) {
+                            pop(
+                              context,
+                              confirmedTotalPoint + changedTotalPoint,
+                            ); // no changes, pop manually
                           } else {
                             await showChangesNotSavedDialog(
                               context,
-                              tayo: tayo,
-                              oldTayo: oldTayo,
+                              tayo: point,
+                              oldTayo: oldPoint,
                               mainButtonOnConfirm: () {
                                 removeCommonElements(
-                                  tayoNewCategories,
-                                  tayoRemovedCategories,
+                                  pointNewCategories,
+                                  pointRemovedCategories,
                                 );
-                                context.read<HomeCubit>().updateStudent(
-                                  newStudent: widget.student.copyWith(
-                                    tayo: tayo,
-                                    totalTayo:
-                                        (widget.student.totalTayo ?? 0) +
-                                        changedTotalTayo,
+                                context.read<GroupCubit>().updateGroup(
+                                  widget.group!.copyWith(
+                                    points: point,
+                                    totalPoints:
+                                        (confirmedTotalPoint) +
+                                        changedTotalPoint,
                                   ),
-                                  oldStudent: widget.student,
-                                  tayoNewCategories: tayoNewCategories,
-                                  tayoRemovedCategories: tayoRemovedCategories,
+                                  pointNewCategories: pointNewCategories,
+                                  pointRemovedCategories:
+                                      pointRemovedCategories,
                                 );
-                                cubit.updateStudentGroup(
-                                  widget.student.groupID ?? '',
-                                  changedTotalTayo,
-                                );
+                                // cubit.updateStudentGroup(
+                                //   widget.student.groupID ?? '',
+                                //   changedTotalPoint,
+                                // );
                                 setState(() {
-                                  confirmedTotalTayo += changedTotalTayo;
-                                  changedTotalTayo = 0; // reset after update
+                                  confirmedTotalPoint += changedTotalPoint;
+                                  changedTotalPoint = 0; // reset after update
                                 });
-                                pushToBase(
+                                pop(
                                   context,
-                                  Routes.mainScreen,
-                                  extra: 'خادم',
+                                  confirmedTotalPoint + changedTotalPoint,
                                 );
                               },
                             );
@@ -309,7 +286,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                       const Gap(12),
                       Expanded(
                         child: Text(
-                          widget.student.name ?? 'معلومات المخدوم',
+                          widget.group!.name ?? 'معلومات المجموعة',
                           style: TextStyles.getSize24(
                             color: AppColors.whiteColor,
                             fontWeight: FontWeight.w700,
@@ -320,7 +297,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                     ],
                   ),
                   const Gap(20),
-                  // Total tayo summary card
+                  // Total Point summary card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -334,7 +311,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                     child: Row(
                       children: [
                         const Icon(
-                          Icons.auto_awesome_rounded,
+                          Icons.stars,
                           color: AppColors.darkYellowIconColor,
                           size: 28,
                         ),
@@ -343,7 +320,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'مجموع الطايو',
+                              'مجموع النقاط',
                               style: TextStyles.getSize12(
                                 color: AppColors.whiteColor.withValues(
                                   alpha: 0.7,
@@ -351,7 +328,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                               ),
                             ),
                             Text(
-                              '${confirmedTotalTayo + changedTotalTayo}',
+                              '${(confirmedTotalPoint) + changedTotalPoint}',
                               style: TextStyles.getSize24(
                                 color: AppColors.whiteColor,
                                 fontWeight: FontWeight.w800,
@@ -366,64 +343,66 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
               ),
             ),
 
-            // ── Tayo list ───────────────────────────────────────────
+            // ── Point list ───────────────────────────────────────────
             Expanded(
-              child: BlocConsumer<HomeCubit, HomeState>(
+              child: BlocConsumer<GroupCubit, GroupState>(
                 listener: (context, state) {
-                  if (state is HomeLoadingState) {
+                  if (state is GroupLoadingState) {
                     showLoadingDialog(context);
-                  } else if (state is HomeErrorState) {
+                  } else if (state is GroupErrorState) {
                     pop(context);
                     showMyDialoge(
                       context,
                       state.message,
                       type: DialogType.error,
                     );
-                  } else if (state is HomeSuccessState) {
+                  } else if (state is GroupSuccessState) {
                     pop(context);
                     showMyDialoge(
                       context,
                       'تم تحديث بيانات المخدوم بنجاح',
                       type: DialogType.success,
                     );
-                    pop(context);
-                  } else if (state is HomeSuccessStateForTakenAt) {
-                    log('HomeSuccessStateForTakenAt triggered');
-                  } else if (state is HomeTayoLoadSuccessState) {
-                    tayo = Map<String, dynamic>.from(
-                      state.tayo.map(
+                    pop(context, confirmedTotalPoint + changedTotalPoint);
+                  } else if (state is GroupSuccessStateForTakenAt) {
+                    log('GroupSuccessStateForTakenAt triggered');
+                  } else if (state is GroupPointsLoadSuccessState) {
+                    point = Map<String, dynamic>.from(
+                      state.point.map(
                         (key, value) =>
                             MapEntry(key, Map<String, dynamic>.from(value)),
                       ),
                     );
-                    oldTayo = Map<String, dynamic>.from(
-                      state.tayo.map(
+                    log("the loaded point contains: $point");
+
+                    oldPoint = Map<String, dynamic>.from(
+                      state.point.map(
                         (key, value) =>
                             MapEntry(key, Map<String, dynamic>.from(value)),
                       ),
                     );
-                    // Compute actual total from fetched tayo
+                    // Compute actual total from fetched Point
                     int computedTotal = 0;
-                    tayo.forEach((key, value) {
+                    point.forEach((key, value) {
                       computedTotal += value['count'] as int? ?? 0;
                     });
 
-                    // Now compare against what Firestore has for totalTayo
-                    if (computedTotal != widget.student.totalTayo) {
+                    // Now compare against what Firestore has for totalPoint
+                    if (computedTotal != confirmedTotalPoint) {
                       log(
-                        '⚠️⚠️⚠️⚠️⚠️Discrepancy detected! computed: $computedTotal, stored: ${widget.student.totalTayo}',
+                        '⚠️⚠️⚠️⚠️⚠️Discrepancy detected! computed: $computedTotal, stored: $confirmedTotalPoint',
                       );
-                      log('Student name: ${widget.student.name}');
+                      log('Group name: ${widget.group!.name}');
                     }
 
-                    checkAndResetTayo();
+                    checkAndResetPoint();
                     setState(() {});
                   }
                 },
                 builder: (context, state) {
-                  if (state is HomeErrorState) {
+                  if (state is GroupErrorState) {
                     return Center(child: Text('حدث خطأ: ${state.message}'));
-                  } else if (state is HomeLoadingState && tayo.isEmpty) {
+                  } else if (state is GroupLoadingState && point.isEmpty) {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -432,7 +411,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                     );
                   }
 
-                  return tayo.isEmpty
+                  return point.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -458,12 +437,12 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                         )
                       : ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                          itemCount: tayo.length,
+                          itemCount: point.length,
                           separatorBuilder: (_, _) => const Gap(10),
                           itemBuilder: (context, index) {
-                            final key = tayo.keys.toList()[index];
-                            int categoryvalue = tayo[key]['count'];
-                            final takenAt = tayo[key]['takenAt'];
+                            final key = point.keys.toList()[index];
+                            int categoryvalue = point[key]['count'];
+                            final takenAt = point[key]['takenAt'];
                             final isExpired = isTakenExpired(
                               takenAt is int ? takenAt : null,
                             );
@@ -532,10 +511,10 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                         IconButton(
                                           onPressed: () {
                                             log('Removing category: $key');
-                                            tayo.remove(key);
-                                            tayoRemovedCategories.add(key);
+                                            point.remove(key);
+                                            pointRemovedCategories.add(key);
                                             log(
-                                              'removed: ${tayoRemovedCategories.toList()}',
+                                              'removed: ${pointRemovedCategories.toList()}',
                                             );
                                             setState(() {});
                                           },
@@ -568,20 +547,20 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                               CounterButton(
                                                 icon: Icons.add_rounded,
                                                 onTap: () {
-                                                  changedTotalTayo++;
-                                                  tayo[key] = {
+                                                  changedTotalPoint++;
+                                                  point[key] = {
                                                     "count": categoryvalue + 1,
                                                     "takenAt": DateTime.now()
                                                         .millisecondsSinceEpoch,
                                                   };
                                                   log(
-                                                    'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
+                                                    'Updated $key count to ${point[key]['count']} with takenAt ${point[key]['takenAt']}',
                                                   );
                                                   log(
-                                                    'Current tayo state: $tayo',
+                                                    'Current Point state: $point',
                                                   );
                                                   log(
-                                                    'Current oldTayo state: $oldTayo',
+                                                    'Current oldPoint state: $oldPoint',
                                                   );
                                                   setState(() {});
                                                 },
@@ -606,29 +585,29 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                                 icon: Icons.remove_rounded,
                                                 onTap: () {
                                                   if (categoryvalue > 0) {
-                                                    changedTotalTayo--;
+                                                    changedTotalPoint--;
                                                     log(
                                                       'Decrementing category: $key, new count will be ${categoryvalue - 1}',
                                                     );
                                                     log(
-                                                      'Changed total tayo after decrement: $changedTotalTayo',
+                                                      'Changed total Point after decrement: $changedTotalPoint',
                                                     );
-                                                    tayo[key] = {
+                                                    point[key] = {
                                                       "takenAt": null,
                                                       "count":
                                                           categoryvalue - 1,
                                                     };
                                                     log(
-                                                      'Updated $key count to ${tayo[key]['count']} with takenAt ${tayo[key]['takenAt']}',
+                                                      'Updated $key count to ${point[key]['count']} with takenAt ${point[key]['takenAt']}',
                                                     );
                                                     log(
-                                                      'Current tayo state: $tayo',
+                                                      'Current Point state: $point',
                                                     );
                                                     log(
-                                                      'Current oldTayo state: $oldTayo',
+                                                      'Current oldPoint state: $oldPoint',
                                                     );
                                                     log(
-                                                      'tayo == oldTayo: ${jsonEncode(tayo) == jsonEncode(oldTayo)}',
+                                                      'Point == oldPoint: ${jsonEncode(point) == jsonEncode(oldPoint)}',
                                                     );
                                                     setState(() {});
                                                   }
@@ -654,7 +633,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
     );
   }
 
-  void addNewTayoItemBottomSheet(BuildContext context) {
+  void addNewPointItemBottomSheet(BuildContext context) {
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -705,7 +684,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                   ),
                   const Gap(14),
                   TextField(
-                    controller: tayoCategoryController,
+                    controller: pointCategoryController,
                     decoration: InputDecoration(
                       hintText: 'اسم البند...',
                       filled: true,
@@ -725,13 +704,13 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                     title: 'اضف البند',
                     onPressed: () {
                       setState(() {
-                        tayo[tayoCategoryController.text] = {
+                        point[pointCategoryController.text] = {
                           "count": 0,
                           "takenAt": null,
                         };
-                        tayoNewCategories.add(tayoCategoryController.text);
-                        log('new categories: ${tayoNewCategories.toList()}');
-                        tayoCategoryController.clear();
+                        pointNewCategories.add(pointCategoryController.text);
+                        log('new categories: ${pointNewCategories.toList()}');
+                        pointCategoryController.clear();
                         pop(context);
                       });
                     },
@@ -743,28 +722,6 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class CounterButton extends StatelessWidget {
-  const CounterButton({required this.icon, required this.onTap});
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: AppColors.primaryColor,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: AppColors.whiteColor, size: 18),
-      ),
     );
   }
 }
