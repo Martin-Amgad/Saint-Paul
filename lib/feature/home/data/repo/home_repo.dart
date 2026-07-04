@@ -4,43 +4,30 @@ import 'dart:io';
 import 'package:saint_paul/core/extentions/image_uploader.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
-import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class HomeRepo {
-  static Future<String?> updatStudent({
-    required StudentModel newStudent,
-    required StudentModel oldStudent,
+  static Future<String?> updatStudent(
+    StudentModel student,
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
-  }) async {
+  ) async {
     try {
-      final historyChanges = computeTayoChanges(
-        oldTayo: oldStudent.tayo!,
-        newTayo: newStudent.tayo!,
-        removedCategories: tayoRemovedCategories ?? [],
-      );
-
-      log('Updating student with ID: ${newStudent.uid}');
+      log('Updating student with ID: ${student.uid}');
       log('New Tayo Categories: $tayoNewCategories');
       log('Removed Tayo Categories: $tayoRemovedCategories');
-
       // THEN update all documents with additions/removals
       if ((tayoNewCategories?.isEmpty ?? true) &&
           (tayoRemovedCategories?.isEmpty ?? true)) {
-        await FirebaseProvider.updateStudent(newStudent);
-
+        await FirebaseProvider.updateStudent(student);
         return 'تم تحديث بيانات المخدوم بنجاح.';
       }
-
       await FirebaseProvider.updateTayoInAllDocuments(
         tayoNewCategories,
         tayoRemovedCategories,
       );
-
-      await FirebaseProvider.updateStudent(newStudent);
-
+      await FirebaseProvider.updateStudent(student);
       tayoNewCategories = [];
       tayoRemovedCategories = [];
 
@@ -183,41 +170,5 @@ class HomeRepo {
       log(e.toString());
       throw Exception('Failed to update badge in Firebase: ${e.toString()}');
     }
-  }
-
-  static List<TayoHistoryChange> computeTayoChanges({
-    required Map<String, dynamic> oldTayo,
-    required Map<String, dynamic> newTayo,
-    required List<String> removedCategories,
-  }) {
-    final changes = <TayoHistoryChange>[];
-
-    for (final entry in newTayo.entries) {
-      final category = entry.key;
-      final newData = entry.value;
-
-      // 1. Skip deleted categories
-      if (removedCategories.contains(category)) continue;
-
-      // Extract count, defaulting to 0 if missing
-      final newCount = (newData['count'] as int?) ?? 0;
-
-      if (oldTayo.containsKey(category)) {
-        // 2. Existing category
-        final oldData = oldTayo[category]!;
-        final oldCount = (oldData['count'] as int?) ?? 0;
-        final diff = newCount - oldCount;
-        if (diff != 0) {
-          changes.add(TayoHistoryChange(category: category, change: diff));
-        }
-      } else {
-        // 3. Brand‑new category (old count implicitly 0)
-        if (newCount != 0) {
-          changes.add(TayoHistoryChange(category: category, change: newCount));
-        }
-      }
-    }
-
-    return changes;
   }
 }

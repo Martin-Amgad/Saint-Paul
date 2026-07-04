@@ -140,11 +140,10 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
               );
               removeCommonElements(tayoNewCategories, tayoRemovedCategories);
               cubit.updateStudent(
-                newStudent: widget.student.copyWith(
+                widget.student.copyWith(
                   tayo: tayo,
                   totalTayo: (widget.student.totalTayo ?? 0) + changedTotalTayo,
                 ),
-                oldStudent: widget.student,
                 tayoNewCategories: tayoNewCategories,
                 tayoRemovedCategories: tayoRemovedCategories,
               );
@@ -196,13 +195,12 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                         'Before updating student total tayo: ${widget.student.totalTayo ?? 99999}, changes to total tayo: $changedTotalTayo',
                       );
                       cubit.updateStudent(
-                        newStudent: widget.student.copyWith(
+                        widget.student.copyWith(
                           tayo: tayo,
                           totalTayo:
                               (widget.student.totalTayo ?? 0) +
                               changedTotalTayo,
                         ),
-                        oldStudent: widget.student,
                         tayoNewCategories: tayoNewCategories,
                         tayoRemovedCategories: tayoRemovedCategories,
                       );
@@ -278,13 +276,12 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                                   tayoRemovedCategories,
                                 );
                                 context.read<HomeCubit>().updateStudent(
-                                  newStudent: widget.student.copyWith(
+                                  widget.student.copyWith(
                                     tayo: tayo,
                                     totalTayo:
                                         (widget.student.totalTayo ?? 0) +
                                         changedTotalTayo,
                                   ),
-                                  oldStudent: widget.student,
                                   tayoNewCategories: tayoNewCategories,
                                   tayoRemovedCategories: tayoRemovedCategories,
                                 );

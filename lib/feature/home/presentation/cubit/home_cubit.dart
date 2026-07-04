@@ -22,19 +22,17 @@ class HomeCubit extends Cubit<HomeState> {
 
   var formkey = GlobalKey<FormState>();
 
-  void updateStudent({
-    required StudentModel newStudent,
-    StudentModel? oldStudent,
+  void updateStudent(
+    StudentModel student, {
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
   }) async {
     emit(HomeLoadingState());
     try {
       var res = await HomeRepo.updatStudent(
-        newStudent: newStudent,
-        oldStudent: oldStudent ?? newStudent,
-        tayoNewCategories: tayoNewCategories,
-        tayoRemovedCategories: tayoRemovedCategories,
+        student,
+        tayoNewCategories,
+        tayoRemovedCategories,
       );
       emit(HomeSuccessState(message: res));
     } on Exception catch (e) {
