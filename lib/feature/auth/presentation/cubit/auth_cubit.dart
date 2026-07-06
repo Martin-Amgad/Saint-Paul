@@ -34,6 +34,7 @@ class AuthCubit extends Cubit<AuthState> {
     if (response == 'خادم' || response == 'مخدوم') {
       emit(AuthSuccessState(role: response));
     } else {
+      log('Login failed with response: $response');
       emit(
         AuthErrorState(
           response ?? 'حدث خطأ أثناء تسجيل الدخول. الرجاء المحاولة مرة أخرى.',

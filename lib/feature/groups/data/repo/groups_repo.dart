@@ -2,7 +2,9 @@ import 'dart:developer';
 
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class GroupsRepo {
   static Future<List<GroupModel>> fetchGroups() async {
@@ -110,33 +112,48 @@ class GroupsRepo {
 
   static Future<String?> updateGroup(
     GroupModel group, {
+    required Map<String, dynamic> oldPoints, // ← new
     List<String>? pointNewCategories,
     List<String>? pointRemovedCategories,
   }) async {
     try {
-      log('Updating group with ID: ${group.gid}');
-      log('New Point Categories: $pointNewCategories');
-      log('Removed Point Categories: $pointRemovedCategories');
-      // THEN update all documents with additions/removals
-      if ((pointNewCategories?.isEmpty ?? true) &&
-          (pointRemovedCategories?.isEmpty ?? true)) {
-        await FirebaseProvider.updateGroup(group);
-        return 'تم تحديث بيانات المجموعة بنجاح.';
-      }
-      await FirebaseProvider.updatePointsInAllGroups(
-        pointNewCategories,
-        pointRemovedCategories,
+      // 1. Compute deltas using the same helper
+      final deltas = TayoHistoryModel.computeTayoChanges(
+        oldTayo: oldPoints,
+        newTayo: group.points ?? {},
+        removedCategories: pointRemovedCategories ?? [],
       );
-      await FirebaseProvider.updateGroup(group);
-      pointNewCategories = [];
-      pointRemovedCategories = [];
+      log('Computed deltas for group ${group.gid}: $deltas');
 
-      return 'تم تحديث بيانات المجموعة بنجاح.';
-    } on Exception catch (e) {
-      throw Exception('Failed to update group: ${e.toString()}');
+      // 2. Bulk category update if needed (optional)
+      if ((pointNewCategories?.isNotEmpty ?? false) ||
+          (pointRemovedCategories?.isNotEmpty ?? false)) {
+        // If you have a global group categories collection, update it here
+        // await FirebaseProvider.updateGroupCategories(...);
+      }
+
+      // 3. Get teacher info
+      final teacher = LocalHelper.getTeacherData();
+      if (teacher == null || teacher.uid == null || teacher.name == null) {
+        return 'تعذر الحصول على بيانات المعلم.';
+      }
+
+      log(
+        'In Repo deltas: $deltas, pointRemovedCategories: $pointRemovedCategories, teacherId: ${teacher.uid}, teacherName: ${teacher.name}',
+      );
+      // 4. Atomic transaction
+      await FirebaseProvider.updateGroupWithHistory(
+        groupId: group.gid!,
+        deltas: deltas,
+        removedCategories: pointRemovedCategories ?? [],
+        teacherId: teacher.uid!,
+        teacherName: teacher.name!,
+      );
+
+      return 'تم تحديث المجموعة بنجاح.';
     } catch (e) {
       log(e.toString());
-      return 'حدث خطأ أثناء تحديث بيانات المجموعة. الرجاء المحاولة مرة أخرى.';
+      return 'حدث خطأ أثناء تحديث المجموعة.';
     }
   }
 
@@ -173,5 +190,15 @@ class GroupsRepo {
       log(e.toString());
       return null;
     }
+  }
+
+  static Future<void> updateGroupTotalTayo(
+    String groupId,
+    int totalTayo,
+  ) async {
+    await FirebaseProvider.updateGroupTotalTayo(
+      groupId: groupId,
+      totalTayo: totalTayo,
+    );
   }
 }

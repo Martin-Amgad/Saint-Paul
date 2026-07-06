@@ -46,7 +46,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final id = LocalHelper.getUserId();
     log('StudentHomeScreen initState - User ID: $id');
     log(
-      'StudentHomeScreen initState - LocalHelper User data: ${LocalHelper.getUserData()?.name}, studyLevel: ${LocalHelper.getUserData()?.studyLevel}',
+      'StudentHomeScreen initState - LocalHelper User data: ${LocalHelper.getStudentData()?.name}, studyLevel: ${LocalHelper.getStudentData()?.studyLevel}',
     );
     context.read<HomeCubit>().loadStudentYear(id);
 
@@ -62,7 +62,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           selectedYear = state.year;
           log('Student year loaded: $selectedYear');
         } else if (state is HomeStudentLoadedState) {
-          LocalHelper.setUserData(state.studentData?.toJsonLocal());
+          LocalHelper.setStudentData(state.studentData?.toJsonLocal());
         } else if (state is HomeErrorState) {
           showMyDialoge(context, state.message, type: DialogType.error);
         }

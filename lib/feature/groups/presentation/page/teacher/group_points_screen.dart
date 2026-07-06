@@ -9,11 +9,15 @@ import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
+import 'package:collection/collection.dart';
+
+const equality = DeepCollectionEquality();
 
 class GroupPointsScreen extends StatefulWidget {
   const GroupPointsScreen({super.key, this.group});
@@ -25,7 +29,6 @@ class GroupPointsScreen extends StatefulWidget {
 }
 
 class _GroupPointsScreenState extends State<GroupPointsScreen> {
-  bool isLoading = true;
   Map<String, dynamic> point = {};
   Map<String, dynamic> oldPoint = {};
   List<String> pointNewCategories = [];
@@ -72,6 +75,28 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
     return now.difference(takenTime).inHours >= expireHours;
   }
 
+  Future<void> saveAndPop({
+    required BuildContext context,
+    required GroupCubit cubit,
+  }) async {
+    removeCommonElements(pointNewCategories, pointRemovedCategories);
+    await context.read<GroupCubit>().updateGroup(
+      widget.group!.copyWith(
+        points: point,
+        totalPoints: (confirmedTotalPoint) + changedTotalPoint,
+      ),
+      oldPoints: oldPoint,
+      pointNewCategories: pointNewCategories,
+      pointRemovedCategories: pointRemovedCategories,
+    );
+
+    setState(() {
+      confirmedTotalPoint += changedTotalPoint;
+      changedTotalPoint = 0; // reset after update
+    });
+    // pop(context, confirmedTotalPoint + changedTotalPoint);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -79,8 +104,12 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
     confirmedTotalPoint = widget.group?.totalPoints ?? 0;
     log("1 after showtime bitches");
     log("the show's confirmedTotalPoint is $confirmedTotalPoint");
+    if (widget.group != null) {
+      context.read<GroupCubit>().getGroupPointsDetails(
+        widget.group ?? GroupModel(),
+      );
+    }
 
-    context.read<GroupCubit>().getGroupPointsDetails(widget.group!);
     log("did we succeed papa?");
     log("yes my son");
   }
@@ -93,15 +122,13 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
       onPopInvokedWithResult: (didPop, result) async {
         log('Back navigation triggered. didPop: $didPop, result: $result');
         if (didPop) return;
-        if (jsonEncode(point) == jsonEncode(oldPoint)) {
+        if (equality.equals(point, oldPoint)) {
           pop(context); // no changes, pop manually
         } else {
           log('Unsaved changes detected. Showing confirmation dialog.');
           log('Current Point: $point');
           log('Old Point: $oldPoint');
-          log(
-            'Point == oldPoint: ${jsonEncode(point) == jsonEncode(oldPoint)}',
-          );
+          log('Point == oldPoint: ${equality.equals(point, oldPoint)}');
           log('Changed total Point: $changedTotalPoint');
           await showChangesNotSavedDialog(
             context,
@@ -112,23 +139,7 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
               log(
                 'Updating student with Point: $point, changes to total Point: $changedTotalPoint',
               );
-              removeCommonElements(pointNewCategories, pointRemovedCategories);
-              cubit.updateGroup(
-                widget.group!.copyWith(
-                  points: point,
-                  totalPoints: (confirmedTotalPoint) + changedTotalPoint,
-                ),
-                pointNewCategories: pointNewCategories,
-                pointRemovedCategories: pointRemovedCategories,
-              );
-              // cubit.updateStudentGroup(
-              //   widget.student.groupID ?? '',
-              //   changedTotalPoint,
-              // );
-              setState(() {
-                confirmedTotalPoint += changedTotalPoint;
-                changedTotalPoint = 0; // reset after update
-              });
+              saveAndPop(context: context, cubit: cubit);
               // pushToBase(context, Routes.mainScreen, extra: 'خادم');
             },
           );
@@ -157,49 +168,8 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                   child: MainButton(
                     title: 'تاكيد',
                     onPressed: () {
-                      removeCommonElements(
-                        pointNewCategories,
-                        pointRemovedCategories,
-                      );
-                      log(
-                        'User confirmed to save changes. Updating student data.',
-                      );
-
-                      // log(
-                      //   'Before updating student total Point: ${widget.student.totalPoint ?? 99999}, changes to total Point: $changedTotalPoint',
-                      // );
-                      cubit.updateGroup(
-                        widget.group!.copyWith(
-                          points: point,
-                          totalPoints:
-                              (confirmedTotalPoint) + changedTotalPoint,
-                        ),
-                        pointNewCategories: pointNewCategories,
-                        pointRemovedCategories: pointRemovedCategories,
-                      );
-                      log(
-                        'After updating student total Point: ${widget.group?.totalPoints ?? 99999}, changes to total Point: $changedTotalPoint',
-                      );
                       checkAndResetPoint();
-                      oldPoint = Map<String, dynamic>.from(point);
-
-                      log('Changes to total Point: $changedTotalPoint');
-                      log(
-                        'Updating student group with ID: ${widget.group?.gid ?? ''}, changes to total Point: $changedTotalPoint',
-                      );
-                      log('Student group ID: ${widget.group?.gid ?? ''}');
-
-                      //I DONT KNOW WHAT THE FUCK THIS IS FOR!!!!!!!!!!!!!!!!!!!!!!!!!!
-                      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                      // cubit.updateStudentGroup(
-                      //   widget.group?.gid ?? '',
-                      //   changedTotalPoint,
-                      // );
-
-                      setState(() {
-                        confirmedTotalPoint += changedTotalPoint;
-                        changedTotalPoint = 0; // reset after update
-                      });
+                      saveAndPop(context: context, cubit: cubit);
                     },
                   ),
                 ),
@@ -240,7 +210,7 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                     children: [
                       CustomBackButton(
                         onTap: () async {
-                          if (jsonEncode(point) == jsonEncode(oldPoint)) {
+                          if (equality.equals(point, oldPoint)) {
                             pop(
                               context,
                               confirmedTotalPoint + changedTotalPoint,
@@ -251,33 +221,7 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                               tayo: point,
                               oldTayo: oldPoint,
                               mainButtonOnConfirm: () {
-                                removeCommonElements(
-                                  pointNewCategories,
-                                  pointRemovedCategories,
-                                );
-                                context.read<GroupCubit>().updateGroup(
-                                  widget.group!.copyWith(
-                                    points: point,
-                                    totalPoints:
-                                        (confirmedTotalPoint) +
-                                        changedTotalPoint,
-                                  ),
-                                  pointNewCategories: pointNewCategories,
-                                  pointRemovedCategories:
-                                      pointRemovedCategories,
-                                );
-                                // cubit.updateStudentGroup(
-                                //   widget.student.groupID ?? '',
-                                //   changedTotalPoint,
-                                // );
-                                setState(() {
-                                  confirmedTotalPoint += changedTotalPoint;
-                                  changedTotalPoint = 0; // reset after update
-                                });
-                                pop(
-                                  context,
-                                  confirmedTotalPoint + changedTotalPoint,
-                                );
+                                saveAndPop(context: context, cubit: cubit);
                               },
                             );
                           }
@@ -300,10 +244,7 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                   // Total Point summary card
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(10, 14, 20, 14),
                     decoration: BoxDecoration(
                       color: AppColors.whiteColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
@@ -336,6 +277,22 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                             ),
                           ],
                         ),
+                        Spacer(),
+                        IconButton(
+                          onPressed: () {
+                            log('Navigating to Points History screen: ');
+                            pushTo(
+                              context,
+                              Routes.tayoHistoryScreen,
+                              extra: widget.group?.gid,
+                            );
+                          },
+                          icon: Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: AppColors.whiteColor.withValues(alpha: 0.7),
+                            size: 25,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -367,20 +324,8 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                   } else if (state is GroupSuccessStateForTakenAt) {
                     log('GroupSuccessStateForTakenAt triggered');
                   } else if (state is GroupPointsLoadSuccessState) {
-                    point = Map<String, dynamic>.from(
-                      state.point.map(
-                        (key, value) =>
-                            MapEntry(key, Map<String, dynamic>.from(value)),
-                      ),
-                    );
-                    log("the loaded point contains: $point");
-
-                    oldPoint = Map<String, dynamic>.from(
-                      state.point.map(
-                        (key, value) =>
-                            MapEntry(key, Map<String, dynamic>.from(value)),
-                      ),
-                    );
+                    point = normaliseTayo(state.point);
+                    oldPoint = normaliseTayo(state.point);
                     // Compute actual total from fetched Point
                     int computedTotal = 0;
                     point.forEach((key, value) {
@@ -607,7 +552,7 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                                                       'Current oldPoint state: $oldPoint',
                                                     );
                                                     log(
-                                                      'Point == oldPoint: ${jsonEncode(point) == jsonEncode(oldPoint)}',
+                                                      'Point == oldPoint: ${equality.equals(point, oldPoint)}',
                                                     );
                                                     setState(() {});
                                                   }

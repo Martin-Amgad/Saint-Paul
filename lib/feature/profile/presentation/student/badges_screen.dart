@@ -115,7 +115,6 @@ class _BadgesScreenState extends State<BadgesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Back button
-                CustomBackButton(),
                 const Gap(18),
                 Row(
                   children: [

@@ -4,32 +4,65 @@ import 'dart:io';
 import 'package:saint_paul/core/extentions/image_uploader.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class HomeRepo {
-  static Future<String?> updatStudent(
-    StudentModel student,
+  static Future<String?> updatStudent({
+    required StudentModel newStudent,
+    required StudentModel oldStudent,
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
-  ) async {
+    String? groupID,
+    int? groupPointsDelta,
+  }) async {
     try {
-      log('Updating student with ID: ${student.uid}');
-      log('New Tayo Categories: $tayoNewCategories');
-      log('Removed Tayo Categories: $tayoRemovedCategories');
-      // THEN update all documents with additions/removals
-      if ((tayoNewCategories?.isEmpty ?? true) &&
-          (tayoRemovedCategories?.isEmpty ?? true)) {
-        await FirebaseProvider.updateStudent(student);
-        return 'تم تحديث بيانات المخدوم بنجاح.';
-      }
-      await FirebaseProvider.updateTayoInAllDocuments(
-        tayoNewCategories,
-        tayoRemovedCategories,
+      // 1. Compute point deltas (no zero-deltas, no removed categories)
+      final deltas = TayoHistoryModel.computeTayoChanges(
+        oldTayo: oldStudent.tayo!,
+        newTayo: newStudent.tayo!,
+        removedCategories: tayoRemovedCategories ?? [],
       );
-      await FirebaseProvider.updateStudent(student);
-      tayoNewCategories = [];
-      tayoRemovedCategories = [];
+
+      log(
+        'Deltas: ${deltas.map((d) => '${d.category}: ${d.change}').join(', ')}',
+      );
+
+      // 2. Optional: update all students if global categories changed
+      if ((tayoNewCategories?.isNotEmpty ?? false) ||
+          (tayoRemovedCategories?.isNotEmpty ?? false)) {
+        await FirebaseProvider.updateTayoInAllDocuments(
+          tayoNewCategories,
+          tayoRemovedCategories,
+        );
+      }
+
+      // 3. Get teacher info
+      log('Fetching teacher data from local storage...');
+      final teacher = LocalHelper.getTeacherData();
+      log('Teacher data from local storage: $teacher');
+
+      if (teacher == null || teacher.uid == null || teacher.name == null) {
+        return 'تعذر الحصول على بيانات المعلم. الرجاء تسجيل الدخول مجدداً.';
+      }
+
+      log('Teacher: uid=${teacher.uid}, name=${teacher.name}');
+
+      // 4. Atomic student update + history (the ONLY write to this student’s tayo)
+      log('Updating student ${newStudent.uid} with deltas: $deltas');
+
+      await FirebaseProvider.updateStudentWithHistory(
+        studentId: newStudent.uid ?? oldStudent.uid!,
+        deltas: deltas,
+        removedCategories: tayoRemovedCategories ?? [],
+        teacherId: teacher.uid!,
+        teacherName: teacher.name!,
+        groupID: groupID,
+        groupPointsDelta: groupPointsDelta,
+      );
+
+      log('✅ Student updated successfully.');
 
       return 'تم تحديث بيانات المخدوم بنجاح.';
     } on Exception catch (e) {

@@ -3,7 +3,9 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/core/models/group_model.dart';
+import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/feature/groups/data/repo/groups_repo.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
 
@@ -31,6 +33,7 @@ class GroupCubit extends Cubit<GroupState> {
 
   Future<void> updateGroup(
     GroupModel group, {
+    required Map<String, dynamic> oldPoints, // ← new
     List<String>? pointNewCategories,
     List<String>? pointRemovedCategories,
   }) async {
@@ -38,20 +41,21 @@ class GroupCubit extends Cubit<GroupState> {
     try {
       var res = await GroupsRepo.updateGroup(
         group,
+        oldPoints: oldPoints,
         pointNewCategories: pointNewCategories,
         pointRemovedCategories: pointRemovedCategories,
       );
-      groupTotalTayo = group.totalPoints ?? 0;
-      emit(GroupSuccessState(message: res));
+      log('Group updated successfully: $res');
+      if (!isClosed) emit(GroupSuccessState(message: res));
     } catch (e) {
-      emit(GroupErrorState('حدث خطأ أثناء تحديث المجموعة: ${e.toString()}'));
+      if (!isClosed)
+        emit(GroupErrorState('حدث خطأ أثناء تحديث المجموعة: ${e.toString()}'));
     }
   }
 
-  Future<String?> createGroup(
-    List<String> studentIds,
-    String studyLevel,
-  ) async {
+  Future<void> createGroup(List<String> studentIds, String studyLevel) async {
+    emit(GroupLoadingState());
+
     try {
       groupTotalTayo = 0; // reset after
 
@@ -84,12 +88,13 @@ class GroupCubit extends Cubit<GroupState> {
 
       await Future.wait(futures);
 
-      return 'تم إنشاء المجموعة بنجاح.';
+      emit(GroupSuccessState(message: 'تم إنشاء المجموعة بنجاح.'));
     } on Exception catch (e) {
-      return 'حدث خطأ أثناء إنشاء المجموعة: ${e.toString()}';
+      log('Error during group creation: ${e.toString()}');
+      emit(GroupErrorState('حدث خطأ أثناء إنشاء المجموعة: ${e.toString()}'));
     } catch (e) {
       log('Unexpected error during group creation: $e');
-      return 'حدث خطأ غير متوقع أثناء إنشاء المجموعة.';
+      emit(GroupErrorState('حدث خطأ غير متوقع أثناء إنشاء المجموعة.'));
     }
   }
 
@@ -225,9 +230,7 @@ class GroupCubit extends Cubit<GroupState> {
         log(
           'Updating group total tayo from ${group?.totalTayo} to $groupTotalTayo',
         );
-        await GroupsRepo.updateGroup(
-          group!.copyWith(totalTayo: groupTotalTayo),
-        );
+        await GroupsRepo.updateGroupTotalTayo(group!.gid!, groupTotalTayo);
         log('Group total tayo updated successfully');
         log(
           'Emitting updated group details with new total tayo: $groupTotalTayo',

@@ -28,7 +28,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   GroupModel? newGroup;
   String? userType;
   int totalPoints = 0;
-  List<StudentModel>? students;
+  List<StudentModel>? students = [];
   bool isLoading = true;
 
   // Future<void> loadGroupData() async {
@@ -90,25 +90,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           // ── Not assigned to any group ────────────────────────────
           if (state is GroupNotAssignedState) {
             isLoading = false;
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.group_off_rounded,
-                    size: 64,
-                    color: AppColors.accentColor.withValues(alpha: 0.2),
-                  ),
-                  const Gap(12),
-                  Text(
-                    'لم يتم تعيينك في مجموعة بعد',
-                    style: TextStyles.getSize18(
-                      color: AppColors.accentColor.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ],
-              ),
-            );
           }
           if (state is StudentsLoadedSuccessState) {
             isLoading = false;
@@ -144,34 +125,46 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   children: [
                     Row(
                       children: [
-                        CustomBackButton(
-                          onTap: () {
-                            pop(context, totalPoints);
-                          },
-                        ),
-                        // const Gap(12),
+                        userType == "مخدوم"
+                            ? Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.whiteColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.groups_rounded,
+                                  color: AppColors.darkYellowIconColor,
+                                  size: 24,
+                                ),
+                              )
+                            : CustomBackButton(
+                                onTap: () {
+                                  pop(context, totalPoints);
+                                },
+                              ),
 
-                        // Container(
-                        //   padding: const EdgeInsets.all(8),
-                        //   decoration: BoxDecoration(
-                        //     color: AppColors.whiteColor.withValues(alpha: 0.15),
-                        //     borderRadius: BorderRadius.circular(12),
-                        //   ),
-                        //   child: const Icon(
-                        //     Icons.groups_rounded,
-                        //     color: AppColors.darkYellowIconColor,
-                        //     size: 24,
-                        //   ),
-                        // ),
+                        // const Gap(12),
                         const Gap(12),
                         Expanded(
-                          child: Text(
-                            widget.group?.name ?? '',
-                            style: TextStyles.getSize24(
-                              color: AppColors.whiteColor,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          child: newGroup?.name == null
+                              ? Text(
+                                  "",
+                                  style: TextStyles.getSize18(
+                                    fontSize: 20,
+                                    color: AppColors.whiteColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                )
+                              : Text(
+                                  newGroup?.name ?? 'بدون اسم',
+                                  style: TextStyles.getSize24(
+                                    color: AppColors.whiteColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -197,7 +190,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                               ),
                               const Gap(6),
                               Text(
-                                '${widget.group?.students?.length ?? 0} مخدوم',
+                                '${newGroup?.students?.length ?? 0} مخدوم',
                                 style: TextStyles.getSize16(
                                   color: AppColors.whiteColor,
                                   fontWeight: FontWeight.w600,
@@ -225,7 +218,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                               ),
                               const Gap(6),
                               Text(
-                                '${widget.group?.totalTayo ?? 0} طايو',
+                                '${newGroup?.totalTayo ?? 0} طايو',
                                 style: TextStyles.getSize16(
                                   color: AppColors.whiteColor,
                                   fontWeight: FontWeight.w600,
@@ -281,26 +274,28 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   log(
                     'Navigating to GroupPointsScreen with group: ${newGroup?.name}, ID: ${newGroup?.gid}',
                   );
-                  pushTo(
-                    context,
-                    Routes.groupPointsScreen,
-                    extra: newGroup,
-                  ).then((newPoints) {
-                    cubit.teachersGroupDetails(newGroup);
-                    log(
-                      'Returned from GroupPointsScreen with new points: $newPoints',
-                    );
-                    if (newPoints != null && newPoints is int) {
-                      setState(() {
-                        totalPoints = newPoints;
-                      });
-                    }
-                  });
+                  userType == "مخدوم"
+                      ? null
+                      : pushTo(
+                          context,
+                          Routes.groupPointsScreen,
+                          extra: newGroup,
+                        ).then((newPoints) {
+                          cubit.teachersGroupDetails(newGroup);
+                          log(
+                            'Returned from GroupPointsScreen with new points: $newPoints',
+                          );
+                          if (newPoints != null && newPoints is int) {
+                            setState(() {
+                              totalPoints = newPoints;
+                            });
+                          }
+                        });
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: EdgeInsets.fromLTRB(0, 14, 20, 14),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceColor,
                       borderRadius: BorderRadius.circular(16),
@@ -366,6 +361,30 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                userType == "خادم"
+                                    ? Gap(20)
+                                    : IconButton(
+                                        onPressed: () {
+                                          log(
+                                            'Navigating to Points History screen: ',
+                                          );
+                                          newGroup?.gid == null
+                                              ? log(
+                                                  'Cannot navigate to Points History screen: group ID is null',
+                                                )
+                                              : pushTo(
+                                                  context,
+                                                  Routes.tayoHistoryScreen,
+                                                  extra: newGroup?.gid,
+                                                );
+                                        },
+                                        icon: Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          color: AppColors.primaryColor
+                                              .withValues(alpha: 0.7),
+                                          size: 25,
+                                        ),
+                                      ),
                               ],
                             ),
                           ],
@@ -388,7 +407,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.people_outline_rounded,
+                              Icons.group_off_rounded,
                               size: 64,
                               color: AppColors.accentColor.withValues(
                                 alpha: 0.2,
@@ -396,7 +415,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                             ),
                             const Gap(12),
                             Text(
-                              'لا يوجد مخدومون في هذه المجموعة',
+                              'لم يتم تعيينك في مجموعة بعد',
                               style: TextStyles.getSize18(
                                 color: AppColors.accentColor.withValues(
                                   alpha: 0.4,
@@ -419,8 +438,24 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                             ),
                         itemBuilder: (context, index) {
                           final student = students?[index];
-                          return groupStudentCardBuilder(
-                            student: student ?? StudentModel(),
+                          return GestureDetector(
+                            onTap: () {
+                              userType == "مخدوم"
+                                  ? null
+                                  : pushTo(
+                                      context,
+                                      Routes.tayoDetailsScreen,
+                                      extra: student,
+                                    ).then((_) {
+                                      // Refresh the group details after returning from the Tayo Details screen
+                                      cubit.fetchAndUpdateTotalTayo(
+                                        widget.group,
+                                      );
+                                    });
+                            },
+                            child: groupStudentCardBuilder(
+                              student: student ?? StudentModel(),
+                            ),
                           );
                         },
                       )
@@ -430,47 +465,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         ),
                       ),
               ),
-              // ── Students grid ───────────────────────────────────────
-              // Expanded(
-              //   child: BlocConsumer<GroupCubit, GroupState>(
-              //     listener: (context, state) {
-              //       if (state is GroupLoadingState) {
-              //         showLoadingDialog(context);
-              //       } else if (state is GroupLoadedState) {
-              //         newGroup = state.group;
-              //         totalPoints = newGroup?.totalPoints ?? 0;
-              //       } else if (state is GroupErrorState) {
-              //         showMyDialoge(
-              //           context,
-              //           state.message,
-              //           type: DialogType.error,
-              //         );
-              //       }
-              //     },
-              //     builder: (context, state) {
-              //       // if (state is GroupLoadingState) {
-              //       //   return const Center(child: CircularProgressIndicator());
-              //       // }
-
-              //       // ── Students loaded successfully ───────────────────────────
-              //       if (state is StudentsLoadedSuccessState) {
-              //         return Column(
-              //           crossAxisAlignment: CrossAxisAlignment.start,
-              //           children: [
-              //             const Gap(16),
-
-              //           ],
-              //         );
-              //       }
-
-              //       return Center(
-              //         child: CircularProgressIndicator(
-              //           color: AppColors.primaryColor,
-              //         ),
-              //       );
-              //     },
-              //   ),
-              // ),
             ],
           );
         },

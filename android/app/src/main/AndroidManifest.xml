@@ -5,6 +5,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
+        android:usesCleartextTraffic="true"
         android:label="Tayo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

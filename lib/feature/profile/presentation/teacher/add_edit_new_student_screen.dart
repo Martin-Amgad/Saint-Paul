@@ -83,7 +83,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                   log('myBadges being sent: $myBadges');
                   log('student myBadges: ${widget.student!.myBadges}');
                   cubit.updateStudent(
-                    widget.student!.copyWith(
+                    newStudent: widget.student!.copyWith(
                       name: cubit.nameController.text.trim(),
                       fatherPhone: cubit.fatherPhoneController.text.trim(),
                       motherPhone: cubit.motherPhoneController.text.trim(),
@@ -98,6 +98,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           .trim(),
                       myBadges: myBadges,
                     ),
+                    oldStudent: widget.student!,
                   );
                   return;
                 }

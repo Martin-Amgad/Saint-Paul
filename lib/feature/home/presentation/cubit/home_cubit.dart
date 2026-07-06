@@ -22,24 +22,34 @@ class HomeCubit extends Cubit<HomeState> {
 
   var formkey = GlobalKey<FormState>();
 
-  void updateStudent(
-    StudentModel student, {
+  Future<void> updateStudent({
+    required StudentModel newStudent,
+    StudentModel? oldStudent,
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
+    String? groupID,
+    int? groupPointsDelta,
   }) async {
     emit(HomeLoadingState());
     try {
-      var res = await HomeRepo.updatStudent(
-        student,
-        tayoNewCategories,
-        tayoRemovedCategories,
+      log(
+        'Starting student update with newStudent: $newStudent, oldStudent: $oldStudent',
       );
+      var res = await HomeRepo.updatStudent(
+        newStudent: newStudent,
+        oldStudent: oldStudent ?? newStudent,
+        tayoNewCategories: tayoNewCategories,
+        tayoRemovedCategories: tayoRemovedCategories,
+        groupID: groupID,
+        groupPointsDelta: groupPointsDelta,
+      );
+      log('Student update completed with result: $res');
       emit(HomeSuccessState(message: res));
     } on Exception catch (e) {
       log(e.toString());
       emit(HomeErrorState(message: e.toString()));
     } catch (e) {
-      log(e.toString());
+      log(" Unexpected error during student update: ${e.toString()}");
       emit(
         HomeErrorState(
           message:
@@ -49,7 +59,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  void updateStudentTakenAt(
+  Future<void> updateStudentTakenAt(
     StudentModel student, {
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
@@ -135,33 +145,6 @@ class HomeCubit extends Cubit<HomeState> {
         HomeErrorState(
           message:
               'حدث خطأ أثناء تحميل بيانات الطالب. الرجاء المحاولة مرة أخرى.',
-        ),
-      );
-    }
-  }
-
-  Future<void> updateStudentGroup(
-    String studentGroupId,
-    int changesToTotalTayo,
-  ) async {
-    if (studentGroupId.isEmpty) {
-      return;
-    }
-    try {
-      log(
-        'Updating student group with ID: $studentGroupId, changes to total tayo: $changesToTotalTayo',
-      );
-      await HomeRepo.updateStudentGroup(studentGroupId, changesToTotalTayo);
-
-      emit(HomeGroupUpdateSuccessState());
-    } on Exception catch (e) {
-      log(e.toString());
-      emit(HomeErrorState(message: e.toString()));
-    } catch (e) {
-      log(e.toString());
-      emit(
-        HomeErrorState(
-          message: 'حدث خطأ أثناء تحديث المجموعة. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

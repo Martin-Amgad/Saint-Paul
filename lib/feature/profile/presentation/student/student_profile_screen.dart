@@ -64,9 +64,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
       if (mounted && newUrl != null) {
         // ── Write new URL back to local storage ──────────────────
-        final currentData = LocalHelper.getUserData();
+        final currentData = LocalHelper.getStudentData();
         if (currentData != null) {
-          await LocalHelper.setUserData(
+          await LocalHelper.setStudentData(
             currentData.copyWith(avatarUrl: newUrl).toJsonLocal(),
           );
         }
@@ -94,7 +94,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   void initState() {
     super.initState();
     // 1. Load from local storage immediately — no loading flash
-    final localData = LocalHelper.getUserData();
+    final localData = LocalHelper.getStudentData();
     log('Loaded user data from local storage: ${localData?.toJsonLocal()}');
     if (localData != null) {
       studentDataLocal = localData;
@@ -118,7 +118,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           } else if (state is ProfileLoadedState) {
             final freshData = state.studentData;
             if (freshData == null) return;
-            await LocalHelper.setUserData(freshData.toJsonLocal());
+            await LocalHelper.setStudentData(freshData.toJsonLocal());
             if (mounted) {
               setState(() {
                 badgesLocal = freshData.myBadges ?? {};
@@ -340,10 +340,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(10, 18, 15, 18),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceColor,
                     borderRadius: BorderRadius.circular(20),
@@ -396,6 +393,22 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           ),
                         ],
                       ),
+                      Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          log('Navigating to Tayo History screen: ');
+                          pushTo(
+                            context,
+                            Routes.tayoHistoryScreen,
+                            extra: null,
+                          );
+                        },
+                        icon: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: AppColors.primaryColor,
+                          size: 18,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -405,7 +418,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(15, 18, 15, 18),
+                  padding: const EdgeInsets.fromLTRB(10, 18, 15, 18),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceColor,
                     borderRadius: BorderRadius.circular(20),

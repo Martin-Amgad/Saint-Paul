@@ -35,6 +35,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   String? selectedYear;
   List<String> selectedStudentIds = [];
 
+  List<StudentModel> students = [];
+  GroupModel? group;
+  int? totalTayo;
   @override
   void initState() {
     super.initState();
@@ -60,24 +63,16 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             if (state is StudentsLoadedSuccessState) {
               return MainButton(
                 title: 'حفظ المجموعة',
-                onPressed: () {
+                onPressed: () async {
                   if ((cubit.formKey.currentState?.validate() ?? true) &&
                       selectedStudentIds.isNotEmpty) {
                     log(
                       'Creating group with name: ${cubit.groupNameController.text}, selected students: $selectedStudentIds, total tayo: ${cubit.groupTotalTayo}, study level: ${selectedYear ?? 'الكل'}',
                     );
-                    cubit
-                        .createGroup(selectedStudentIds, selectedYear ?? 'الكل')
-                        .then((message) {
-                          if (message != null) {
-                            showMyDialoge(
-                              context,
-                              message,
-                              type: DialogType.success,
-                            );
-                            pop(context);
-                          }
-                        });
+                    await cubit.createGroup(
+                      selectedStudentIds,
+                      selectedYear ?? 'الكل',
+                    );
                   } else if (selectedStudentIds.isEmpty) {
                     showMyDialoge(
                       context,
@@ -122,22 +117,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomBackButton(),
-                  const Gap(12),
+                  const Gap(15),
+
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.groups_rounded,
-                          color: AppColors.darkYellowIconColor,
-                          size: 24,
-                        ),
-                      ),
+                      CustomBackButton(),
                       const Gap(12),
                       Text(
                         'إنشاء مجموعة',
@@ -148,7 +132,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ],
                   ),
-                  const Gap(18),
+                  const Gap(20),
+
                   // Group name input
                   Container(
                     decoration: BoxDecoration(
@@ -294,50 +279,58 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             // ── Student list ─────────────────────────────────────────
             BlocConsumer<GroupCubit, GroupState>(
               listener: (context, state) {
-                if (state is GroupErrorState) {
+                if (state is GroupLoadingState) {
+                  showLoadingDialog(context);
+                } else if (state is GroupErrorState) {
                   showMyDialoge(context, state.message, type: DialogType.error);
+                } else if (state is GroupSuccessState) {
+                  pop(context);
+                  showMyDialoge(
+                    context,
+                    state.message ?? 'تم إنشاء المجموعة بنجاح.',
+                    type: DialogType.success,
+                  );
+                  pop(context);
                 }
               },
               builder: (context, state) {
-                if (state is GroupLoadingState) {
-                  return Column(
-                    children: [
-                      // the gap size is according to the user phone dimensions, so it will be responsive
-                      Gap(MediaQuery.of(context).size.height * 0.2),
-                      Center(child: CircularProgressIndicator()),
-                    ],
-                  );
-                } else if (state is StudentsLoadedSuccessState) {
-                  return Expanded(
-                    child: StudentGroupListBuilder(
-                      searchNotifier: searchNotifier,
-                      selectedYear: selectedYear,
-                      students: state.students,
-                      selectedStudentIds: selectedStudentIds,
-                      onStudentToggled: (studentId, totalTayo) {
-                        log(
-                          'Current selected student IDs: $selectedStudentIds',
-                        );
-                        setState(() {
-                          if (selectedStudentIds.contains(studentId)) {
-                            selectedStudentIds.remove(studentId);
-                            cubit.groupTotalTayo -= totalTayo;
-                          } else {
-                            selectedStudentIds.add(studentId);
-                            cubit.groupTotalTayo += totalTayo;
-                          }
-                        });
-                        log(
-                          'Current selected student IDs: $selectedStudentIds',
-                        );
-                        log(
-                          'Current group total tayo: ${cubit.groupTotalTayo}',
-                        );
-                      },
-                    ),
-                  );
+                if (state is StudentsLoadedSuccessState) {
+                  students = state.students;
                 }
-                return const SizedBox();
+                return students.isEmpty
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryColor,
+                        ),
+                      )
+                    : Expanded(
+                        child: StudentGroupListBuilder(
+                          searchNotifier: searchNotifier,
+                          selectedYear: selectedYear,
+                          students: students,
+                          selectedStudentIds: selectedStudentIds,
+                          onStudentToggled: (studentId, totalTayo) {
+                            log(
+                              'Current selected student IDs: $selectedStudentIds',
+                            );
+                            setState(() {
+                              if (selectedStudentIds.contains(studentId)) {
+                                selectedStudentIds.remove(studentId);
+                                cubit.groupTotalTayo -= totalTayo;
+                              } else {
+                                selectedStudentIds.add(studentId);
+                                cubit.groupTotalTayo += totalTayo;
+                              }
+                            });
+                            log(
+                              'Current selected student IDs: $selectedStudentIds',
+                            );
+                            log(
+                              'Current group total tayo: ${cubit.groupTotalTayo}',
+                            );
+                          },
+                        ),
+                      );
               },
             ),
           ],

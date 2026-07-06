@@ -10,6 +10,8 @@ import 'package:saint_paul/feature/groups/presentation/page/student/group_detail
 import 'package:saint_paul/feature/groups/presentation/page/teacher/create_group_screen.dart';
 import 'package:saint_paul/feature/groups/presentation/page/teacher/group_points_screen.dart';
 import 'package:saint_paul/feature/groups/presentation/page/teacher/groups_showcase_screen.dart';
+import 'package:saint_paul/feature/history/presentation/cubit/history_cubit.dart';
+import 'package:saint_paul/feature/history/presentation/page/tayo_history_screen.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
 import 'package:saint_paul/feature/home/widgets/add_new_badge_bottom_sheet.dart';
@@ -61,6 +63,7 @@ class Routes {
   static const String groupDetailsScreen = '/groupDetailsScreen';
   static const String appBlockedScreen = '/appBlockedScreen';
   static const String groupPointsScreen = '/groupPointsScreen';
+  static const String tayoHistoryScreen = '/tayoHistoryScreen';
 
   static final routes = GoRouter(
     routes: [
@@ -108,6 +111,20 @@ class Routes {
         builder: (context, state) => BlocProvider(
           create: (context) => ProfileCubit(),
           child: StudentProfileScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: badgesScreen,
+        builder: (context, state) =>
+            BadgesScreen(earnedBadges: state.extra as Map<String, String>),
+      ),
+
+      GoRoute(
+        path: tayoHistoryScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => HistoryCubit(),
+          child: TayoHistoryScreen(groupId: state.extra as String?),
         ),
       ),
 
@@ -203,6 +220,7 @@ class Routes {
           );
         },
       ),
+
       GoRoute(
         path: groupPointsScreen,
         builder: (context, state) {
@@ -255,12 +273,6 @@ class Routes {
       GoRoute(
         path: teacherHomeScreen,
         builder: (context, state) => TeacherHomeScreen(),
-      ),
-
-      GoRoute(
-        path: badgesScreen,
-        builder: (context, state) =>
-            BadgesScreen(earnedBadges: state.extra as Map<String, String>),
       ),
     ],
   );

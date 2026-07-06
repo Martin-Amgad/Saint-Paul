@@ -27,7 +27,7 @@ class AuthRepo {
           snapshot.data() as Map<String, dynamic>,
           snapshot.id,
         );
-        LocalHelper.setUserData(userData.toJsonLocal());
+        LocalHelper.setStudentData(userData.toJsonLocal());
         LocalHelper.setUserGroup('${userData.groupID}');
         LocalHelper.setUserType('مخدوم');
       } else if (user.photoURL == '1') {
@@ -37,8 +37,9 @@ class AuthRepo {
           snapshot.data() as Map<String, dynamic>,
           snapshot.id,
         );
-        LocalHelper.setUserData(userData.toJsonLocal());
         LocalHelper.setUserType('خادم');
+        LocalHelper.setTeacherName(userData.name ?? '');
+        LocalHelper.setTeacherData(userData);
       } else {
         // Fallback (should not normally happen)
         LocalHelper.setUserType('مخدوم');
@@ -52,6 +53,7 @@ class AuthRepo {
       return user.photoURL == '1' ? 'خادم' : 'مخدوم';
     } on FirebaseAuthException catch (e) {
       log('Login error code: ${e.code}');
+      log('Login error message: ${e.message}');
       switch (e.code) {
         case 'user-not-found':
           return 'لا يوجد مستخدم بهذا البريد الإلكتروني.';
@@ -87,13 +89,19 @@ class AuthRepo {
         return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
       }
 
+      // 1. Create Auth account
       final credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
-
       final user = credential.user!;
 
+      // 2. Prepare role‑specific data (only once)
+      final isTeacher = (role == 'خادم');
+      final photoURL = isTeacher ? '1' : '0';
+      final userType = isTeacher ? 'خادم' : 'مخدوم';
+
+      // 3. Create Firestore document
       try {
-        if (role == 'مخدوم') {
+        if (!isTeacher) {
           await FirebaseProvider.createStudent(
             StudentModel(
               uid: user.uid,
@@ -103,7 +111,7 @@ class AuthRepo {
               tayo: tayo,
             ),
           );
-        } else if (role == 'خادم') {
+        } else if (isTeacher) {
           await FirebaseProvider.createTeacher(
             TeacherModel(
               uid: user.uid,
@@ -119,28 +127,21 @@ class AuthRepo {
         return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
       }
 
+      // 4. Update Auth profile metadata
       await user.updateDisplayName(name);
+      await user.updatePhotoURL(photoURL);
 
-      if (role == 'خادم') {
-        await user.updatePhotoURL('1');
-        LocalHelper.setUserType('خادم');
-      } else {
-        await user.updatePhotoURL('0');
-        LocalHelper.setUserType('مخدوم');
-      }
-
-      log('User logged in with email: $email');
-      log('User UID: ${user.uid}');
-      log('================================');
-
+      // 5. Save everything to local storage (using the correct methods)
       LocalHelper.setUserId(user.uid);
+      LocalHelper.setUserType(userType);
 
-      if (role == 'خادم') {
-        LocalHelper.setUserData(
-          TeacherModel(uid: user.uid, name: name, church: church).toJsonLocal(),
+      if (isTeacher) {
+        LocalHelper.setTeacherName(name);
+        await LocalHelper.setTeacherData(
+          TeacherModel(uid: user.uid, name: name, church: church),
         );
       } else {
-        LocalHelper.setUserData(
+        await LocalHelper.setStudentData(
           StudentModel(
             uid: user.uid,
             name: name,
@@ -151,6 +152,7 @@ class AuthRepo {
         );
       }
 
+      log('User registered: $email, role: $role');
       return 'تم إنشاء الحساب بنجاح.';
     } on FirebaseAuthException catch (e) {
       switch (e.code) {

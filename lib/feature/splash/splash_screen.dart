@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
-    _getAndStoreStudentData();
+    // _getAndStoreStudentData();
     _initAndNavigate();
   }
 
@@ -80,7 +80,6 @@ class _SplashScreenState extends State<SplashScreen>
     final bool isUnderMaintenance = results[2] as bool;
     log('Update available: $isUpdateAvailable');
     log('App under maintenance: $isUnderMaintenance');
-
     if (!mounted) return;
 
     if (isUpdateAvailable) {
@@ -104,17 +103,22 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  Future<void> _getAndStoreStudentData() async {
-    var snapshot = await FirebaseProvider.getStudentByID(
-      LocalHelper.getUserId(),
-    );
-    var userData = StudentModel.fromJson(
-      snapshot.data() as Map<String, dynamic>,
-      snapshot.id,
-    );
-    LocalHelper.setUserData(userData.toJsonLocal());
-    LocalHelper.setUserGroup('${userData.groupID}');
-  }
+  // Future<void> _getAndStoreStudentData() async {
+  //   var snapshot = await FirebaseProvider.getStudentByID(
+  //     LocalHelper.getUserId(),
+  //   );
+
+  /// for now commented in debugging,
+  /// but will be used later to store user data locally
+  ///
+  ///
+  // var userData = StudentModel.fromJson(
+  //   snapshot.data() as Map<String, dynamic>,
+  //   snapshot.id,
+  // );
+  // LocalHelper.setUserData(userData.toJsonLocal());
+  // LocalHelper.setUserGroup('${userData.groupID}');
+  // }
 
   @override
   void dispose() {
