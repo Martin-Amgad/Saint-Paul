@@ -43,3 +43,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase emulator export
+emulator-backup/
+
+# AI assistant skills (if not needed)
+.agents/
+
+# iOS SPM generated
+Package.resolved
+
+# Any temporary SKILL md files
+SKILLmd
+*.md-temp
