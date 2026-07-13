@@ -45,7 +45,7 @@ app.*.map.json
 /android/app/release
 
 # AI agent skill files (auto‑generated, not part of the app)
-agents/
+.agents/
 
 # Firebase emulator local backup
 emulator-backup/
@@ -54,4 +54,4 @@ emulator-backup/
 functions/node_modules/
 
 # Downloaded console page
-Saint Paul — Database — Data — Firebase console.html
+Saint Paul – Database – Data – Firebase console.html
