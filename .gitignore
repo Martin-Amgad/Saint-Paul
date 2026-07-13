@@ -56,3 +56,6 @@ Package.resolved
 # Any temporary SKILL md files
 SKILLmd
 *.md-temp
+
+# Firebase console export
+Saint Paul — Database — Data — Firebase console.html
