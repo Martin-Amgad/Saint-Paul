@@ -46,7 +46,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     final id = LocalHelper.getUserId();
     log('StudentHomeScreen initState - User ID: $id');
     log(
-      'StudentHomeScreen initState - LocalHelper User data: ${LocalHelper.getStudentData()?.name}, studyLevel: ${LocalHelper.getStudentData()?.studyLevel}',
+      'StudentHomeScreen initState - LocalHelper User data: ${LocalHelper.getStudentData()?.name}, studyLevel: ${LocalHelper.getUserStudyLevel()}, family: ${LocalHelper.getUserFamily()}',
     );
     context.read<HomeCubit>().loadStudentYear(id);
 

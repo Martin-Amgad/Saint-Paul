@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
@@ -25,18 +26,6 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _scaleAnim;
   bool? updateAvailable = false;
   bool? underMaintenance = false;
-
-  Future<void> checkIfThereIsAnUpdate() async {
-    bool isUpdateAvailable = await FirebaseProvider.checkIfUpdateAvailable();
-    bool isUnderMaintenance =
-        await FirebaseProvider.checkIfAppUnderMaintenance();
-    setState(() {
-      updateAvailable = isUpdateAvailable;
-      underMaintenance = isUnderMaintenance;
-    });
-    log('Checked for updates: $updateAvailable');
-    log('App under maintenance: $underMaintenance');
-  }
 
   @override
   void initState() {
@@ -66,29 +55,80 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initAndNavigate() async {
-    final String? userType = FirebaseAuth.instance.currentUser?.photoURL;
+    final String? role = FirebaseAuth.instance.currentUser?.photoURL;
     final bool isNewUser = LocalHelper.getIsNewUser() ?? true;
 
-    // Wait for BOTH the minimum splash duration AND the update check
-    final results = await Future.wait([
-      Future.delayed(const Duration(seconds: 2)),
-      FirebaseProvider.checkIfUpdateAvailable(),
-      FirebaseProvider.checkIfAppUnderMaintenance(),
-    ]);
+    // Start concurrent futures
+    final updateCheckFuture =
+        FirebaseProvider.checkIfUpdateAvailableOrAppUnderMaintenance();
 
-    final bool isUpdateAvailable = results[1] as bool;
-    final bool isUnderMaintenance = results[2] as bool;
+    // Minimum splash time
+    await Future.delayed(const Duration(seconds: 2));
+
+    // 1. Load user‑specific data based on role
+    if (role == '1') {
+      // ── TEACHER ──────────────────────────────────
+      TeacherModel? teacher;
+      try {
+        teacher = await FirebaseProvider.getTeacherByID(
+          LocalHelper.getUserId(),
+        );
+      } catch (e) {
+        log('Failed to fetch teacher: $e');
+      }
+
+      LocalHelper.setUserFamily(teacher?.assignedFamily ?? '');
+      LocalHelper.setUserStudyLevel(teacher?.assignedStudyLevel ?? '');
+      LocalHelper.setUserRole(teacher?.role ?? '');
+      LocalHelper.setUserType(teacher?.role ?? '');
+    } else {
+      // ── STUDENT (or any other role) ──────────────
+      try {
+        final doc = await FirebaseProvider.getStudentByID(
+          LocalHelper.getUserId(),
+        );
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          LocalHelper.setUserChurchName(data['church'] ?? '');
+          LocalHelper.setUserFamily(data['family'] ?? '');
+        }
+      } catch (e) {
+        log('Failed to fetch student: $e');
+      }
+
+      // Make sure role is set for non‑teachers (adjust if needed)
+      LocalHelper.setUserRole('مخدوم');
+      LocalHelper.setUserType('مخدوم');
+    }
+
+    // 2. Check for updates / maintenance
+    Map<String, bool> updateCheck;
+    try {
+      updateCheck = await updateCheckFuture;
+    } catch (e) {
+      log('Failed to check for updates: $e');
+      updateCheck = {
+        'isUpdateAvailable': false,
+        'isAppUnderMaintenance': false,
+      };
+    }
+
+    final isUpdateAvailable = updateCheck['isUpdateAvailable'] ?? false;
+    final isUnderMaintenance = updateCheck['isAppUnderMaintenance'] ?? false;
+
     log('Update available: $isUpdateAvailable');
     log('App under maintenance: $isUnderMaintenance');
+
     if (!mounted) return;
 
+    // 3. Navigate
     if (isUpdateAvailable) {
       pushWithReplacement(
         context,
         Routes.appBlockedScreen,
         extra: AppBlockedReason.update,
       );
-    } else if (isUnderMaintenance == true) {
+    } else if (isUnderMaintenance) {
       pushWithReplacement(
         context,
         Routes.appBlockedScreen,
@@ -96,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen>
       );
     } else if (isNewUser) {
       pushWithReplacement(context, Routes.welcome);
-    } else if (userType == '1') {
+    } else if (role == '1') {
       pushWithReplacement(context, Routes.mainScreen, extra: 'خادم');
     } else {
       pushWithReplacement(context, Routes.mainScreen, extra: 'مخدوم');

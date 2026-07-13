@@ -4,6 +4,8 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
+import 'package:saint_paul/feature/Notifications/data/fcm_token_manager.dart';
+import 'package:saint_paul/feature/Notifications/data/fcm_token_repo.dart';
 
 class AuthRepo {
   static Future<String?> login({
@@ -30,25 +32,36 @@ class AuthRepo {
         LocalHelper.setStudentData(userData.toJsonLocal());
         LocalHelper.setUserGroup('${userData.groupID}');
         LocalHelper.setUserType('مخدوم');
+        await LocalHelper.setUserFamily(userData.family ?? '');
+        await LocalHelper.setUserStudyLevel(userData.studyLevel ?? '');
+        await LocalHelper.setUserChurchName(userData.church ?? '');
       } else if (user.photoURL == '1') {
         // Teacher
-        final snapshot = await FirebaseProvider.getTeacherByID(user.uid);
-        final userData = TeacherModel.fromJson(
-          snapshot.data() as Map<String, dynamic>,
-          snapshot.id,
-        );
+        final userData = await FirebaseProvider.getTeacherByID(user.uid);
+
         LocalHelper.setUserType('خادم');
-        LocalHelper.setTeacherName(userData.name ?? '');
-        LocalHelper.setTeacherData(userData);
-      } else {
-        // Fallback (should not normally happen)
-        LocalHelper.setUserType('مخدوم');
+        LocalHelper.setTeacherName(userData?.name ?? '');
+        await LocalHelper.setUserFamily(userData?.assignedFamily ?? '');
+        await LocalHelper.setUserStudyLevel(userData?.assignedStudyLevel ?? '');
+        await LocalHelper.setUserChurchName(userData?.church ?? '');
+        LocalHelper.setTeacherData(
+          userData ??
+              TeacherModel(
+                uid: user.uid,
+                name: '',
+                church: '',
+                role: '',
+                assignedFamily: '',
+                assignedStudyLevel: '',
+              ),
+        );
       }
 
       log('User logged in with email: $email');
       log('User UID: ${user.uid}');
       log('Role indicator (photoURL): ${user.photoURL}');
       log('================================');
+      ;
 
       return user.photoURL == '1' ? 'خادم' : 'مخدوم';
     } on FirebaseAuthException catch (e) {
@@ -80,7 +93,8 @@ class AuthRepo {
     String? studyLevel,
     String? role,
     DateTime? birthday,
-    String? church,
+    String? churchName,
+    String? family,
   }) async {
     try {
       final tayo = await FirebaseProvider.getDefaultTayo();
@@ -109,6 +123,8 @@ class AuthRepo {
               studyLevel: studyLevel,
               birthday: birthday,
               tayo: tayo,
+              church: churchName,
+              family: family,
             ),
           );
         } else if (isTeacher) {
@@ -116,7 +132,10 @@ class AuthRepo {
             TeacherModel(
               uid: user.uid,
               name: name,
-              church: church,
+              church: churchName,
+              assignedFamily: family,
+              role: role,
+              assignedStudyLevel: studyLevel,
               // adminPin if you have one
             ),
           );
@@ -134,12 +153,23 @@ class AuthRepo {
       // 5. Save everything to local storage (using the correct methods)
       LocalHelper.setUserId(user.uid);
       LocalHelper.setUserType(userType);
+      await LocalHelper.setUserFamily(family ?? '');
+      await LocalHelper.setUserStudyLevel(studyLevel ?? '');
+      await LocalHelper.setUserChurchName(churchName ?? '');
 
       if (isTeacher) {
         LocalHelper.setTeacherName(name);
         await LocalHelper.setTeacherData(
-          TeacherModel(uid: user.uid, name: name, church: church),
+          TeacherModel(
+            uid: user.uid,
+            name: name,
+            role: role,
+            church: churchName,
+            assignedFamily: family,
+            assignedStudyLevel: studyLevel,
+          ),
         );
+        // await LocalHelper.setUserStudyLevel(studyLevel ?? '');
       } else {
         await LocalHelper.setStudentData(
           StudentModel(
@@ -148,6 +178,8 @@ class AuthRepo {
             studyLevel: studyLevel,
             birthday: birthday,
             tayo: tayo,
+            church: churchName,
+            family: family,
           ).toJsonLocal(),
         );
       }
@@ -174,6 +206,93 @@ class AuthRepo {
     }
   }
 
+  static Future<String> registerNewCHurch({
+    required String email,
+    required String password,
+    required String name,
+    String? role,
+    required String churchName,
+    String? adminPin,
+  }) async {
+    try {
+      // 1. Create Auth account
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+      final user = credential.user!;
+
+      // 2. Create Firestore document
+      try {
+        await FirebaseProvider.createTeacher(
+          TeacherModel(
+            uid: user.uid,
+            name: name,
+            church: churchName,
+            role: "أمين خدمة التربية الكنسية",
+            // adminPin if you have one
+          ),
+        );
+
+        await FirebaseProvider.updateDefaultsChurchName(churchName, adminPin);
+      } catch (_) {
+        // Roll back Firebase Auth account if Firestore write fails
+        await user.delete();
+        return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
+      }
+
+      // 3. Update Auth profile metadata
+      await user.updateDisplayName(name);
+      await user.updatePhotoURL(
+        "2",
+      ); // Use "2" to indicate a new church registration
+
+      // 4. Save everything to local storage (using the correct methods)
+      LocalHelper.setUserId(user.uid);
+      LocalHelper.setUserType("أمين خدمة التربية الكنسية");
+
+      LocalHelper.setTeacherName(name);
+      await LocalHelper.setTeacherData(
+        TeacherModel(
+          uid: user.uid,
+          name: name,
+          church: churchName,
+          role: "أمين خدمة التربية الكنسية",
+        ),
+      );
+
+      log('User registered: $email, role: $role');
+      return 'تم إنشاء الكنيسة بنجاح.';
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'weak-password':
+          return 'كلمة المرور ضعيفة جداً.';
+        case 'email-already-in-use':
+          return 'الحساب موجود بالفعل لهذا البريد الإلكتروني.';
+        case 'invalid-email':
+          return 'البريد الإلكتروني غير صالح.';
+        case 'operation-not-allowed':
+          return 'تسجيل الحساب غير مسموح به حالياً.';
+        default:
+          log('Register error code: ${e.code}');
+          return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
+      }
+    } catch (e) {
+      log('Register error: $e');
+      return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
+    }
+  }
+
+  static Future<Map<String, dynamic>?>? getChurches() async {
+    try {
+      final churches = await FirebaseProvider.getChurches();
+      log('Fetched churches in Repo: $churches');
+
+      return churches;
+    } catch (e) {
+      log('Error fetching churches: $e');
+      return null;
+    }
+  }
+
   static Future<String?>? resetPassword(String email) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
@@ -183,6 +302,23 @@ class AuthRepo {
       return null;
     }
   }
+
+  static Future<void> logout() async {
+    // 1. Delete FCM token from Firestore
+    await FCMTokenRepo.deleteToken();
+
+    // 2. Cancel the token refresh listener
+    FCMTokenManager.dispose();
+
+    // 3. Sign out from Firebase Auth
+    await FirebaseAuth.instance.signOut();
+
+    // 4. Clear local session data (your existing logic)
+    LocalHelper.setIsNewUser(true);
+    LocalHelper.setUserType('null??????');
+    // add any other cleanup you need
+  }
+}
 
   //   static Future<AuthResponse?> check_forget_password(AuthParams params) async {
   //     try {
@@ -219,4 +355,4 @@ class AuthRepo {
   //       return null;
   //     }
   //   }
-}
+

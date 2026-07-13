@@ -99,11 +99,8 @@ class _AdminPasswordChangeBottomSheetState
             title: 'تغيير كلمة المرور',
             onPressed: () async {
               log('Button pressed');
-              await FirebaseProvider.updateTeacher(
-                TeacherModel(
-                  uid: '28W6AI0V3SGxJI7qHY73',
-                  adminPin: newPasswordController.text.trim(),
-                ),
+              await FirebaseProvider.updateChurchAdminPassword(
+                newPasswordController.text,
               );
               log('Password updated in Firestore');
               newPasswordController.clear();

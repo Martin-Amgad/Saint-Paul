@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/feature/missions/data/repo/missions_repo.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_state.dart';
 
@@ -28,6 +29,9 @@ class MissionCubit extends Cubit<MissionState> {
         expireAfter: int.tryParse(expireAfterController.text) ?? 0,
         currentDate: DateTime.now(),
         missionStudyLevel: selectedValue,
+        missionFamily: LocalHelper.getUserFamily(),
+        missionChurch: LocalHelper.getUserChurchName(),
+        createdBy: LocalHelper.getUserId(),
       );
       final result = await MissionRepo.createMission(mission);
       emit(MissionSuccessState(message: result));

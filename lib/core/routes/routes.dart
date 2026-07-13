@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/feature/auth/presentation/cubit/auth_cubit.dart';
 import 'package:saint_paul/feature/auth/presentation/page/login/login_screen.dart';
+import 'package:saint_paul/feature/auth/presentation/page/register/register_new_church_screen.dart';
 import 'package:saint_paul/feature/auth/presentation/page/register/register_screen%20.dart';
 import 'package:saint_paul/feature/groups/presentation/cubit/group_cubit.dart';
 import 'package:saint_paul/feature/groups/presentation/page/student/group_details_screen.dart';
@@ -14,7 +16,7 @@ import 'package:saint_paul/feature/history/presentation/cubit/history_cubit.dart
 import 'package:saint_paul/feature/history/presentation/page/tayo_history_screen.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
-import 'package:saint_paul/feature/home/widgets/add_new_badge_bottom_sheet.dart';
+import 'package:saint_paul/feature/miss_checks/presentation/page/miss_check_screen.dart';
 import 'package:saint_paul/feature/profile/presentation/teacher/add_edit_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
@@ -27,6 +29,8 @@ import 'package:saint_paul/feature/missions/presentation/page/teacher/teacher_mi
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
 import 'package:saint_paul/feature/profile/presentation/student/badges_screen.dart';
 import 'package:saint_paul/feature/profile/presentation/student/student_profile_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/edit_teacher_students_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/edit_teachers_info_Screen.dart';
 import 'package:saint_paul/feature/profile/presentation/teacher/students_showcase_and_edit_screen.dart';
 import 'package:saint_paul/feature/main/nav_bar.dart';
 import 'package:saint_paul/feature/splash/splash_screen.dart';
@@ -40,6 +44,7 @@ class Routes {
   static const String welcome = '/welcome';
   static const String login = '/login';
   static const String register = '/Register';
+  static const String registerNewChurch = '/RegisterNewChurch';
   static const String emailScreen = '/emailScreen';
   static const String otpScreen = '/otpScreen';
   static const String newPasswordScreen = '/NewPasswordScreen';
@@ -64,6 +69,9 @@ class Routes {
   static const String appBlockedScreen = '/appBlockedScreen';
   static const String groupPointsScreen = '/groupPointsScreen';
   static const String tayoHistoryScreen = '/tayoHistoryScreen';
+  static const String editTeachersInfoScreen = '/editTeachersInfoScreen';
+  static const String editTeacherStudents = '/editTeacherStudents';
+  static const String missCheckStudentScreen = '/missCheckStudentScreen';
 
   static final routes = GoRouter(
     routes: [
@@ -97,6 +105,14 @@ class Routes {
         ),
       ),
 
+      GoRoute(
+        path: registerNewChurch,
+        builder: (context, state) => BlocProvider(
+          create: (context) => AuthCubit(),
+          child: RegisterNewChurchScreen(),
+        ),
+      ),
+
       //Profile Cubit Screens ////////////////////////////////////////
       GoRoute(
         path: studentShowcaseAndEditScreen,
@@ -116,8 +132,10 @@ class Routes {
 
       GoRoute(
         path: badgesScreen,
-        builder: (context, state) =>
-            BadgesScreen(earnedBadges: state.extra as Map<String, String>),
+        builder: (context, state) => BlocProvider(
+          create: (context) => ProfileCubit(),
+          child: BadgesScreen(earnedBadges: state.extra as Map<String, String>),
+        ),
       ),
 
       GoRoute(
@@ -126,6 +144,28 @@ class Routes {
           create: (context) => HistoryCubit(),
           child: TayoHistoryScreen(groupId: state.extra as String?),
         ),
+      ),
+
+      GoRoute(
+        path: editTeachersInfoScreen,
+        builder: (context, state) => BlocProvider(
+          create: (context) => ProfileCubit(),
+          child: EditTeachersInfoScreen(teacher: state.extra as TeacherModel?),
+        ),
+      ),
+      GoRoute(
+        path: editTeacherStudents,
+        builder: (context, state) => BlocProvider(
+          create: (context) => ProfileCubit(),
+          child: EditTeacherStudentsScreen(
+            teacher: state.extra as TeacherModel,
+          ),
+        ),
+      ),
+
+      GoRoute(
+        path: missCheckStudentScreen,
+        builder: (context, state) => StudentsMissCheckScreen(),
       ),
 
       //Mission Cubit Screens ////////////////////////////////////////
@@ -262,7 +302,13 @@ class Routes {
       //No Cubit Screens ////////////////////////////////////////
       GoRoute(path: splash, builder: (context, state) => SplashScreen()),
 
-      GoRoute(path: welcome, builder: (context, state) => WelcomScreen()),
+      GoRoute(
+        path: welcome,
+        builder: (context, state) => BlocProvider(
+          create: (context) => AuthCubit(),
+          child: WelcomScreen(),
+        ),
+      ),
 
       GoRoute(
         path: appBlockedScreen,
@@ -277,5 +323,3 @@ class Routes {
     ],
   );
 }
-
-class AddNewBadgeBottomSheet {}

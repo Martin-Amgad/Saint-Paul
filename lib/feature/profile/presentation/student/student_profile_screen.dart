@@ -17,7 +17,6 @@ import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
-import 'package:saint_paul/feature/profile/data/models/badge_model.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
 import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
@@ -33,6 +32,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   String avatarUrlLocal = '';
   String pathLocal = '';
   Map<String, String> badgesLocal = {};
+  Map<String, String> badgeNamesByIdLocal = {};
   int totalTayoLocal = 0;
   bool _isUploadingImage = false;
 
@@ -103,7 +103,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       totalTayoLocal = localData.totalTayo ?? 0;
     }
 
+    badgeNamesByIdLocal = LocalHelper.getBadgeNamesMap();
+    log('Loaded badge names from local storage: $badgeNamesByIdLocal');
     context.read<ProfileCubit>().loadStudentData(LocalHelper.getUserId());
+    context.read<ProfileCubit>().loadBadges(
+      LocalHelper.getUserChurchName() ?? '',
+      LocalHelper.getUserFamily() ?? '',
+    );
   }
 
   @override
@@ -125,6 +131,27 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 totalTayoLocal = freshData.totalTayo ?? 0;
                 avatarUrlLocal = freshData.avatarUrl ?? '';
                 studentDataLocal = freshData;
+              });
+            }
+          } else if (state is ProfileBadgesLoadedState) {
+            if (mounted) {
+              // Build name map from server data
+              final namesMap = <String, String>{};
+              for (final badge in state.badges) {
+                if (badge.bId != null &&
+                    badge.bId!.isNotEmpty &&
+                    badge.name != null &&
+                    badge.name!.trim().isNotEmpty) {
+                  namesMap[badge.bId!] = badge.name!;
+                }
+              }
+
+              // Save to persistent storage
+              await LocalHelper.setBadgeNamesMap(namesMap);
+
+              // Update in‑memory cache
+              setState(() {
+                badgeNamesByIdLocal = namesMap;
               });
             }
           }
@@ -335,211 +362,225 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
               const Gap(24),
 
-              // ── Stats cards ──────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(10, 18, 15, 18),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.primaryColor.withValues(alpha: 0.1),
+              /// ── Stats cards ──────────────────────────────────────────
+              // Tayo section
+              GestureDetector(
+                onTap: () {
+                  pushTo(context, Routes.tayoHistoryScreen, extra: null);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 18, 15, 18),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primaryColor.withValues(alpha: 0.1),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.darkYellowIconColor.withValues(
-                            alpha: 0.12,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.darkYellowIconColor.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          borderRadius: BorderRadius.circular(14),
+                          child: Icon(
+                            Icons.auto_awesome_rounded,
+                            color: AppColors.darkYellowIconColor,
+                            size: 26,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.auto_awesome_rounded,
-                          color: AppColors.darkYellowIconColor,
-                          size: 26,
-                        ),
-                      ),
-                      const Gap(16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'مجموع الطايو',
-                            style: TextStyles.getSize12(
-                              color: AppColors.accentColor.withValues(
-                                alpha: 0.5,
+                        const Gap(16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'مجموع الطايو',
+                              style: TextStyles.getSize12(
+                                color: AppColors.accentColor.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
-                          ),
-                          const Gap(2),
-                          Text(
-                            '$totalTayoLocal',
-                            style: TextStyles.getSize24(
-                              color: AppColors.accentColor,
-                              fontWeight: FontWeight.w800,
+                            const Gap(2),
+                            Text(
+                              '$totalTayoLocal',
+                              style: TextStyles.getSize24(
+                                color: AppColors.accentColor,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Spacer(),
-                      IconButton(
-                        onPressed: () {
-                          log('Navigating to Tayo History screen: ');
-                          pushTo(
-                            context,
-                            Routes.tayoHistoryScreen,
-                            extra: null,
-                          );
-                        },
-                        icon: Icon(
+                          ],
+                        ),
+                        Spacer(),
+                        Icon(
                           Icons.arrow_forward_ios_rounded,
                           color: AppColors.primaryColor,
                           size: 18,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
               Gap(10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(10, 18, 15, 18),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.primaryColor.withValues(alpha: 0.1),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+              // Badges section
+              GestureDetector(
+                onTap: () {
+                  pushTo(context, Routes.badgesScreen, extra: badgesLocal);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 18, 15, 18),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primaryColor.withValues(alpha: 0.1),
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.darkYellowIconColor.withValues(
-                                alpha: 0.12,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.darkYellowIconColor.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              borderRadius: BorderRadius.circular(14),
+                              child: Icon(
+                                Icons.military_tech,
+                                color: AppColors.darkYellowIconColor,
+                                size: 28,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.military_tech,
-                              color: AppColors.darkYellowIconColor,
-                              size: 28,
+                            const Gap(16),
+                            Text(
+                              'أوسمة',
+                              style: TextStyles.getSize18(
+                                color: AppColors.accentColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 22,
+                              ),
                             ),
-                          ),
-                          const Gap(16),
-                          Text(
-                            'أوسمة',
-                            style: TextStyles.getSize18(
-                              color: AppColors.accentColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 22,
-                            ),
-                          ),
-                          Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              log(
-                                'Navigating to badges screen with badges: $badgesLocal',
-                              );
-                              pushTo(
-                                context,
-                                Routes.badgesScreen,
-                                extra: badgesLocal,
-                              );
-                            },
-                            icon: Icon(
+                            Spacer(),
+                            Icon(
                               Icons.arrow_forward_ios_rounded,
                               color: AppColors.primaryColor,
                               size: 18,
                             ),
-                          ),
-                        ],
-                      ),
-                      Gap(15),
-                      SizedBox(
-                        height: 150,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: badgesLocal.length,
-                          separatorBuilder: (BuildContext context, int index) {
-                            return Gap(10);
-                          },
-                          itemBuilder: (BuildContext context, int index) {
-                            final badgeName = badgesLocal.keys.toList()[index];
-                            'Badge Name';
-                            final badgeImage = badgesLocal[badgeName];
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    height: 80,
-                                    width: 80,
-                                    padding: const EdgeInsets.all(8),
+                          ],
+                        ),
+                        Gap(15),
+                        // Inside the badge section card, replace the SizedBox containing the ListView
+                        BlocBuilder<ProfileCubit, ProfileState>(
+                          builder: (context, state) {
+                            // Build the name map from the state if available
+                            final nameMap = <String, String>{};
+                            if (state is ProfileBadgesLoadedState) {
+                              for (final badge in state.badges) {
+                                if (badge.bId != null && badge.name != null) {
+                                  nameMap[badge.bId!] = badge.name!;
+                                }
+                              }
+                            } else {
+                              nameMap.addAll(badgeNamesByIdLocal);
+                            }
+
+                            return SizedBox(
+                              height: 150,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: badgesLocal.length,
+                                separatorBuilder: (_, __) => const Gap(10),
+                                itemBuilder: (context, index) {
+                                  final badgeId = badgesLocal.keys
+                                      .toList()[index];
+                                  final badgeImage = badgesLocal[badgeId];
+
+                                  // Use the loaded name, or a temporary placeholder
+                                  final badgeDisplayName =
+                                      nameMap[badgeId] ??
+                                      '...'; // 👈 never show ID
+
+                                  return Container(
                                     decoration: BoxDecoration(
-                                      color: AppColors.darkYellowIconColor
-                                          .withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: AppColors.primaryColor.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
-                                    child:
-                                        badgeImage != null &&
-                                            badgeImage.isNotEmpty
-                                        ? CachedNetworkImage(
-                                            imageUrl: badgeImage,
-                                            fit: BoxFit.contain,
-                                          )
-                                        : Icon(
-                                            Icons.image_not_supported_outlined,
-                                            color: AppColors.primaryColor
-                                                .withValues(alpha: 0.3),
-                                            size: 32,
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          height: 80,
+                                          width: 80,
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.darkYellowIconColor
+                                                .withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
-                                  ),
-                                  const Gap(12),
-                                  Text(
-                                    badgeName,
-                                    style: TextStyles.getSize16(
-                                      color: AppColors.accentColor,
+                                          child:
+                                              badgeImage != null &&
+                                                  badgeImage.isNotEmpty
+                                              ? CachedNetworkImage(
+                                                  imageUrl: badgeImage,
+                                                  fit: BoxFit.contain,
+                                                )
+                                              : Icon(
+                                                  Icons
+                                                      .image_not_supported_outlined,
+                                                  color: AppColors.primaryColor
+                                                      .withValues(alpha: 0.3),
+                                                  size: 32,
+                                                ),
+                                        ),
+                                        const Gap(12),
+                                        Text(
+                                          badgeDisplayName,
+                                          style: TextStyles.getSize16(
+                                            color: AppColors.accentColor,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
                             );
                           },
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

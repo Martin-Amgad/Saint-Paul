@@ -57,7 +57,7 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
       child: ValueListenableBuilder(
         valueListenable: widget.searchNotifier,
         builder: (context, searchText, _) {
-          filteredGroups = searchText.isEmpty && widget.selectedYear == null
+          filteredGroups = searchText.isEmpty && widget.selectedYear == 'الكل'
               ? widget.groups
               : widget.groups?.where((group) {
                   final name = group.name ?? '';
@@ -267,7 +267,7 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
                               ),
                             ),
                             Text(
-                              '${group.totalPoints ?? 0} 7altita',
+                              '${group.totalPoints ?? 0}',
                               style: TextStyles.getSize16(
                                 color: AppColors.darkYellowIconColor,
                                 fontWeight: FontWeight.w700,

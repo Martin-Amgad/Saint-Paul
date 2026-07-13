@@ -117,7 +117,7 @@ class TayoHistoryModel {
         }
       } else {
         // 3. Brand‑new category (old count implicitly 0)
-        if (newCount != 0) {
+        if (newCount >= 0) {
           changes.add(
             TayoHistoryModel(
               category: category,

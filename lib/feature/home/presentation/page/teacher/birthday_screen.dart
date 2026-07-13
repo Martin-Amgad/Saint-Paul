@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 
@@ -48,9 +51,12 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
 
   Future<void> loadStudents() async {
     setState(() => isLoading = true);
+    final snapshot = await FirebaseProvider.fetchStudentsByBirthday(
+      LocalHelper.getUserChurchName(),
+      LocalHelper.getUserFamily(),
+    );
 
-    final snapshot = await FirebaseProvider.fetchStudentsByBirthday();
-
+    log('Fetched students snapshot: ${snapshot.docs.length} documents');
     allStudents = snapshot.docs
         .map(
           (doc) =>
@@ -66,9 +72,11 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
       return a.birthday!.month.compareTo(b.birthday!.month);
     });
 
-    setState(() {
-      if (context.mounted) isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   bool birthdayInAWeek(DateTime? birthday) {

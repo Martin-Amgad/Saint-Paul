@@ -10,6 +10,7 @@ import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
@@ -19,6 +20,8 @@ import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
 import 'package:saint_paul/feature/groups/widgets/student_group_list_builder.dart';
 import 'package:saint_paul/feature/home/widgets/filter_chip.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
+
+import '../../../../auth/data/models/school_years_model.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -32,8 +35,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final ValueNotifier<String> searchNotifier = ValueNotifier('');
 
   String searchText = '';
-  String? selectedYear;
+  String? selectedYear = 'الكل';
   List<String> selectedStudentIds = [];
+  List<String> filterChipsElements = ['الكل'];
 
   List<StudentModel> students = [];
   GroupModel? group;
@@ -41,7 +45,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<GroupCubit>().fetchStudents();
+    context.read<GroupCubit>().fetchStudents(
+      LocalHelper.getUserFamily(),
+      LocalHelper.getUserChurchName(),
+    );
+    filterChipsElements
+      ..addAll(SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? []);
   }
 
   @override
@@ -240,32 +249,19 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          FilteredChip(
-                            label: 'الكل',
-                            selected: selectedYear == null,
-                            onTap: () => setState(() => selectedYear = null),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'اولي اعدادي',
-                            selected: selectedYear == 'اولي اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'اولي اعدادي'),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'تانيه اعدادي',
-                            selected: selectedYear == 'تانيه اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'تانيه اعدادي'),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'ثالثة اعدادي',
-                            selected: selectedYear == 'ثالثة اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'ثالثة اعدادي'),
-                          ),
+                          ...filterChipsElements.map((year) {
+                            return Row(
+                              children: [
+                                FilteredChip(
+                                  label: year,
+                                  selected: selectedYear == year,
+                                  onTap: () =>
+                                      setState(() => selectedYear = year),
+                                ),
+                                Gap(5),
+                              ],
+                            );
+                          }),
                         ],
                       ),
                     ),

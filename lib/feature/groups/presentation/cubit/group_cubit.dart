@@ -48,8 +48,9 @@ class GroupCubit extends Cubit<GroupState> {
       log('Group updated successfully: $res');
       if (!isClosed) emit(GroupSuccessState(message: res));
     } catch (e) {
-      if (!isClosed)
+      if (!isClosed) {
         emit(GroupErrorState('حدث خطأ أثناء تحديث المجموعة: ${e.toString()}'));
+      }
     }
   }
 
@@ -87,7 +88,7 @@ class GroupCubit extends Cubit<GroupState> {
       );
 
       await Future.wait(futures);
-
+      if (isClosed) return;
       emit(GroupSuccessState(message: 'تم إنشاء المجموعة بنجاح.'));
     } on Exception catch (e) {
       log('Error during group creation: ${e.toString()}');
@@ -102,6 +103,7 @@ class GroupCubit extends Cubit<GroupState> {
     emit(GroupLoadingState());
     try {
       var res = await GroupsRepo.fetchGroups();
+      if (isClosed) return;
       emit(GroupsLoadedSuccessState(groups: res));
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعات: ${e.toString()}'));
@@ -116,6 +118,7 @@ class GroupCubit extends Cubit<GroupState> {
       final group = await GroupsRepo.fetchGroup(groupId);
       log("fetchGroup FINISHED");
       log(">>> EMITTING GroupLoadedState");
+      if (isClosed) return;
       emit(GroupLoadedState(group: group ?? GroupModel()));
       log(">>> GroupLoadedState emitted");
     } catch (e) {
@@ -124,10 +127,11 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
-  Future<void> fetchStudents() async {
+  Future<void> fetchStudents(String? family, String? churchName) async {
     emit(GroupLoadingState());
     try {
-      var res = await GroupsRepo.fetchStudents();
+      var res = await GroupsRepo.fetchStudents(family, churchName);
+      if (isClosed) return;
       emit(StudentsLoadedSuccessState(students: res));
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعات: ${e.toString()}'));
@@ -142,6 +146,7 @@ class GroupCubit extends Cubit<GroupState> {
         log('Fetched student: ${student.uid} → ${student.name}');
         groupTotalTayo += student.totalTayo ?? 0;
       }
+      if (isClosed) return;
       emit(
         StudentsLoadedSuccessState(
           students: students,
@@ -167,7 +172,6 @@ class GroupCubit extends Cubit<GroupState> {
       final data = snapshot.data() as Map<String, dynamic>? ?? {};
       log('Fetched student data for ID $studentId: $data');
       final groupId = data['groupID'] as String?;
-
       if (groupId == null || groupId.isEmpty) {
         emit(GroupNotAssignedState());
         return;
@@ -182,6 +186,8 @@ class GroupCubit extends Cubit<GroupState> {
       final students = await GroupsRepo.fetchStudentsByIds(
         group.students ?? [],
       );
+      if (isClosed) return;
+
       emit(
         StudentsLoadedSuccessState(
           students: students,
@@ -204,6 +210,7 @@ class GroupCubit extends Cubit<GroupState> {
       log(
         'Fetched students for group ${group?.gid}: Total Points = ${newGroup?.totalPoints}',
       );
+      if (isClosed) return;
       emit(StudentsLoadedSuccessState(students: students, group: newGroup));
     } catch (e) {
       emit(GroupErrorState('حدث خطأ أثناء جلب المجموعة: ${e.toString()}'));
@@ -238,6 +245,8 @@ class GroupCubit extends Cubit<GroupState> {
         log(
           'Group details: ${group.copyWith(totalTayo: groupTotalTayo).toJson()}',
         );
+        if (isClosed) return;
+
         emit(
           StudentsLoadedSuccessState(
             students: students,
@@ -250,6 +259,7 @@ class GroupCubit extends Cubit<GroupState> {
           'Emitting group details with existing total tayo: ${group?.totalTayo}',
         );
         log('Group details: ${group?.toJson()}');
+        if (isClosed) return;
         emit(StudentsLoadedSuccessState(students: students, group: group));
       }
     } catch (e) {
@@ -277,6 +287,8 @@ class GroupCubit extends Cubit<GroupState> {
   }) async {
     try {
       await GroupsRepo.updateGroupTakenAt(group);
+      if (isClosed) return;
+
       emit(GroupSuccessState(message: 'تم تحديث بيانات المجموعة بنجاح.'));
     } on Exception catch (e) {
       log(e.toString());
@@ -295,6 +307,8 @@ class GroupCubit extends Cubit<GroupState> {
     emit(GroupLoadingState());
     try {
       var res = await GroupsRepo.getGroupPointsDetails(group);
+      if (isClosed) return;
+
       if (res != null) {
         log('Group details retrieved successfully: $res');
         emit(GroupPointsLoadSuccessState(point: res));

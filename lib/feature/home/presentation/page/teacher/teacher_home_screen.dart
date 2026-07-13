@@ -1,13 +1,17 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/feature/auth/data/models/school_years_model.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:saint_paul/feature/home/widgets/add_new_badge_bottom_sheet.dart';
@@ -32,11 +36,23 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
   List<StudentModel> allStudents = [];
   List<StudentModel> filteredStudents = [];
+  List<String> filterChipsElements = [];
+
+  String? userType = 'خادم';
 
   @override
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    userType = LocalHelper.getUserType();
+    log('TeacherHomeScreen userType: $userType');
+    filterChipsElements =
+        SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? [];
   }
 
   Color? rankColor(int index) {
@@ -92,6 +108,22 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                   // Title row with add + logout
                   Row(
                     children: [
+                      ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+                      ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+                      // to add new Field to all documents in the Students collection
+
+                      // HeaderIconButton(
+                      //   icon: Icons.add_rounded,
+                      //   onTap: () {
+                      //     log(
+                      //       'Adding new church to all documents in the Students collection',
+                      //     );
+                      //     // context.read<HomeCubit>().addChurchToAllDocs(
+                      //     //   "اعدادي",
+                      //     // );
+                      //   },
+                      // ),
+                      // Gap(30),
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -113,6 +145,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                         ),
                       ),
                       const Spacer(),
+
                       //create new badge button
                       HeaderIconButton(
                         pngAsset: AppAssets.addBadgeIcon,
@@ -138,25 +171,28 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                           // Future.wait(futures);
                         },
                       ),
-                      Gap(12),
 
                       // change password button
-                      HeaderIconButton(
-                        svgAsset: AppAssets.lockSvg,
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: AppColors.backgroundColor,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(24),
+                      if (userType == "أمين خدمة التربية الكنسية") ...[
+                        Gap(12),
+
+                        HeaderIconButton(
+                          svgAsset: AppAssets.lockSvg,
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: AppColors.backgroundColor,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(24),
+                                ),
                               ),
-                            ),
-                            builder: (_) => AdminPasswordChangeBottomSheet(),
-                          );
-                        },
-                      ),
+                              builder: (_) => AdminPasswordChangeBottomSheet(),
+                            );
+                          },
+                        ),
+                      ],
                       Gap(12),
                       // Logout button
                       HeaderIconButton(
@@ -228,27 +264,20 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                             selected: selectedYear == 'الكل',
                             onTap: () => setState(() => selectedYear = 'الكل'),
                           ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'اولي اعدادي',
-                            selected: selectedYear == 'اولي اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'اولي اعدادي'),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'تانيه اعدادي',
-                            selected: selectedYear == 'تانيه اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'تانيه اعدادي'),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'ثالثة اعدادي',
-                            selected: selectedYear == 'ثالثة اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'ثالثة اعدادي'),
-                          ),
+                          Gap(5),
+                          ...filterChipsElements.map((year) {
+                            return Row(
+                              children: [
+                                FilteredChip(
+                                  label: year,
+                                  selected: selectedYear == year,
+                                  onTap: () =>
+                                      setState(() => selectedYear = year),
+                                ),
+                                Gap(5),
+                              ],
+                            );
+                          }),
                         ],
                       ),
                     ),

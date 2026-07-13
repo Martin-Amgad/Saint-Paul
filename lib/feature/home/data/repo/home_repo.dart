@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:saint_paul/core/extentions/image_uploader.dart';
+import 'package:saint_paul/core/models/badge_model.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/models/tayo_history_model.dart';
@@ -52,6 +53,10 @@ class HomeRepo {
       // 4. Atomic student update + history (the ONLY write to this student’s tayo)
       log('Updating student ${newStudent.uid} with deltas: $deltas');
 
+      final otherFields = newStudent.toUpdateData();
+      otherFields.remove('tayo');
+      otherFields.remove('totalTayo');
+
       await FirebaseProvider.updateStudentWithHistory(
         studentId: newStudent.uid ?? oldStudent.uid!,
         deltas: deltas,
@@ -60,6 +65,7 @@ class HomeRepo {
         teacherName: teacher.name!,
         groupID: groupID,
         groupPointsDelta: groupPointsDelta,
+        otherFields: otherFields.isNotEmpty ? otherFields : null,
       );
 
       log('✅ Student updated successfully.');
@@ -185,14 +191,17 @@ class HomeRepo {
     }
   }
 
-  static Future<Map<String, String>> getCurrentBadges() async {
+  static Future<List<BadgeModel>> getCurrentBadges() async {
     try {
-      final badges = await FirebaseProvider.getBadges();
+      final badges = await FirebaseProvider.getBadgesFor(
+        LocalHelper.getUserChurchName(),
+        LocalHelper.getUserFamily(),
+      );
       log('Fetched badges from Firebase: $badges');
       return badges;
     } catch (e) {
       log(e.toString());
-      return <String, String>{};
+      return []; // Return an empty list on error
     }
   }
 
@@ -202,6 +211,21 @@ class HomeRepo {
     } on Exception catch (e) {
       log(e.toString());
       throw Exception('Failed to update badge in Firebase: ${e.toString()}');
+    }
+  }
+
+  static Future<void> addChurchToAllDocs(String churchName) async {
+    try {
+      log(
+        'Adding church "$churchName" to all documents in the Students collection...',
+      );
+      await FirebaseProvider.addFieldToAllDocs(churchName);
+      log('Successfully added church "$churchName" to all documents.');
+    } on Exception catch (e) {
+      log(
+        'Failed to add church "$churchName" to all documents: ${e.toString()}',
+      );
+      throw Exception('Failed to add church to all documents: ${e.toString()}');
     }
   }
 }

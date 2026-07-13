@@ -55,7 +55,10 @@ class GroupsRepo {
     }
   }
 
-  static Future<List<StudentModel>> fetchStudents() async {
+  static Future<List<StudentModel>> fetchStudents(
+    String? family,
+    String? churchName,
+  ) async {
     try {
       final snapshot = await FirebaseProvider.getAllStudents();
 
@@ -117,6 +120,9 @@ class GroupsRepo {
     List<String>? pointRemovedCategories,
   }) async {
     try {
+      log(
+        'Updating group ${group.gid} with new points: ${group.points}, oldPoints: $oldPoints ',
+      );
       // 1. Compute deltas using the same helper
       final deltas = TayoHistoryModel.computeTayoChanges(
         oldTayo: oldPoints,

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:lottie/lottie.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
@@ -7,6 +8,8 @@ import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/auth/data/repo/auth_repo.dart';
+import 'package:saint_paul/feature/auth/presentation/cubit/auth_cubit.dart';
 import '../constants/app_assets.dart';
 import '../utils/colors.dart';
 
@@ -59,10 +62,8 @@ void showSignOutDialog(BuildContext context) {
             MainButton(
               title: 'تسجيل الخروج',
               width: 150,
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                LocalHelper.setIsNewUser(true);
-                LocalHelper.setUserType('null??????');
+              onPressed: () async {
+                await AuthRepo.logout();
 
                 pushToBase(context, Routes.welcome);
               },

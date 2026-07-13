@@ -80,6 +80,9 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
     required GroupCubit cubit,
   }) async {
     removeCommonElements(pointNewCategories, pointRemovedCategories);
+    log(
+      'Saving changes. New categories: $pointNewCategories, Removed categories: $pointRemovedCategories',
+    );
     await context.read<GroupCubit>().updateGroup(
       widget.group!.copyWith(
         points: point,
@@ -242,58 +245,58 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                   ),
                   const Gap(20),
                   // Total Point summary card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(10, 14, 20, 14),
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.stars,
-                          color: AppColors.darkYellowIconColor,
-                          size: 28,
-                        ),
-                        const Gap(12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'مجموع النقاط',
-                              style: TextStyles.getSize12(
-                                color: AppColors.whiteColor.withValues(
-                                  alpha: 0.7,
+                  GestureDetector(
+                    onTap: () {
+                      pushTo(
+                        context,
+                        Routes.tayoHistoryScreen,
+                        extra: widget.group?.gid,
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.whiteColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.stars,
+                            color: AppColors.darkYellowIconColor,
+                            size: 28,
+                          ),
+                          const Gap(12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'مجموع النقاط',
+                                style: TextStyles.getSize12(
+                                  color: AppColors.whiteColor.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Text(
-                              '${(confirmedTotalPoint) + changedTotalPoint}',
-                              style: TextStyles.getSize24(
-                                color: AppColors.whiteColor,
-                                fontWeight: FontWeight.w800,
+                              Text(
+                                '${(confirmedTotalPoint) + changedTotalPoint}',
+                                style: TextStyles.getSize24(
+                                  color: AppColors.whiteColor,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Spacer(),
-                        IconButton(
-                          onPressed: () {
-                            log('Navigating to Points History screen: ');
-                            pushTo(
-                              context,
-                              Routes.tayoHistoryScreen,
-                              extra: widget.group?.gid,
-                            );
-                          },
-                          icon: Icon(
+                            ],
+                          ),
+                          Spacer(),
+
+                          Icon(
                             Icons.arrow_forward_ios_rounded,
                             color: AppColors.whiteColor.withValues(alpha: 0.7),
                             size: 25,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

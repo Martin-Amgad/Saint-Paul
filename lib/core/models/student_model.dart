@@ -18,6 +18,9 @@ class StudentModel {
   final List<String>? acceptedMissions;
   final Map<String, dynamic>? submittedMissions;
   final String? groupID;
+  final String? family;
+  final String? church;
+  final DateTime? lastMissCheck;
 
   StudentModel({
     this.uid,
@@ -45,6 +48,9 @@ class StudentModel {
     this.acceptedMissions = const [],
     this.submittedMissions = const {},
     this.groupID,
+    this.family,
+    this.church,
+    this.lastMissCheck,
   });
 
   /// Model → Firestore
@@ -66,6 +72,11 @@ class StudentModel {
       'acceptedMissions': acceptedMissions,
       'submittedMissions': submittedMissions,
       'groupID': groupID,
+      'family': family,
+      'church': church,
+      'lastMissCheck': lastMissCheck != null
+          ? Timestamp.fromDate(lastMissCheck!)
+          : null,
     };
   }
 
@@ -97,6 +108,11 @@ class StudentModel {
       'acceptedMissions': acceptedMissions,
       'submittedMissions': submittedMissions,
       'groupID': groupID,
+      'family': family,
+      'church': church,
+      'lastMissCheck': lastMissCheck != null
+          ? Timestamp.fromDate(lastMissCheck!)
+          : null,
     };
   }
 
@@ -140,6 +156,11 @@ class StudentModel {
             ),
           ),
       groupID: map['groupID'],
+      family: map['family'],
+      church: map['church'],
+      lastMissCheck: map['lastMissCheck'] != null
+          ? (map['lastMissCheck'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -184,6 +205,15 @@ class StudentModel {
             ),
           ),
       groupID: map['groupID'],
+      family: map['family'],
+      church: map['church'],
+      lastMissCheck: map['lastMissCheck'] != null
+          ? (map['lastMissCheck'] is int
+                ? DateTime.fromMillisecondsSinceEpoch(
+                    map['lastMissCheck'] as int,
+                  )
+                : (map['lastMissCheck'] as Timestamp).toDate())
+          : null,
     );
   }
 
@@ -205,6 +235,9 @@ class StudentModel {
     List<String>? acceptedMissions,
     Map<String, dynamic>? submittedMissions,
     String? groupID,
+    String? family,
+    String? church,
+    DateTime? lastMissCheck,
   }) {
     return StudentModel(
       uid: uid,
@@ -224,6 +257,9 @@ class StudentModel {
       acceptedMissions: acceptedMissions ?? this.acceptedMissions,
       submittedMissions: submittedMissions ?? this.submittedMissions,
       groupID: groupID ?? this.groupID,
+      family: family ?? this.family,
+      church: church ?? this.church,
+      lastMissCheck: lastMissCheck ?? this.lastMissCheck,
     );
   }
 
@@ -255,6 +291,16 @@ class StudentModel {
     if (groupID != null) {
       data['groupID'] = groupID;
     }
+    if (family != null) {
+      data['family'] = family;
+    }
+    if (church != null) {
+      data['church'] = church;
+    }
+    if (lastMissCheck != null) {
+      data['lastMissCheck'] = Timestamp.fromDate(lastMissCheck!);
+    }
+
     return data;
   }
 }

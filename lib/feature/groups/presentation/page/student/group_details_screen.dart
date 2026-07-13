@@ -100,6 +100,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             // i want to print the students content
 
             newGroup = state.group;
+            totalPoints = state.group?.totalPoints ?? 0;
           }
           return Column(
             children: [
@@ -295,7 +296,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
-                    padding: EdgeInsets.fromLTRB(0, 14, 20, 14),
+                    padding: EdgeInsets.fromLTRB(10, 14, 20, 14),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceColor,
                       borderRadius: BorderRadius.circular(16),
@@ -316,18 +317,27 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         // Header row: icon + title + points, all in one compact line
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor.withValues(
-                                  alpha: 0.1,
+                            GestureDetector(
+                              onTap: () {
+                                pushTo(
+                                  context,
+                                  Routes.tayoHistoryScreen,
+                                  extra: newGroup?.gid,
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryColor.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.stars_rounded,
-                                color: AppColors.primaryColor,
-                                size: 18,
+                                child: Icon(
+                                  Icons.stars_rounded,
+                                  color: AppColors.primaryColor,
+                                  size: 18,
+                                ),
                               ),
                             ),
                             const Gap(10),
@@ -361,29 +371,15 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                const Gap(5),
+
                                 userType == "خادم"
                                     ? Gap(20)
-                                    : IconButton(
-                                        onPressed: () {
-                                          log(
-                                            'Navigating to Points History screen: ',
-                                          );
-                                          newGroup?.gid == null
-                                              ? log(
-                                                  'Cannot navigate to Points History screen: group ID is null',
-                                                )
-                                              : pushTo(
-                                                  context,
-                                                  Routes.tayoHistoryScreen,
-                                                  extra: newGroup?.gid,
-                                                );
-                                        },
-                                        icon: Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: AppColors.primaryColor
-                                              .withValues(alpha: 0.7),
-                                          size: 25,
-                                        ),
+                                    : Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        color: AppColors.primaryColor
+                                            .withValues(alpha: 0.7),
+                                        size: 25,
                                       ),
                               ],
                             ),

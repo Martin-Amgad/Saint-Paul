@@ -11,6 +11,9 @@ class MissionModel {
   final String? studentSolution;
   final int? enrolledStudents;
   final String? missionStudyLevel;
+  final String? missionFamily;
+  final String? missionChurch;
+  final String? createdBy;
 
   MissionModel({
     this.mid,
@@ -23,6 +26,9 @@ class MissionModel {
     this.studentSolution,
     this.enrolledStudents = 0,
     this.missionStudyLevel,
+    this.missionFamily,
+    this.missionChurch,
+    this.createdBy,
   });
 
   factory MissionModel.fromJson(Map<String, dynamic> map, String mid) {
@@ -39,6 +45,9 @@ class MissionModel {
       studentSolution: map['studentSolution'] ?? '',
       enrolledStudents: map['enrolledStudents'] ?? 0,
       missionStudyLevel: map['missionStudyLevel'] ?? '',
+      missionFamily: map['missionFamily'] ?? '',
+      missionChurch: map['missionChurch'] ?? '',
+      createdBy: map['createdBy'] ?? '',
     );
   }
 
@@ -55,6 +64,9 @@ class MissionModel {
       'studentSolution': studentSolution,
       'enrolledStudents': enrolledStudents,
       'missionStudyLevel': missionStudyLevel,
+      'missionFamily': missionFamily,
+      'missionChurch': missionChurch,
+      'createdBy': createdBy,
     };
   }
 
@@ -69,6 +81,9 @@ class MissionModel {
     String? studentSolution,
     int? enrolledStudents,
     String? missionStudyLevel,
+    String? missionFamily,
+    String? missionChurch,
+    String? createdBy,
   }) {
     return MissionModel(
       mid: mid ?? this.mid,
@@ -81,6 +96,9 @@ class MissionModel {
       studentSolution: studentSolution ?? this.studentSolution,
       enrolledStudents: enrolledStudents ?? this.enrolledStudents,
       missionStudyLevel: missionStudyLevel ?? this.missionStudyLevel,
+      missionFamily: missionFamily ?? this.missionFamily,
+      missionChurch: missionChurch ?? this.missionChurch,
+      createdBy: createdBy ?? this.createdBy,
     );
   }
 
@@ -92,12 +110,19 @@ class MissionModel {
     if (link != null) data['link'] = link;
     if (reward != null) data['reward'] = reward;
     if (expireAfter != null) data['expireAfter'] = expireAfter;
-    if (currentDate != null)
+    if (currentDate != null) {
       data['currentDate'] = Timestamp.fromDate(currentDate!);
+    }
     if (studentSolution != null) data['studentSolution'] = studentSolution;
     if (enrolledStudents != null) data['enrolledStudents'] = enrolledStudents;
-    if (missionStudyLevel != null)
+    if (missionStudyLevel != null) {
       data['missionStudyLevel'] = missionStudyLevel;
+    }
+
+    if (missionFamily != null) data['missionFamily'] = missionFamily;
+    if (missionChurch != null) data['missionChurch'] = missionChurch;
+    if (createdBy != null) data['createdBy'] = createdBy;
+
     return data;
   }
 }
