@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AI agent skill files (auto‑generated, not part of the app)
+agents/
