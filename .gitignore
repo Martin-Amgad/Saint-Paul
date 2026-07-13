@@ -46,3 +46,12 @@ app.*.map.json
 
 # AI agent skill files (auto‑generated, not part of the app)
 agents/
+
+# Firebase emulator local backup
+emulator-backup/
+
+# Node.js dependencies for Cloud Functions
+functions/node_modules/
+
+# Downloaded console page
+Saint Paul — Database — Data — Firebase console.html
