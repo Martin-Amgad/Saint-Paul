@@ -44,14 +44,21 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# AI agent skill files (auto‑generated, not part of the app)
+# Firebase emulator export
+emulator-backup/
+
+# AI assistant skills (if not needed)
 .agents/
 
-# Firebase emulator local backup
-emulator-backup/
+# iOS SPM generated
+Package.resolved
+
+# Any temporary SKILL md files
+SKILLmd
+*.md-temp
 
 # Node.js dependencies for Cloud Functions
 functions/node_modules/
 
-# Downloaded console page
-Saint Paul – Database – Data – Firebase console.html
+# Firebase console export
+Saint Paul — Database — Data — Firebase console.html

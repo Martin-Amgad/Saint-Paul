@@ -10,6 +10,7 @@ import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
@@ -19,6 +20,8 @@ import 'package:saint_paul/feature/groups/presentation/cubit/group_state.dart';
 import 'package:saint_paul/feature/groups/widgets/student_group_list_builder.dart';
 import 'package:saint_paul/feature/home/widgets/filter_chip.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
+
+import '../../../../auth/data/models/school_years_model.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -32,13 +35,22 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final ValueNotifier<String> searchNotifier = ValueNotifier('');
 
   String searchText = '';
-  String? selectedYear;
+  String? selectedYear = 'الكل';
   List<String> selectedStudentIds = [];
+  List<String> filterChipsElements = ['الكل'];
 
+  List<StudentModel> students = [];
+  GroupModel? group;
+  int? totalTayo;
   @override
   void initState() {
     super.initState();
-    context.read<GroupCubit>().fetchStudents();
+    context.read<GroupCubit>().fetchStudents(
+      LocalHelper.getUserFamily(),
+      LocalHelper.getUserChurchName(),
+    );
+    filterChipsElements
+      ..addAll(SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? []);
   }
 
   @override
@@ -57,28 +69,25 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: BlocBuilder<GroupCubit, GroupState>(
           builder: (context, state) {
-            if (state is GroupLoadingState) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is StudentsLoadedSuccessState) {
+            if (state is StudentsLoadedSuccessState) {
               return MainButton(
                 title: 'حفظ المجموعة',
-                onPressed: () {
-                  if (cubit.formKey.currentState?.validate() ?? false) {
+                onPressed: () async {
+                  if ((cubit.formKey.currentState?.validate() ?? true) &&
+                      selectedStudentIds.isNotEmpty) {
                     log(
                       'Creating group with name: ${cubit.groupNameController.text}, selected students: $selectedStudentIds, total tayo: ${cubit.groupTotalTayo}, study level: ${selectedYear ?? 'الكل'}',
                     );
-                    cubit
-                        .createGroup(selectedStudentIds, selectedYear ?? 'الكل')
-                        .then((message) {
-                          if (message != null) {
-                            showMyDialoge(
-                              context,
-                              message,
-                              type: DialogType.success,
-                            );
-                            pop(context);
-                          }
-                        });
+                    await cubit.createGroup(
+                      selectedStudentIds,
+                      selectedYear ?? 'الكل',
+                    );
+                  } else if (selectedStudentIds.isEmpty) {
+                    showMyDialoge(
+                      context,
+                      'يرجى اختيار مخدوم واحد على الأقل',
+                      type: DialogType.error,
+                    );
                   }
                 },
               );
@@ -117,22 +126,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomBackButton(),
-                  const Gap(12),
+                  const Gap(15),
+
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.groups_rounded,
-                          color: AppColors.darkYellowIconColor,
-                          size: 24,
-                        ),
-                      ),
+                      CustomBackButton(),
                       const Gap(12),
                       Text(
                         'إنشاء مجموعة',
@@ -143,7 +141,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ],
                   ),
-                  const Gap(18),
+                  const Gap(20),
+
                   // Group name input
                   Container(
                     decoration: BoxDecoration(
@@ -157,8 +156,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         padding: EdgeInsets.only(left: 8.0, right: 8),
                         child: Icon(
                           Icons.group_rounded,
-                          color: AppColors.whiteColor,
+                          color: AppColors.primaryColor,
                         ),
+                      ),
+                      errorStyle: TextStyles.getSize12(
+                        color: AppColors.whiteColor.withValues(alpha: 0.8),
                       ),
                       validator: (p0) {
                         if (p0 == null || p0.trim().isEmpty) {
@@ -247,32 +249,19 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          FilteredChip(
-                            label: 'الكل',
-                            selected: selectedYear == null,
-                            onTap: () => setState(() => selectedYear = null),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'اولي اعدادي',
-                            selected: selectedYear == 'اولي اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'اولي اعدادي'),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'تانيه اعدادي',
-                            selected: selectedYear == 'تانيه اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'تانيه اعدادي'),
-                          ),
-                          const Gap(8),
-                          FilteredChip(
-                            label: 'ثالثة اعدادي',
-                            selected: selectedYear == 'ثالثة اعدادي',
-                            onTap: () =>
-                                setState(() => selectedYear = 'ثالثة اعدادي'),
-                          ),
+                          ...filterChipsElements.map((year) {
+                            return Row(
+                              children: [
+                                FilteredChip(
+                                  label: year,
+                                  selected: selectedYear == year,
+                                  onTap: () =>
+                                      setState(() => selectedYear = year),
+                                ),
+                                Gap(5),
+                              ],
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -286,41 +275,58 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             // ── Student list ─────────────────────────────────────────
             BlocConsumer<GroupCubit, GroupState>(
               listener: (context, state) {
-                if (state is GroupErrorState) {
+                if (state is GroupLoadingState) {
+                  showLoadingDialog(context);
+                } else if (state is GroupErrorState) {
                   showMyDialoge(context, state.message, type: DialogType.error);
+                } else if (state is GroupSuccessState) {
+                  pop(context);
+                  showMyDialoge(
+                    context,
+                    state.message ?? 'تم إنشاء المجموعة بنجاح.',
+                    type: DialogType.success,
+                  );
+                  pop(context);
                 }
               },
               builder: (context, state) {
-                if (state is GroupLoadingState) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is StudentsLoadedSuccessState) {
-                  return Expanded(
-                    child: StudentGroupListBuilder(
-                      searchNotifier: searchNotifier,
-                      selectedYear: selectedYear,
-                      students: state.students,
-                      selectedStudentIds: selectedStudentIds,
-                      onStudentToggled: (studentId, totalTayo) {
-                        setState(() {
-                          if (selectedStudentIds.contains(studentId)) {
-                            selectedStudentIds.remove(studentId);
-                            cubit.groupTotalTayo -= totalTayo;
-                          } else {
-                            selectedStudentIds.add(studentId);
-                            cubit.groupTotalTayo += totalTayo;
-                          }
-                        });
-                        log(
-                          'Current selected student IDs: $selectedStudentIds',
-                        );
-                        log(
-                          'Current group total tayo: ${cubit.groupTotalTayo}',
-                        );
-                      },
-                    ),
-                  );
+                if (state is StudentsLoadedSuccessState) {
+                  students = state.students;
                 }
-                return const SizedBox();
+                return students.isEmpty
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryColor,
+                        ),
+                      )
+                    : Expanded(
+                        child: StudentGroupListBuilder(
+                          searchNotifier: searchNotifier,
+                          selectedYear: selectedYear,
+                          students: students,
+                          selectedStudentIds: selectedStudentIds,
+                          onStudentToggled: (studentId, totalTayo) {
+                            log(
+                              'Current selected student IDs: $selectedStudentIds',
+                            );
+                            setState(() {
+                              if (selectedStudentIds.contains(studentId)) {
+                                selectedStudentIds.remove(studentId);
+                                cubit.groupTotalTayo -= totalTayo;
+                              } else {
+                                selectedStudentIds.add(studentId);
+                                cubit.groupTotalTayo += totalTayo;
+                              }
+                            });
+                            log(
+                              'Current selected student IDs: $selectedStudentIds',
+                            );
+                            log(
+                              'Current group total tayo: ${cubit.groupTotalTayo}',
+                            );
+                          },
+                        ),
+                      );
               },
             ),
           ],

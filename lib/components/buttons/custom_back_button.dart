@@ -22,7 +22,7 @@ class CustomBackButton extends StatelessWidget {
         child: Icon(
           Icons.arrow_back_ios_rounded,
           color: AppColors.whiteColor,
-          size: 18,
+          size: 22,
         ),
       ),
     );

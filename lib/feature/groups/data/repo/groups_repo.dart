@@ -2,12 +2,14 @@ import 'dart:developer';
 
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 
 class GroupsRepo {
   static Future<List<GroupModel>> fetchGroups() async {
     try {
-      final snapshot = await FirebaseProvider.fetchGroupsByTotalTayo();
+      final snapshot = await FirebaseProvider.fetchGroupsByTotalPoints();
 
       log('Fetched groups snapshot: ${snapshot.docs.length} documents');
       try {
@@ -53,7 +55,10 @@ class GroupsRepo {
     }
   }
 
-  static Future<List<StudentModel>> fetchStudents() async {
+  static Future<List<StudentModel>> fetchStudents(
+    String? family,
+    String? churchName,
+  ) async {
     try {
       final snapshot = await FirebaseProvider.getAllStudents();
 
@@ -108,13 +113,98 @@ class GroupsRepo {
     }
   }
 
-  static Future<void> updateGroup(GroupModel group) async {
+  static Future<String?> updateGroup(
+    GroupModel group, {
+    required Map<String, dynamic> oldPoints, // ← new
+    List<String>? pointNewCategories,
+    List<String>? pointRemovedCategories,
+  }) async {
+    try {
+      log(
+        'Updating group ${group.gid} with new points: ${group.points}, oldPoints: $oldPoints ',
+      );
+      // 1. Compute deltas using the same helper
+      final deltas = TayoHistoryModel.computeTayoChanges(
+        oldTayo: oldPoints,
+        newTayo: group.points ?? {},
+        removedCategories: pointRemovedCategories ?? [],
+      );
+      log('Computed deltas for group ${group.gid}: $deltas');
+
+      // 2. Bulk category update if needed (optional)
+      if ((pointNewCategories?.isNotEmpty ?? false) ||
+          (pointRemovedCategories?.isNotEmpty ?? false)) {
+        // If you have a global group categories collection, update it here
+        // await FirebaseProvider.updateGroupCategories(...);
+      }
+
+      // 3. Get teacher info
+      final teacher = LocalHelper.getTeacherData();
+      if (teacher == null || teacher.uid == null || teacher.name == null) {
+        return 'تعذر الحصول على بيانات المعلم.';
+      }
+
+      log(
+        'In Repo deltas: $deltas, pointRemovedCategories: $pointRemovedCategories, teacherId: ${teacher.uid}, teacherName: ${teacher.name}',
+      );
+      // 4. Atomic transaction
+      await FirebaseProvider.updateGroupWithHistory(
+        groupId: group.gid!,
+        deltas: deltas,
+        removedCategories: pointRemovedCategories ?? [],
+        teacherId: teacher.uid!,
+        teacherName: teacher.name!,
+      );
+
+      return 'تم تحديث المجموعة بنجاح.';
+    } catch (e) {
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث المجموعة.';
+    }
+  }
+
+  static Future<void> updateGroupPoints({
+    required String groupId,
+    required int changeInPoints,
+  }) {
+    return FirebaseProvider.updateGroupPoints(
+      groupId: groupId,
+      changeInPoints: changeInPoints,
+    );
+  }
+
+  static Future<String?> updateGroupTakenAt(GroupModel group) async {
     try {
       await FirebaseProvider.updateGroup(group);
-      log('Group ${group.gid} updated successfully');
+      return 'تم تحديث بيانات المجموعة بنجاح.';
     } on Exception catch (e) {
-      log('Error updating group ${group.gid}: ${e.toString()}');
-      rethrow;
+      log(e.toString());
+      return 'حدث خطأ أثناء تحديث بيانات المجموعة. الرجاء المحاولة مرة أخرى.';
     }
+  }
+
+  static Future<Map<String, dynamic>?> getGroupPointsDetails(
+    GroupModel group,
+  ) async {
+    try {
+      final snapshot = await FirebaseProvider.getGroupByID(group.gid ?? '');
+
+      final data = ((snapshot.data()) as Map<String, dynamic>?) ?? {};
+
+      return data['points'] as Map<String, dynamic>? ?? {};
+    } on Exception catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
+
+  static Future<void> updateGroupTotalTayo(
+    String groupId,
+    int totalTayo,
+  ) async {
+    await FirebaseProvider.updateGroupTotalTayo(
+      groupId: groupId,
+      totalTayo: totalTayo,
+    );
   }
 }

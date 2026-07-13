@@ -4,14 +4,16 @@ import 'package:gap/gap.dart';
 import 'package:saint_paul/components/buttons/custom_back_button.dart';
 import 'package:saint_paul/components/buttons/main_button.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
-import 'package:saint_paul/components/inputs/form_field.dart';
+import 'package:saint_paul/components/inputs/Custom_form_field.dart';
 import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
+import 'package:saint_paul/feature/auth/data/models/school_years_model.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_cubit.dart';
 import 'package:saint_paul/feature/missions/presentation/cubit/mission_state.dart';
 
@@ -26,12 +28,7 @@ class CreateAndEditMissionScreen extends StatefulWidget {
 
 class _CreateAndEditMissionScreenState
     extends State<CreateAndEditMissionScreen> {
-  final List<String> items = [
-    'الكل',
-    'اولي اعدادي',
-    'تانيه اعدادي',
-    'ثالثة اعدادي',
-  ];
+  List<String> items = ['الكل'];
 
   @override
   void initState() {
@@ -39,6 +36,7 @@ class _CreateAndEditMissionScreenState
       context.read<MissionCubit>().loadMissionControllers(widget.missionEdit);
     }
     super.initState();
+    items.addAll(SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? []);
   }
 
   @override

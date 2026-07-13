@@ -33,7 +33,8 @@ class StudentGroupListBuilder extends StatelessWidget {
           final studyLevel = student.studyLevel ?? '';
           final matchesSearch = searchText.isEmpty || name.contains(searchText);
           final matchesYear =
-              selectedYear == null || studyLevel.contains(selectedYear!);
+              selectedYear == 'الكل' ||
+              studyLevel.contains(selectedYear ?? 'الكل');
           return matchesSearch && matchesYear;
         }).toList();
 

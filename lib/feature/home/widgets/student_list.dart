@@ -6,6 +6,7 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 
@@ -33,10 +34,12 @@ class StudentList extends StatelessWidget {
     List<StudentModel> allStudents;
     List<StudentModel> allStudentsWithYear;
     List<StudentModel> filteredStudents;
-    int rankCounter = 4;
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseProvider.streamedSortStudentsByTotalTayo(),
+      stream: FirebaseProvider.streamedSortStudentsByTotalTayo(
+        LocalHelper.getUserFamily(),
+        LocalHelper.getUserChurchName(),
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox();
@@ -54,7 +57,10 @@ class StudentList extends StatelessWidget {
             ),
           );
         }
-
+        log(
+          'StreamBuilder snapshot data: ${snapshot.data?.docs.length ?? 0} documents',
+        );
+        log('User family: ${LocalHelper.getUserFamily()}');
         final docs = snapshot.data?.docs ?? [];
         allStudents = docs
             .map(
@@ -64,6 +70,8 @@ class StudentList extends StatelessWidget {
               ),
             )
             .toList();
+
+        log('Fetched students: ${allStudents.length}');
         allStudentsWithYear = allStudents
             .where(
               (student) => (student.studyLevel ?? '').contains(filterSelection),
@@ -189,7 +197,7 @@ class StudentList extends StatelessWidget {
                                 color: rankColor,
                               )
                             : Text(
-                                '${rankCounter++}',
+                                '${studentRank}',
                                 style: TextStyles.getSize16(
                                   color: AppColors.primaryColor,
                                   fontWeight: FontWeight.w700,

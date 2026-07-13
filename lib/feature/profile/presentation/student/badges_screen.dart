@@ -1,26 +1,17 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:saint_paul/components/buttons/custom_back_button.dart';
-import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/models/badge_model.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
-
-// Full badge model — all possible badges
-// 'ملك التايـو': AppAssets.tayoKing,
-// 'بطل الانتظام': AppAssets.consistencyChampion,
-// 'فارس المهمات': AppAssets.missionMaster,
-// 'البطل الصامت': AppAssets.silentKing,
-// 'نجم المعرفة': AppAssets.smartstar,
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_cubit.dart';
+import 'package:saint_paul/feature/profile/presentation/cubit/profile_state.dart';
 
 class BadgesScreen extends StatefulWidget {
   const BadgesScreen({super.key, required this.earnedBadges});
 
-  // Only the keys the student has earned
   final Map<String, String> earnedBadges;
 
   @override
@@ -28,260 +19,277 @@ class BadgesScreen extends StatefulWidget {
 }
 
 class _BadgesScreenState extends State<BadgesScreen> {
-  Map<String, String> allBadges = LocalHelper.getAllBadges() ?? {};
-
   @override
   void initState() {
-    getConfigBadges();
     super.initState();
-  }
-
-  Future<void> getConfigBadges() async {
-    try {
-      final localBadges = LocalHelper.getAllBadges() ?? {};
-      final firestoreBadges = await FirebaseProvider.getBadges();
-      log('Fetched badges from Firestore: ${firestoreBadges}');
-      log('Fetched badges from local storage: ${localBadges}');
-      log('Earned badges: ${widget.earnedBadges}');
-
-      if (!mounted) return;
-
-      if (localBadges.length != firestoreBadges.length) {
-        log(
-          'Firestore badges differ from local badges. Updating local badges.',
-        );
-        await LocalHelper.setAllBadges(firestoreBadges);
-        setState(() {
-          allBadges = firestoreBadges;
-        });
-      } else {
-        log(
-          'Firestore badges are the same as earned badges. No update needed.',
-        );
-        setState(() {
-          allBadges = localBadges;
-        });
-      }
-    } catch (e) {
-      log('❌ getConfigBadges failed: $e');
-      // fallback to local if firestore fails
-      final localBadges = LocalHelper.getAllBadges() ?? {};
-      setState(() => allBadges = localBadges);
-    }
+    final church = LocalHelper.getUserChurchName() ?? '';
+    final family = LocalHelper.getUserFamily() ?? '';
+    context.read<ProfileCubit>().loadBadges(church, family);
   }
 
   @override
   Widget build(BuildContext context) {
-    // final widget.earnedBadges = widget.widget.earnedBadges.entries
-    //     .where((e) => allBadges.containsKey(e.key))
-    //     .toList();
-    // log('Earned badges: ${widget.earnedBadges.map((e) => e.key).toList()}');
-    // log('All badges: ${allBadges.keys.toList()}');
-    // log('Earned badge keys: ${widget.widget.earnedBadges.keys.toList()}');
-    // log(
-    //   'Earned badges from all badges: ${allBadges.entries.where((e) => widget.widget.earnedBadges.keys.contains(e.key)).map((e) => e.key).toList()}',
-    // );
-    final lockedBadges = allBadges.entries
-        .where((e) => !widget.earnedBadges.keys.contains(e.key))
-        .toList();
+    return BlocBuilder<ProfileCubit, ProfileState>(
+      builder: (context, state) {
+        // Use badges from state only when loaded; otherwise empty list for header display
+        final allBadges = state is ProfileBadgesLoadedState
+            ? state.badges
+            : <BadgeModel>[];
+        final earnedCount = widget.earnedBadges.length;
+        final total = allBadges.length;
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Column(
-        children: [
-          // ── Header ──────────────────────────────────────────────────
-          Container(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              MediaQuery.of(context).padding.top + 16,
-              20,
-              28,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.primaryColor,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(36),
-                bottomRight: Radius.circular(36),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryColor.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: Offset.zero,
+        return Scaffold(
+          backgroundColor: AppColors.backgroundColor,
+          body: Column(
+            children: [
+              // ── Header (always visible) ──────────────────────────
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  MediaQuery.of(context).padding.top + 16,
+                  20,
+                  28,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Back button
-                CustomBackButton(),
-                const Gap(18),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.whiteColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        Icons.military_tech_rounded,
-                        color: AppColors.darkYellowIconColor,
-                        size: 26,
-                      ),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(36),
+                    bottomRight: Radius.circular(36),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryColor.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: Offset.zero,
                     ),
-                    const Gap(14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Gap(18),
+                    Row(
                       children: [
-                        Text(
-                          'أوسمتي',
-                          style: TextStyles.getSize24(
-                            color: AppColors.whiteColor,
-                            fontWeight: FontWeight.w700,
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.whiteColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.military_tech_rounded,
+                            color: AppColors.darkYellowIconColor,
+                            size: 26,
                           ),
                         ),
-                        Text(
-                          'اكتشف إنجازاتك',
-                          style: TextStyles.getSize12(
-                            color: AppColors.whiteColor.withValues(alpha: 0.65),
-                          ),
+                        const Gap(14),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'أوسمتي',
+                              style: TextStyles.getSize24(
+                                color: AppColors.whiteColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              'اكتشف إنجازاتك',
+                              style: TextStyles.getSize12(
+                                color: AppColors.whiteColor.withValues(
+                                  alpha: 0.65,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const Gap(16),
-                // Progress pill
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.whiteColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.emoji_events_rounded,
-                        color: AppColors.darkYellowIconColor,
-                        size: 18,
+                    const Gap(16),
+                    // Progress pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                      const Gap(8),
-                      Text(
-                        '${widget.earnedBadges.length} من ${allBadges.length} أوسمة',
-                        style: TextStyles.getSize16(
-                          color: AppColors.whiteColor.withValues(alpha: 0.85),
-                          fontWeight: FontWeight.w600,
-                        ),
+                      decoration: BoxDecoration(
+                        color: AppColors.whiteColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      const Gap(10),
-                      // Progress bar
-                      Container(
-                        width: 80,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: AppColors.whiteColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerRight,
-                          widthFactor: allBadges.isNotEmpty
-                              ? (widget.earnedBadges.length / allBadges.length)
-                              : 0.0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.darkYellowIconColor,
-                              borderRadius: BorderRadius.circular(3),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.emoji_events_rounded,
+                            color: AppColors.darkYellowIconColor,
+                            size: 18,
+                          ),
+                          const Gap(8),
+                          Text(
+                            '$earnedCount من $total أوسمة',
+                            style: TextStyles.getSize16(
+                              color: AppColors.whiteColor.withValues(
+                                alpha: 0.85,
+                              ),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
+                          const Gap(10),
+                          // Progress bar
+                          Container(
+                            width: 80,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: AppColors.whiteColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: FractionallySizedBox(
+                              alignment: Alignment.centerRight,
+                              widthFactor: total > 0
+                                  ? (earnedCount / total)
+                                  : 0.0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.darkYellowIconColor,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-
-          // ── Badge grid ──────────────────────────────────────────────
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Earned badges
-                  if (widget.earnedBadges.isNotEmpty) ...[
-                    _SectionLabel(
-                      icon: Icons.check_circle_rounded,
-                      color: AppColors.darkYellowIconColor,
-                      label: 'أوسمة محققة',
-                    ),
-                    const Gap(12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
-                      itemCount: widget.earnedBadges.length,
-                      itemBuilder: (context, index) {
-                        return _BadgeCard(
-                          name: widget.earnedBadges.keys.toList()[index],
-                          assetPath: widget.earnedBadges.values.toList()[index],
-                          isEarned: true,
-                        );
-                      },
-                    ),
-                    const Gap(24),
-                  ],
-
-                  // Locked badges
-                  if (lockedBadges.isNotEmpty) ...[
-                    _SectionLabel(
-                      icon: Icons.lock_rounded,
-                      color: AppColors.accentColor.withValues(alpha: 0.4),
-                      label: 'أوسمة مقفلة',
-                    ),
-                    const Gap(12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
-                      itemCount: lockedBadges.length,
-                      itemBuilder: (context, index) {
-                        return _BadgeCard(
-                          name: lockedBadges[index].key,
-                          assetPath: lockedBadges[index].value,
-                          isEarned: false,
-                        );
-                      },
-                    ),
-                  ],
-                ],
               ),
-            ),
+
+              // ── Content (changes with state) ─────────────────────
+              Expanded(child: _buildContent(context, state)),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+
+  // ------------------------------------------------------
+  // Helper that renders the appropriate body below the header
+  // ------------------------------------------------------
+  Widget _buildContent(BuildContext context, ProfileState state) {
+    // Loading state
+    if (state is ProfileLoadingState) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Error state
+    if (state is ProfileErrorState) {
+      return Center(child: Text('Error: ${state.message}'));
+    }
+
+    // Loaded state – show the badge grids
+    if (state is ProfileBadgesLoadedState) {
+      final allBadges = state.badges;
+      final allBadgesById = <String, BadgeModel>{
+        for (final badge in allBadges)
+          if (badge.bId != null && badge.bId!.isNotEmpty) badge.bId!: badge,
+      };
+
+      final earnedBadgeIds = widget.earnedBadges.keys.toSet();
+      final lockedBadges = allBadges
+          .where(
+            (b) => (b.bId == null || b.bId!.isEmpty)
+                ? !widget.earnedBadges.containsKey(b.name)
+                : !earnedBadgeIds.contains(b.bId),
+          )
+          .toList();
+
+      final earnedBadgesForUi = widget.earnedBadges.entries.map((entry) {
+        final badgeIdOrName = entry.key;
+        final fromId = allBadgesById[badgeIdOrName];
+        final displayName = fromId?.name ?? badgeIdOrName;
+        final displayUrl = (fromId?.url?.isNotEmpty ?? false)
+            ? fromId!.url!
+            : entry.value;
+        return MapEntry(displayName, displayUrl);
+      }).toList();
+
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Earned badges
+            if (earnedBadgesForUi.isNotEmpty) ...[
+              _SectionLabel(
+                icon: Icons.check_circle_rounded,
+                color: AppColors.darkYellowIconColor,
+                label: 'أوسمة محققة',
+              ),
+              const Gap(12),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: earnedBadgesForUi.length,
+                itemBuilder: (context, index) {
+                  final earnedBadge = earnedBadgesForUi[index];
+                  return _BadgeCard(
+                    name: earnedBadge.key,
+                    assetPath: earnedBadge.value,
+                    isEarned: true,
+                  );
+                },
+              ),
+              const Gap(24),
+            ],
+
+            // Locked badges
+            if (lockedBadges.isNotEmpty) ...[
+              _SectionLabel(
+                icon: Icons.lock_rounded,
+                color: AppColors.accentColor.withValues(alpha: 0.4),
+                label: 'أوسمة مقفلة',
+              ),
+              const Gap(12),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: lockedBadges.length,
+                itemBuilder: (context, index) {
+                  return _BadgeCard(
+                    name: lockedBadges[index].name ?? 'وسام مقفل',
+                    assetPath: lockedBadges[index].url ?? '',
+                    isEarned: false,
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Fallback (should never happen)
+    return const SizedBox.shrink();
+  }
 }
+
+// ─────────────────────────────────────────────────────────────
+//  _SectionLabel & _BadgeCard remain exactly as before
+// ─────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({

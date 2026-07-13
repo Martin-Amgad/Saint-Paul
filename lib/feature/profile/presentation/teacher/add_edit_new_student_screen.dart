@@ -11,13 +11,14 @@ import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
+import 'package:saint_paul/core/models/badge_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
-import 'package:saint_paul/components/inputs/form_field.dart';
+import 'package:saint_paul/components/inputs/Custom_form_field.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 
@@ -32,10 +33,11 @@ class AddEditNewStudentScreen extends StatefulWidget {
 
 class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
   final List<String> items = ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
-  final List<String> availableBadges = [];
+  final List<BadgeModel> availableBadges = [];
   final Map<String, String> myBadges = {};
-  Map<String, String> allBadges = {};
-  String? selectedBadge;
+  List<BadgeModel> allBadges = [];
+  final GlobalKey<FormFieldState<String>> _badgeDropdownKey =
+      GlobalKey<FormFieldState<String>>();
 
   DateTime? pickedDate;
   @override
@@ -50,16 +52,47 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
   }
 
   Future<void> getAllBadges() async {
-    allBadges = await FirebaseProvider.getBadges();
+    final fetchedBadges = await FirebaseProvider.getBadgesFor(
+      LocalHelper.getUserChurchName(),
+      LocalHelper.getUserFamily(),
+    );
+
+    // Keep a single badge per ID to avoid duplicate dropdown values.
+    final uniqueById = <String, BadgeModel>{};
+    for (final badge in fetchedBadges) {
+      final badgeId = badge.bId;
+      if (badgeId == null || badgeId.isEmpty) continue;
+      uniqueById[badgeId] = badge;
+    }
+    allBadges = uniqueById.values.toList();
+
     if (mounted) {
       setState(() {
-        for (var key in allBadges.keys) {
-          if (!myBadges.containsKey(key)) {
-            availableBadges.add(key);
+        availableBadges.clear();
+        for (var badge in allBadges) {
+          if (!myBadges.containsKey(badge.bId)) {
+            availableBadges.add(badge);
           }
         }
       });
     }
+  }
+
+  BadgeModel? _badgeById(String badgeId) {
+    for (final badge in allBadges) {
+      if (badge.bId == badgeId) {
+        return badge;
+      }
+    }
+    return null;
+  }
+
+  String _badgeLabel(String badgeId) {
+    final badgeName = _badgeById(badgeId)?.name;
+    if (badgeName == null || badgeName.trim().isEmpty) {
+      return badgeId;
+    }
+    return badgeName;
   }
 
   @override
@@ -74,16 +107,13 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
           child: MainButton(
             title: 'حفظ',
             onPressed: () async {
+              log('Save button pressed. Validating form...');
+              // log the new badges
+              log('Current badges: ${myBadges.keys.join(', ')}');
               if (cubit.formkey.currentState?.validate() ?? false) {
                 if (widget.student != null) {
-                  if (selectedBadge != null &&
-                      allBadges[selectedBadge] != null) {
-                    myBadges[selectedBadge!] = allBadges[selectedBadge]!;
-                  }
-                  log('myBadges being sent: $myBadges');
-                  log('student myBadges: ${widget.student!.myBadges}');
                   cubit.updateStudent(
-                    widget.student!.copyWith(
+                    newStudent: widget.student!.copyWith(
                       name: cubit.nameController.text.trim(),
                       fatherPhone: cubit.fatherPhoneController.text.trim(),
                       motherPhone: cubit.motherPhoneController.text.trim(),
@@ -96,8 +126,9 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           .responsibleTeacherController
                           .text
                           .trim(),
-                      myBadges: myBadges,
+                      myBadges: Map<String, String>.from(myBadges),
                     ),
+                    oldStudent: widget.student!,
                   );
                   return;
                 }
@@ -114,6 +145,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                     birthday: pickedDate,
                     responsibleTeacher: cubit.responsibleTeacherController.text
                         .trim(),
+                    myBadges: Map<String, String>.from(myBadges),
                   ),
                 );
               }
@@ -133,6 +165,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
               widget.student == null ? 'تمت الاضافة بنجاح' : 'تم التعديل بنجاح',
               type: DialogType.success,
             );
+            pop(context);
           } else if (state is HomeErrorState) {
             pop(context);
             showMyDialoge(context, state.message, type: DialogType.error);
@@ -222,7 +255,11 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           icon: Icons.school_rounded,
                           child: DropdownButtonFormField<String>(
                             isDense: false,
-                            value: cubit.selectedValue,
+                            value:
+                                cubit.selectedValue != null &&
+                                    items.contains(cubit.selectedValue)
+                                ? cubit.selectedValue
+                                : null,
                             hint: Text(
                               'المستوى الدراسي',
                               style: TextStyles.getSize16(
@@ -435,10 +472,11 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
 
                           CustomFormField(
                             label: ' أضافة وسام',
-                            icon: Icons.school_rounded,
+                            icon: Icons.emoji_events_rounded,
                             child: DropdownButtonFormField<String>(
+                              key: _badgeDropdownKey,
                               isDense: false,
-                              value: selectedBadge,
+                              value: null,
                               hint: Text(
                                 ' أضافة وسام',
                                 style: TextStyles.getSize16(
@@ -465,7 +503,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                               selectedItemBuilder: (context) {
                                 return availableBadges.map((item) {
                                   return Text(
-                                    item,
+                                    item.name ?? '',
                                     style: TextStyles.getSize16(
                                       color: AppColors.primaryColor,
                                       fontWeight: FontWeight.w500,
@@ -474,11 +512,11 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                                 }).toList();
                               },
 
-                              items: availableBadges.map((item) {
+                              items: availableBadges.map((badge) {
                                 return DropdownMenuItem(
-                                  value: item,
+                                  value: badge.bId,
                                   child: Text(
-                                    item,
+                                    badge.name ?? '',
                                     style: TextStyles.getSize16(
                                       color: AppColors.whiteColor,
                                       fontWeight: FontWeight.w500,
@@ -488,15 +526,18 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                               }).toList(),
                               onChanged: (value) {
                                 if (value == null) return;
-                                final url = allBadges[value] ?? '';
+                                final selectedBadge = _badgeById(value);
+                                if (selectedBadge == null) return;
+                                final badgeId = selectedBadge.bId;
+                                if (badgeId == null || badgeId.isEmpty) return;
+
                                 setState(() {
-                                  myBadges[value] = url;
-                                  availableBadges.remove(
-                                    value,
-                                  ); // remove from dropdown
-                                  selectedBadge =
-                                      null; // reset dropdown to hint
+                                  myBadges[badgeId] = selectedBadge.url ?? '';
+                                  availableBadges.removeWhere(
+                                    (badge) => badge.bId == badgeId,
+                                  );
                                 });
+                                _badgeDropdownKey.currentState?.reset();
                               },
                             ),
                           ),
@@ -516,9 +557,8 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                                     return Gap(10);
                                   },
                               itemBuilder: (BuildContext context, int index) {
-                                final badgeName = myBadges.keys.toList()[index];
-                                'Badge Name';
-                                final badgeImage = myBadges[badgeName];
+                                final badgeId = myBadges.keys.toList()[index];
+                                final badgeImage = myBadges[badgeId];
                                 return Container(
                                   decoration: BoxDecoration(
                                     color: AppColors.primaryColor.withValues(
@@ -571,11 +611,21 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                                             left: 2,
                                             child: GestureDetector(
                                               onTap: () {
+                                                final removedBadge = _badgeById(
+                                                  badgeId,
+                                                );
                                                 setState(() {
-                                                  myBadges.remove(badgeName);
-                                                  availableBadges.add(
-                                                    badgeName,
-                                                  );
+                                                  myBadges.remove(badgeId);
+                                                  if (removedBadge != null &&
+                                                      !availableBadges.any(
+                                                        (badge) =>
+                                                            badge.bId ==
+                                                            removedBadge.bId,
+                                                      )) {
+                                                    availableBadges.add(
+                                                      removedBadge,
+                                                    );
+                                                  }
                                                 });
                                               },
                                               child: Icon(
@@ -590,7 +640,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                                       ),
                                       const Gap(5),
                                       Text(
-                                        badgeName,
+                                        _badgeLabel(badgeId),
                                         style: TextStyles.getSize16(
                                           color: AppColors.accentColor,
                                         ),

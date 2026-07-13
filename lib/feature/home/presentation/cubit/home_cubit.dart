@@ -22,24 +22,36 @@ class HomeCubit extends Cubit<HomeState> {
 
   var formkey = GlobalKey<FormState>();
 
-  void updateStudent(
-    StudentModel student, {
+  Future<void> updateStudent({
+    required StudentModel newStudent,
+    StudentModel? oldStudent,
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
+    String? groupID,
+    int? groupPointsDelta,
   }) async {
     emit(HomeLoadingState());
     try {
-      var res = await HomeRepo.updatStudent(
-        student,
-        tayoNewCategories,
-        tayoRemovedCategories,
+      log(
+        'Starting student update with newStudent: $newStudent, oldStudent: $oldStudent',
       );
+      var res = await HomeRepo.updatStudent(
+        newStudent: newStudent,
+        oldStudent: oldStudent ?? newStudent,
+        tayoNewCategories: tayoNewCategories,
+        tayoRemovedCategories: tayoRemovedCategories,
+        groupID: groupID,
+        groupPointsDelta: groupPointsDelta,
+      );
+      log('Student update completed with result: $res');
+
+      if (isClosed) return;
       emit(HomeSuccessState(message: res));
     } on Exception catch (e) {
       log(e.toString());
       emit(HomeErrorState(message: e.toString()));
     } catch (e) {
-      log(e.toString());
+      log(" Unexpected error during student update: ${e.toString()}");
       emit(
         HomeErrorState(
           message:
@@ -49,13 +61,15 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  void updateStudentTakenAt(
+  Future<void> updateStudentTakenAt(
     StudentModel student, {
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
   }) async {
     try {
       await HomeRepo.updatStudentTakenAt(student);
+
+      if (isClosed) return;
       emit(HomeSuccessStateForTakenAt());
     } on Exception catch (e) {
       log(e.toString());
@@ -77,6 +91,7 @@ class HomeCubit extends Cubit<HomeState> {
       var res = await HomeRepo.getStudentTayoDetails(student);
       if (res != null) {
         // log('Student details retrieved successfully: $res');
+        if (isClosed) return;
         emit(HomeTayoLoadSuccessState(tayo: res));
       } else {
         log('No student details found for the given student.');
@@ -92,6 +107,8 @@ class HomeCubit extends Cubit<HomeState> {
     String? res;
     try {
       res = await HomeRepo.createStudent(student);
+
+      if (isClosed) return;
       emit(HomeSuccessState(message: res));
     } on Exception catch (e) {
       log(e.toString());
@@ -117,6 +134,8 @@ class HomeCubit extends Cubit<HomeState> {
     emit(HomeLoadingState());
     try {
       final res = await HomeRepo.loadStudentYear(id);
+
+      if (isClosed) return;
       emit(StudentYearLoaded(year: res ?? ''));
     } on Exception catch (e) {
       log(e.toString());
@@ -128,6 +147,8 @@ class HomeCubit extends Cubit<HomeState> {
     emit(HomeLoadingState());
     try {
       StudentModel? res = await HomeRepo.loadStudentData(id);
+
+      if (isClosed) return;
       emit(HomeStudentLoadedState(studentData: res));
     } on Exception catch (e) {
       log(e.toString());
@@ -135,33 +156,6 @@ class HomeCubit extends Cubit<HomeState> {
         HomeErrorState(
           message:
               'حدث خطأ أثناء تحميل بيانات الطالب. الرجاء المحاولة مرة أخرى.',
-        ),
-      );
-    }
-  }
-
-  Future<void> updateStudentGroup(
-    String studentGroupId,
-    int changesToTotalTayo,
-  ) async {
-    if (studentGroupId.isEmpty) {
-      return;
-    }
-    try {
-      log(
-        'Updating student group with ID: $studentGroupId, changes to total tayo: $changesToTotalTayo',
-      );
-      await HomeRepo.updateStudentGroup(studentGroupId, changesToTotalTayo);
-
-      emit(HomeGroupUpdateSuccessState());
-    } on Exception catch (e) {
-      log(e.toString());
-      emit(HomeErrorState(message: e.toString()));
-    } catch (e) {
-      log(e.toString());
-      emit(
-        HomeErrorState(
-          message: 'حدث خطأ أثناء تحديث المجموعة. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }
@@ -192,7 +186,7 @@ class HomeCubit extends Cubit<HomeState> {
       log(
         ' /////////////////////////////// Current badges in config: $currentBadges',
       );
-      if (currentBadges.containsKey(badgeName)) {
+      if (currentBadges.any((badge) => badge.name == badgeName)) {
         log('Badge with name "$badgeName" already exists in config.');
         emit(
           HomeErrorState(
@@ -203,6 +197,8 @@ class HomeCubit extends Cubit<HomeState> {
         return;
       }
       await HomeRepo.createBadgeInConfig(badgeName, url);
+
+      if (isClosed) return;
       emit(HomeBadgeCreationSuccessState());
     } on Exception catch (e) {
       log(e.toString());
@@ -212,6 +208,28 @@ class HomeCubit extends Cubit<HomeState> {
       emit(
         HomeErrorState(
           message: 'حدث خطأ أثناء إضافة الشارة. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
+
+  Future<void> addChurchToAllDocs(String churchName) async {
+    try {
+      log(
+        'Adding church "$churchName" to all documents in the Students collection',
+      );
+      await HomeRepo.addChurchToAllDocs(churchName);
+
+      if (isClosed) return;
+      emit(HomeSuccessState(message: 'تم إضافة اسم الكنيسة بنجاح.'));
+    } on Exception catch (e) {
+      log(e.toString());
+      emit(HomeErrorState(message: e.toString()));
+    } catch (e) {
+      log(e.toString());
+      emit(
+        HomeErrorState(
+          message: 'حدث خطأ أثناء إضافة اسم الكنيسة. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

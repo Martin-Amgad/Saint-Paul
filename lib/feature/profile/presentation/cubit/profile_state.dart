@@ -1,3 +1,4 @@
+import 'package:saint_paul/core/models/badge_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 
 class ProfileState {}
@@ -17,6 +18,24 @@ class ProfileLoadedState extends ProfileState {
 
   ProfileLoadedState({this.message, this.studentData});
 }
+
+class ProfileBadgesLoadedState extends ProfileState {
+  final List<BadgeModel> badges;
+  ProfileBadgesLoadedState({required this.badges});
+}
+
+// Holds the students list and the currently selected IDs
+class ProfileAssignedStudentsLoadedState extends ProfileState {
+  final List<StudentModel> students;
+  final List<String> selectedStudentIds;
+
+  ProfileAssignedStudentsLoadedState({
+    required this.students,
+    required this.selectedStudentIds,
+  });
+}
+
+class TeacherStudentsLoading extends ProfileState {}
 
 class ProfileDeletedState extends ProfileState {}
 

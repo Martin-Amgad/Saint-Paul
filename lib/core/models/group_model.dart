@@ -2,15 +2,19 @@ class GroupModel {
   final String? gid;
   final String? name;
   final int? totalTayo;
+  final int? totalPoints;
   final List<String>? students;
   final String? studyLevel;
+  final Map<String, dynamic>? points;
 
   GroupModel({
     this.gid,
     this.name,
     this.totalTayo,
+    this.totalPoints,
     this.students,
     this.studyLevel,
+    this.points,
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> map, String mid) {
@@ -18,10 +22,12 @@ class GroupModel {
       gid: mid,
       name: map['name'] ?? '',
       totalTayo: map['totalTayo'] ?? 0,
+      totalPoints: map['totalPoints'] ?? 0,
       students: map['students'] is List
           ? List<String>.from(map['students'])
           : const <String>[],
       studyLevel: map['studyLevel'] ?? '',
+      points: map['points'] as Map<String, dynamic>? ?? {},
     );
   }
 
@@ -29,8 +35,10 @@ class GroupModel {
     return {
       'name': name,
       'totalTayo': totalTayo,
+      'totalPoints': totalPoints,
       'students': students,
       'studyLevel': studyLevel,
+      'points': points,
     };
   }
 
@@ -38,15 +46,19 @@ class GroupModel {
     String? mid,
     String? name,
     int? totalTayo,
+    int? totalPoints,
     List<String>? students,
     String? studyLevel,
+    Map<String, dynamic>? points,
   }) {
     return GroupModel(
       gid: gid,
       name: name ?? this.name,
       totalTayo: totalTayo ?? this.totalTayo,
+      totalPoints: totalPoints ?? this.totalPoints,
       students: students ?? this.students,
       studyLevel: studyLevel ?? this.studyLevel,
+      points: points ?? this.points,
     );
   }
 
@@ -55,8 +67,10 @@ class GroupModel {
 
     if (name != null) data['name'] = name;
     if (totalTayo != null) data['totalTayo'] = totalTayo;
+    if (totalPoints != null) data['totalPoints'] = totalPoints;
     if (students != null) data['students'] = students;
     if (studyLevel != null) data['studyLevel'] = studyLevel;
+    if (points != null) data['points'] = points;
     return data;
   }
 }

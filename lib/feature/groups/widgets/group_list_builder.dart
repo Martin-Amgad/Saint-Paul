@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -28,6 +30,7 @@ class GroupsListBuilder extends StatefulWidget {
 
 class _GroupsListBuilderState extends State<GroupsListBuilder> {
   List<GroupModel>? filteredGroups;
+  int totalPoints = 0;
 
   @override
   void initState() {
@@ -54,7 +57,7 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
       child: ValueListenableBuilder(
         valueListenable: widget.searchNotifier,
         builder: (context, searchText, _) {
-          filteredGroups = searchText.isEmpty && widget.selectedYear == null
+          filteredGroups = searchText.isEmpty && widget.selectedYear == 'الكل'
               ? widget.groups
               : widget.groups?.where((group) {
                   final name = group.name ?? '';
@@ -91,6 +94,11 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
             separatorBuilder: (_, _) => const Gap(12),
             itemBuilder: (context, index) {
               final group = filteredGroups![index];
+              var totalPoints = group.totalPoints ?? 0;
+
+              log(
+                'Building group item for ${group.name} (ID: ${group.gid}) with totalPoints: $totalPoints',
+              );
               return GestureDetector(
                 onLongPress: () {
                   sureToDeleteMissionDialog(
@@ -107,9 +115,29 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
                   );
                 },
                 onTap: () {
+                  log(
+                    '⚠️⚠️⚠️⚠️⚠️⚠️Tapped on group: ${group.name}, ID: ${group.gid}⚠️⚠️⚠️⚠️⚠️',
+                  );
                   FocusManager.instance.primaryFocus?.unfocus();
 
-                  pushTo(context, Routes.groupDetailsScreen, extra: group);
+                  pushTo(
+                    context,
+                    Routes.groupDetailsScreen,
+                    extra: group,
+                  ).then((newPoints) {
+                    context.read<GroupCubit>().fetchGroups();
+                    // if (newPoints != null && newPoints is int) {
+                    //   setState(() {
+                    //     totalPoints = newPoints;
+                    //   });
+                    // }
+                    // log(
+                    //   'Returned from group details screen with newPoints: $newPoints',
+                    // );
+                    // log(
+                    //   'Updated totalPoints for group ${group.name} (ID: ${group.gid}) to $totalPoints',
+                    // );
+                  });
                 },
                 child: Container(
                   width: double.infinity,
@@ -226,20 +254,20 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
                             ),
                             const Spacer(),
                             Icon(
-                              Icons.auto_awesome_rounded,
+                              Icons.stars,
                               color: AppColors.darkYellowIconColor,
                               size: 18,
                             ),
                             const Gap(6),
                             Text(
-                              'الطايو: ',
+                              'النقاط: ',
                               style: TextStyles.getSize12(
                                 color: AppColors.primaryColor,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             Text(
-                              '${group.totalTayo ?? 0}',
+                              '${group.totalPoints ?? 0}',
                               style: TextStyles.getSize16(
                                 color: AppColors.darkYellowIconColor,
                                 fontWeight: FontWeight.w700,

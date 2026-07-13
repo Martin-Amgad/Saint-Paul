@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:saint_paul/components/inputs/custom_text_field.dart';
 import 'package:saint_paul/core/constants/app_assets.dart';
@@ -5,15 +7,18 @@ import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
+import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:saint_paul/feature/auth/data/models/school_years_model.dart';
 import 'package:saint_paul/feature/home/data/lists/1st_prep_students_list.dart';
 import 'package:saint_paul/feature/home/data/lists/3rd_prep_students_list.dart';
 import 'package:saint_paul/feature/home/widgets/filter_chip.dart';
 import 'package:saint_paul/feature/home/widgets/header_icon_button.dart';
 import 'package:saint_paul/feature/home/widgets/student_info_edit_builder.dart';
+import 'package:saint_paul/feature/profile/widgets/teachers_edit_builder.dart';
 
 class StudentsShowcaseAndEditScreen extends StatefulWidget {
   const StudentsShowcaseAndEditScreen({super.key});
@@ -29,15 +34,35 @@ class _StudentsShowcaseAndEditScreenState
   ValueNotifier<String> searchNotifier = ValueNotifier('');
 
   String searchText = '';
-  String? selectedYear;
+  String? selectedYear = 'الكل';
+  String? userType = LocalHelper.getUserType();
 
   List<StudentModel> allStudents = [];
   List<StudentModel> filteredStudents = [];
+  List<String> filterChipsElements = ['الكل', 'مخدومينى'];
+  List<String> roleSelection = [
+    'خادم',
+    'أمين الخدمة',
+    'أمين خدمة التربية الكنسية',
+  ];
+  List<String> familyfilterElements = [];
 
   @override
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    familyfilterElements = SchoolYearsModel.getFamilies();
+
+    log('User type in StudentsShowcaseAndEditScreen: $userType');
+    log(
+      'User study level in StudentsShowcaseAndEditScreen: ${LocalHelper.getUserStudyLevel()}',
+    );
   }
 
   @override
@@ -88,17 +113,32 @@ class _StudentsShowcaseAndEditScreenState
                     ),
                     const Gap(12),
                     Text(
-                      'حسابات المخدومين',
+                      userType == 'خادم' ? 'حسابات المخدومين' : 'حسابات الخدام',
                       style: TextStyles.getSize24(
                         color: AppColors.whiteColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+
                     const Spacer(),
+                    userType == 'خادم'
+                        ? HeaderIconButton(
+                            icon: Icons.add_rounded,
+                            onTap: () {
+                              pushTo(context, Routes.addEditNewStudentScreen);
+
+                              // var futures = thirdPrepStudentList.map((student) {
+                              //   return FirebaseProvider.createStudent(student);
+                              // });
+                              // Future.wait(futures);
+                            },
+                          )
+                        : SizedBox(),
+                    Gap(5),
                     HeaderIconButton(
-                      icon: Icons.add_rounded,
+                      icon: Icons.rule_rounded,
                       onTap: () {
-                        pushTo(context, Routes.addEditNewStudentScreen);
+                        pushTo(context, Routes.missCheckStudentScreen);
 
                         // var futures = thirdPrepStudentList.map((student) {
                         //   return FirebaseProvider.createStudent(student);
@@ -116,7 +156,9 @@ class _StudentsShowcaseAndEditScreenState
                   ),
                   child: CustomTextField(
                     controller: searchController,
-                    hintText: "بحث عن مخدوم...",
+                    hintText: userType == 'خادم'
+                        ? "بحث عن مخدوم..."
+                        : "بحث عن خادم...",
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(left: 8.0, right: 8),
                       child: SvgPicture.asset(
@@ -151,62 +193,64 @@ class _StudentsShowcaseAndEditScreenState
           ),
 
           // ── Filter chips ─────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-            child: Row(
-              children: [
-                Text(
-                  'فلتر:',
-                  style: TextStyles.getSize16(
-                    color: AppColors.accentColor.withValues(alpha: 0.6),
-                  ),
-                ),
-                const Gap(10),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        FilteredChip(
-                          label: 'الكل',
-                          selected: selectedYear == null,
-                          onTap: () => setState(() => selectedYear = null),
-                        ),
-                        const Gap(8),
-                        FilteredChip(
-                          label: 'اولي اعدادي',
-                          selected: selectedYear == 'اولي اعدادي',
-                          onTap: () =>
-                              setState(() => selectedYear = 'اولي اعدادي'),
-                        ),
-                        const Gap(8),
-                        FilteredChip(
-                          label: 'تانيه اعدادي',
-                          selected: selectedYear == 'تانيه اعدادي',
-                          onTap: () =>
-                              setState(() => selectedYear = 'تانيه اعدادي'),
-                        ),
-                        const Gap(8),
-                        FilteredChip(
-                          label: 'ثالثة اعدادي',
-                          selected: selectedYear == 'ثالثة اعدادي',
-                          onTap: () =>
-                              setState(() => selectedYear = 'ثالثة اعدادي'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
+          if (userType == 'خادم') ...{
+            filterChipBuilder(filterChipsElements),
+          } else if (userType == 'أمين خدمة التربية الكنسية') ...{
+            filterChipBuilder(familyfilterElements),
+          },
           const Gap(14),
 
           // ── List ─────────────────────────────────────────────────
-          StudentInfoEditbuilder(
-            searchNotifier: searchNotifier,
-            selectedYear: selectedYear,
+          userType == 'خادم'
+              ? Expanded(
+                  child: StudentInfoEditbuilder(
+                    searchNotifier: searchNotifier,
+                    selectedYear: selectedYear,
+                  ),
+                )
+              : Expanded(
+                  child: TeacherInfoEditbuilder(
+                    searchNotifier: searchNotifier,
+                    selectedFamily: selectedYear,
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Padding filterChipBuilder(List<String> FilterElements) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+      child: Row(
+        children: [
+          Text(
+            'فلتر:',
+            style: TextStyles.getSize16(
+              color: AppColors.accentColor.withValues(alpha: 0.6),
+            ),
+          ),
+          const Gap(10),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...FilterElements.map((year) {
+                    return Row(
+                      children: [
+                        FilteredChip(
+                          label: year,
+                          selected: selectedYear == year,
+                          onTap: () => setState(() => selectedYear = year),
+                        ),
+                        Gap(5),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ),
           ),
         ],
       ),
