@@ -6,6 +6,8 @@ class GroupModel {
   final List<String>? students;
   final String? studyLevel;
   final Map<String, dynamic>? points;
+  final String? groupChurch;
+  final String? groupFamily;
 
   GroupModel({
     this.gid,
@@ -15,6 +17,8 @@ class GroupModel {
     this.students,
     this.studyLevel,
     this.points,
+    this.groupChurch,
+    this.groupFamily,
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> map, String mid) {
@@ -28,6 +32,8 @@ class GroupModel {
           : const <String>[],
       studyLevel: map['studyLevel'] ?? '',
       points: map['points'] as Map<String, dynamic>? ?? {},
+      groupChurch: map['groupChurch'] ?? '',
+      groupFamily: map['groupFamily'] ?? '',
     );
   }
 
@@ -39,6 +45,8 @@ class GroupModel {
       'students': students,
       'studyLevel': studyLevel,
       'points': points,
+      'groupChurch': groupChurch,
+      'groupFamily': groupFamily,
     };
   }
 
@@ -50,6 +58,8 @@ class GroupModel {
     List<String>? students,
     String? studyLevel,
     Map<String, dynamic>? points,
+    String? groupChurch,
+    String? groupFamily,
   }) {
     return GroupModel(
       gid: gid,
@@ -59,6 +69,8 @@ class GroupModel {
       students: students ?? this.students,
       studyLevel: studyLevel ?? this.studyLevel,
       points: points ?? this.points,
+      groupChurch: groupChurch ?? this.groupChurch,
+      groupFamily: groupFamily ?? this.groupFamily,
     );
   }
 
@@ -71,6 +83,9 @@ class GroupModel {
     if (students != null) data['students'] = students;
     if (studyLevel != null) data['studyLevel'] = studyLevel;
     if (points != null) data['points'] = points;
+    if (groupChurch != null) data['groupChurch'] = groupChurch;
+    if (groupFamily != null) data['groupFamily'] = groupFamily;
+
     return data;
   }
 }

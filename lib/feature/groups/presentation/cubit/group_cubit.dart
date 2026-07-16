@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:saint_paul/core/models/group_model.dart';
-import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
 import 'package:saint_paul/feature/groups/data/repo/groups_repo.dart';
@@ -80,6 +79,8 @@ class GroupCubit extends Cubit<GroupState> {
           totalTayo: groupTotalTayo,
           studyLevel: studyLevel,
           points: defaultPoints,
+          groupChurch: LocalHelper.getUserChurchName(),
+          groupFamily: LocalHelper.getUserFamily(),
         ),
       );
 

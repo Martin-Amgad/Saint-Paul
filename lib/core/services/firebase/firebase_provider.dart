@@ -460,20 +460,23 @@ class FirebaseProvider {
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   static Future<void> updateTayoInAllDocuments(
     List<String>? tayoNewCategories,
-    List<String>? tayoRemovedCategories,
-  ) async {
+    List<String>? tayoRemovedCategories, {
+    String? excludeStudentId,
+  }) async {
     if ((tayoNewCategories?.isEmpty ?? true) &&
         (tayoRemovedCategories?.isEmpty ?? true)) {
       return;
     }
 
+    // 1. Update config defaults
     final updates = updateTayoMethod(tayoNewCategories, tayoRemovedCategories);
-
-    // update config doc
     await configCollection.doc('defaults').update(updates);
 
-    // update all student docs in batches of 500
-    final snapshot = await studentCollection.get();
+    // 2. Fetch all students, skip the excluded one
+    final snapshot = await studentCollection
+        .where('church', isEqualTo: LocalHelper.getUserChurchName())
+        .where('family', isEqualTo: LocalHelper.getUserFamily())
+        .get();
     final docs = snapshot.docs;
 
     for (int i = 0; i < docs.length; i += 500) {
@@ -481,7 +484,26 @@ class FirebaseProvider {
       final chunk = docs.sublist(i, (i + 500).clamp(0, docs.length));
 
       for (final doc in chunk) {
-        batch.update(doc.reference, updates);
+        if (excludeStudentId != null && doc.id == excludeStudentId) {
+          continue; // skip
+        }
+
+        // If categories are being removed, we must adjust totalTayo
+        Map<String, dynamic> docUpdates = Map<String, dynamic>.from(updates);
+        if (tayoRemovedCategories != null && tayoRemovedCategories.isNotEmpty) {
+          final data = doc.data();
+          final tayo = Map<String, dynamic>.from(data['tayo'] ?? {});
+          int totalTayo = (data['totalTayo'] ?? 0).toInt();
+
+          for (final cat in tayoRemovedCategories) {
+            if (tayo.containsKey(cat)) {
+              final catData = tayo[cat] as Map<String, dynamic>?;
+              totalTayo -= (catData?['count'] as num?)?.toInt() ?? 0;
+            }
+          }
+          docUpdates['totalTayo'] = totalTayo;
+        }
+        batch.update(doc.reference, docUpdates);
       }
 
       await batch.commit();
@@ -590,9 +612,7 @@ class FirebaseProvider {
     required String groupId,
     required int totalTayo,
   }) async {
-    await FirebaseFirestore.instance.collection('Group').doc(groupId).update({
-      'totalTayo': totalTayo,
-    });
+    await groupCollection.doc(groupId).update({'totalTayo': totalTayo});
   }
 
   /// Atomically applies Points deltas and records history.
@@ -675,6 +695,86 @@ class FirebaseProvider {
         });
       }
     });
+  }
+
+  /// Adds / removes categories from ALL group documents (except `currentGroupId`)
+  /// and updates the config defaults.
+  static Future<void> propagateCategoryChanges({
+    required String currentGroupId,
+    required List<String> newCategories,
+    required List<String> removedCategories,
+  }) async {
+    try {
+      if (newCategories.isEmpty && removedCategories.isEmpty) return;
+
+      // 1. Update the config defaults (dot‑notation works inside maps)
+      final defaultsUpdates = <String, dynamic>{};
+      for (final cat in newCategories) {
+        defaultsUpdates['points.$cat'] = {'count': 0, 'takenAt': null};
+      }
+      for (final cat in removedCategories) {
+        defaultsUpdates['points.$cat'] = FieldValue.delete();
+      }
+      await configCollection.doc('defaults').update(defaultsUpdates);
+
+      // 2. Fetch all groups except the one currently being edited
+      final allSnap = await groupCollection
+          .where('groupChurch', isEqualTo: LocalHelper.getUserChurchName())
+          .where('groupFamily', isEqualTo: LocalHelper.getUserFamily())
+          .get();
+      final otherGroups = allSnap.docs
+          .where((doc) => doc.id != currentGroupId)
+          .toList();
+
+      if (otherGroups.isEmpty) return;
+
+      // 3. Batch‑write in chunks of 500 (Firestore batch limit)
+      for (int i = 0; i < otherGroups.length; i += 500) {
+        final batch = firebase.batch();
+        final chunk = otherGroups.sublist(
+          i,
+          (i + 500).clamp(0, otherGroups.length),
+        );
+
+        for (final doc in chunk) {
+          final data = doc.data();
+          final points = Map<String, dynamic>.from(data['points'] ?? {});
+          int totalPoints = (data['totalPoints'] ?? 0).toInt();
+
+          final updates = <String, dynamic>{};
+
+          // Add new categories with count = 0 (totalPoints unchanged)
+          for (final cat in newCategories) {
+            updates['points.$cat.count'] = 0;
+            updates['points.$cat.takenAt'] = null;
+          }
+
+          // Remove categories and subtract their current count from totalPoints
+          for (final cat in removedCategories) {
+            if (points.containsKey(cat)) {
+              final catData = points[cat] as Map<String, dynamic>?;
+              final count = (catData?['count'] as num?)?.toInt() ?? 0;
+              totalPoints -= count;
+              updates['points.$cat'] = FieldValue.delete();
+            }
+          }
+
+          updates['totalPoints'] = totalPoints; // always correct the total
+          batch.update(doc.reference, updates);
+        }
+
+        await batch.commit();
+      }
+    } on FirebaseException catch (e, stackTrace) {
+      log(
+        'Firestore Error'
+        '\nCode: ${e.code}'
+        '\nMessage: ${e.message}'
+        '\nStack: $stackTrace',
+      );
+    } catch (e, stackTrace) {
+      log('Unexpected Error: $e', stackTrace: stackTrace);
+    }
   }
 
   // History Methods ////////////////////////////////////////////////////////////

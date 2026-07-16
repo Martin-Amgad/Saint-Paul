@@ -134,7 +134,7 @@ class _GroupsShowcaseScreenState extends State<GroupsShowcaseScreen> {
                   ),
                   child: CustomTextField(
                     controller: searchController,
-                    hintText: "بحث عن مخدوم...",
+                    hintText: "بحث عن مجموعة...",
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(left: 8.0, right: 8),
                       child: SvgPicture.asset(

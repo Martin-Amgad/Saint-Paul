@@ -256,6 +256,15 @@ class _StudentMissionsListState extends State<StudentMissionsList> {
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
+                                Spacer(),
+
+                                Text(
+                                  "${filteredMissions![index].missionStudyLevel}",
+                                  style: TextStyles.getSize12(
+                                    color: AppColors.darkYellowIconColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ],
                             ),
                             Row(

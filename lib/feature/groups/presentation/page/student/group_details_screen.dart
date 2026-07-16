@@ -276,7 +276,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     'Navigating to GroupPointsScreen with group: ${newGroup?.name}, ID: ${newGroup?.gid}',
                   );
                   userType == "مخدوم"
-                      ? null
+                      ? pushTo(
+                          context,
+                          Routes.tayoHistoryScreen,
+                          extra: newGroup?.gid,
+                        )
                       : pushTo(
                           context,
                           Routes.groupPointsScreen,
@@ -317,27 +321,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         // Header row: icon + title + points, all in one compact line
                         Row(
                           children: [
-                            GestureDetector(
-                              onTap: () {
-                                pushTo(
-                                  context,
-                                  Routes.tayoHistoryScreen,
-                                  extra: newGroup?.gid,
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryColor.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryColor.withValues(
+                                  alpha: 0.1,
                                 ),
-                                child: Icon(
-                                  Icons.stars_rounded,
-                                  color: AppColors.primaryColor,
-                                  size: 18,
-                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.stars_rounded,
+                                color: AppColors.primaryColor,
+                                size: 18,
                               ),
                             ),
                             const Gap(10),

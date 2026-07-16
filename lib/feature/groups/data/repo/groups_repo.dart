@@ -148,6 +148,12 @@ class GroupsRepo {
         'In Repo deltas: $deltas, pointRemovedCategories: $pointRemovedCategories, teacherId: ${teacher.uid}, teacherName: ${teacher.name}',
       );
       // 4. Atomic transaction
+      await FirebaseProvider.propagateCategoryChanges(
+        currentGroupId: group.gid!,
+        newCategories: pointNewCategories ?? [],
+        removedCategories: pointRemovedCategories ?? [],
+      );
+
       await FirebaseProvider.updateGroupWithHistory(
         groupId: group.gid!,
         deltas: deltas,

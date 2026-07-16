@@ -36,6 +36,7 @@ class HomeRepo {
         await FirebaseProvider.updateTayoInAllDocuments(
           tayoNewCategories,
           tayoRemovedCategories,
+          excludeStudentId: newStudent.uid ?? oldStudent.uid,
         );
       }
 
