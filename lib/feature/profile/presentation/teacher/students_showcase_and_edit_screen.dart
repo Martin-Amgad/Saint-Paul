@@ -45,7 +45,7 @@ class _StudentsShowcaseAndEditScreenState
     'أمين الخدمة',
     'أمين خدمة التربية الكنسية',
   ];
-  List<String> familyfilterElements = [];
+  List<String> familyfilterElements = ['الكل'];
 
   @override
   void dispose() {
@@ -57,7 +57,7 @@ class _StudentsShowcaseAndEditScreenState
   void initState() {
     super.initState();
 
-    familyfilterElements = SchoolYearsModel.getFamilies();
+    familyfilterElements.addAll(SchoolYearsModel.getFamilies());
 
     log('User type in StudentsShowcaseAndEditScreen: $userType');
     log(

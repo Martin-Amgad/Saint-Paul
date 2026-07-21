@@ -193,7 +193,7 @@ class _AddNewBadgeSheetState extends State<AddNewBadgeSheet> {
                       );
                       return;
                     }
-                    await cubit.createBadgeInConfig(
+                    await cubit.createChurchFamilyBadge(
                       newBadgeNameController.text.trim(),
                       _uploadedUrl,
                     );

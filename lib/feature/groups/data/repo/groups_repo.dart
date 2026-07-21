@@ -9,7 +9,10 @@ import 'package:saint_paul/core/services/local/local_helper.dart';
 class GroupsRepo {
   static Future<List<GroupModel>> fetchGroups() async {
     try {
-      final snapshot = await FirebaseProvider.fetchGroupsByTotalPoints();
+      String? church = LocalHelper.getUserChurchName();
+      final snapshot = await FirebaseProvider.fetchChurchGroupsByTotalPoints(
+        churchName: church,
+      );
 
       log('Fetched groups snapshot: ${snapshot.docs.length} documents');
       try {
@@ -60,7 +63,7 @@ class GroupsRepo {
     String? churchName,
   ) async {
     try {
-      final snapshot = await FirebaseProvider.getAllStudents();
+      final snapshot = await FirebaseProvider.getAllStudents(churchName ?? '');
 
       log('Fetched students snapshot: ${snapshot.docs.length} documents');
       try {

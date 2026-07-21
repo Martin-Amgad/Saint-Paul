@@ -40,8 +40,8 @@ class _MissCheckListBuilderState extends State<MissCheckListBuilder> {
     super.initState();
 
     studentsStream = FirebaseProvider.streamedSortStudentsByTotalTayo(
-      LocalHelper.getUserFamily(),
-      LocalHelper.getUserChurchName(),
+      family: LocalHelper.getUserFamily(),
+      church: LocalHelper.getUserChurchName() ?? '',
     );
 
     FirebaseProvider.getAssignedStudentIdsForTeacher(

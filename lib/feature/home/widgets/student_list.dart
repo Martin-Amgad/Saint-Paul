@@ -34,11 +34,19 @@ class StudentList extends StatelessWidget {
     List<StudentModel> allStudents;
     List<StudentModel> allStudentsWithYear;
     List<StudentModel> filteredStudents;
+    log(
+      'Building StudentList with searchText: "$searchText" and filterSelection: "$filterSelection"',
+    );
+    log('User type: ${LocalHelper.getUserType()}');
+    log('User family: ${LocalHelper.getUserFamily()}');
+    log('User church name: ${LocalHelper.getUserChurchName()}');
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseProvider.streamedSortStudentsByTotalTayo(
-        LocalHelper.getUserFamily(),
-        LocalHelper.getUserChurchName(),
+        church: LocalHelper.getUserChurchName() ?? '',
+        family: LocalHelper.getUserType() == 'أمين خدمة التربية الكنسية'
+            ? filterSelection
+            : LocalHelper.getUserFamily(),
       ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

@@ -180,9 +180,9 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  Future<void> createBadgeInConfig(String badgeName, String url) async {
+  Future<void> createChurchFamilyBadge(String badgeName, String url) async {
     try {
-      var currentBadges = await HomeRepo.getCurrentBadges();
+      var currentBadges = await HomeRepo.getCurrentChurchFamilyBadges();
       log(
         ' /////////////////////////////// Current badges in config: $currentBadges',
       );
@@ -196,7 +196,7 @@ class HomeCubit extends Cubit<HomeState> {
         );
         return;
       }
-      await HomeRepo.createBadgeInConfig(badgeName, url);
+      await HomeRepo.createBadge(badgeName, url);
 
       if (isClosed) return;
       emit(HomeBadgeCreationSuccessState());

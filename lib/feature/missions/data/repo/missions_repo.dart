@@ -48,15 +48,19 @@ class MissionRepo {
   static Future<List<MissionModel>> fetchMissions() async {
     try {
       final QuerySnapshot<Object?> snapshot;
+      String? church = LocalHelper.getUserChurchName();
 
       if (LocalHelper.getUserType() == 'مخدوم') {
         final userStudyLevel = LocalHelper.getUserStudyLevel() ?? '';
         log(
           'Fetching missions for student with study level: "$userStudyLevel" (includes "الكل")',
         );
-        snapshot = await FirebaseProvider.fetchStudentMissions(userStudyLevel);
+        snapshot = await FirebaseProvider.fetchStudentMissions(
+          userStudyLevel,
+          church,
+        );
       } else {
-        snapshot = await FirebaseProvider.fetchMissions();
+        snapshot = await FirebaseProvider.fetchMissions(church);
       }
 
       log('Fetched missions snapshot: ${snapshot.docs.length} documents');

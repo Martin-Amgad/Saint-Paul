@@ -33,7 +33,7 @@ class HomeRepo {
       // 2. Optional: update all students if global categories changed
       if ((tayoNewCategories?.isNotEmpty ?? false) ||
           (tayoRemovedCategories?.isNotEmpty ?? false)) {
-        await FirebaseProvider.updateTayoInAllDocuments(
+        await FirebaseProvider.applyFamilyTayoCategoryChanges(
           tayoNewCategories,
           tayoRemovedCategories,
           excludeStudentId: newStudent.uid ?? oldStudent.uid,
@@ -75,7 +75,7 @@ class HomeRepo {
     } on Exception catch (e) {
       throw Exception('Failed to update student: ${e.toString()}');
     } catch (e) {
-      log(e.toString());
+      log('Unexpected error during student update in Repo: ${e.toString()}');
       return 'حدث خطأ أثناء تحديث بيانات المخدوم. الرجاء المحاولة مرة أخرى.';
     }
   }
@@ -192,9 +192,9 @@ class HomeRepo {
     }
   }
 
-  static Future<List<BadgeModel>> getCurrentBadges() async {
+  static Future<List<BadgeModel>> getCurrentChurchFamilyBadges() async {
     try {
-      final badges = await FirebaseProvider.getBadgesFor(
+      final badges = await FirebaseProvider.getChurchFamilyBadges(
         LocalHelper.getUserChurchName(),
         LocalHelper.getUserFamily(),
       );
@@ -206,9 +206,9 @@ class HomeRepo {
     }
   }
 
-  static Future<void> createBadgeInConfig(String badgeName, String url) async {
+  static Future<void> createBadge(String badgeName, String url) async {
     try {
-      await FirebaseProvider.createBadge(badgeName, url);
+      await FirebaseProvider.createBadgeForChurchFamily(badgeName, url);
     } on Exception catch (e) {
       log(e.toString());
       throw Exception('Failed to update badge in Firebase: ${e.toString()}');

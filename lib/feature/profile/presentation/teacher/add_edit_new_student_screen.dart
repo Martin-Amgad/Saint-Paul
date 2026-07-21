@@ -52,7 +52,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
   }
 
   Future<void> getAllBadges() async {
-    final fetchedBadges = await FirebaseProvider.getBadgesFor(
+    final fetchedBadges = await FirebaseProvider.getChurchFamilyBadges(
       LocalHelper.getUserChurchName(),
       LocalHelper.getUserFamily(),
     );

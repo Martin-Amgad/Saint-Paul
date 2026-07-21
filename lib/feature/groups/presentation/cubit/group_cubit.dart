@@ -16,6 +16,7 @@ class GroupCubit extends Cubit<GroupState> {
   var groupTotalTayo = 0;
   int groupTotalPoints = 0;
 
+  // this function deletes a group and updates the students' group IDs accordingly
   Future<void> deleteGroup(GroupModel group) async {
     emit(GroupLoadingState());
     try {
@@ -30,6 +31,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function updates a group with the provided details, including old points and any new or removed point categories
   Future<void> updateGroup(
     GroupModel group, {
     required Map<String, dynamic> oldPoints, // ← new
@@ -53,6 +55,8 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function creates a new group with the provided student IDs and study level,
+  // calculates the total tayo for the group, and updates the students' group IDs accordingly
   Future<void> createGroup(List<String> studentIds, String studyLevel) async {
     emit(GroupLoadingState());
 
@@ -70,7 +74,7 @@ class GroupCubit extends Cubit<GroupState> {
 
       log('Total tayo for selected students: $groupTotalTayo');
 
-      final defaultPoints = await FirebaseProvider.getDefaultPoints();
+      final defaultPoints = await FirebaseProvider.getChurchDefaultPoints();
 
       final groupId = await FirebaseProvider.createGroup(
         GroupModel(
@@ -100,6 +104,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches all groups and emits the result
   Future<void> fetchGroups() async {
     emit(GroupLoadingState());
     try {
@@ -111,6 +116,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches a specific group by its ID and emits the result
   Future<void> fetchGroup(String groupId) async {
     log("fetchGroup START");
     emit(GroupLoadingState());
@@ -128,6 +134,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches students by their family and church name
   Future<void> fetchStudents(String? family, String? churchName) async {
     emit(GroupLoadingState());
     try {
@@ -139,6 +146,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches students by their IDs and calculates the total tayo for the group
   Future<void> fetchGroupStudents(List<String> ids) async {
     emit(GroupLoadingState());
     try {
@@ -159,6 +167,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches the group for a specific student and then fetches the students in that group
   Future<void> fetchAndCheckStudentGroup(String? studentId) async {
     if (studentId == null || studentId.isEmpty) {
       emit(GroupNotAssignedState());
@@ -201,6 +210,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches the group details for teachers, including the students in that group
   Future<void> teachersGroupDetails(GroupModel? group) async {
     emit(GroupLoadingState());
     try {
@@ -218,6 +228,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches the students in a group and calculates the total tayo for that group, updating it if necessary
   Future<void> fetchAndUpdateTotalTayo(GroupModel? group) async {
     emit(GroupLoadingState());
     try {
@@ -281,6 +292,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches the points details for a group and emits the result
   void updateGroupTakenAt(
     GroupModel group, {
     List<String>? pointNewCategories,
@@ -304,6 +316,7 @@ class GroupCubit extends Cubit<GroupState> {
     }
   }
 
+  // this function fetches the group details for teachers, including the students in that group, and also fetches the points details for that group
   void getGroupPointsDetails(GroupModel group) async {
     emit(GroupLoadingState());
     try {

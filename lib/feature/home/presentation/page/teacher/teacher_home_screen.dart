@@ -36,7 +36,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
   List<StudentModel> allStudents = [];
   List<StudentModel> filteredStudents = [];
-  List<String> filterChipsElements = [];
+  List<String> filterChipsElements = ['الكل'];
 
   String? userType = 'خادم';
 
@@ -51,8 +51,11 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     super.initState();
     userType = LocalHelper.getUserType();
     log('TeacherHomeScreen userType: $userType');
-    filterChipsElements =
-        SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? [];
+    LocalHelper.getUserType() == 'أمين خدمة التربية الكنسية'
+        ? filterChipsElements.addAll(SchoolYearsModel.getFamilies())
+        : filterChipsElements.addAll(
+            SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? [],
+          );
   }
 
   Color? rankColor(int index) {
@@ -259,12 +262,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          FilteredChip(
-                            label: 'الكل',
-                            selected: selectedYear == 'الكل',
-                            onTap: () => setState(() => selectedYear = 'الكل'),
-                          ),
-                          Gap(5),
                           ...filterChipsElements.map((year) {
                             return Row(
                               children: [

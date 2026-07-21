@@ -101,6 +101,7 @@ class _WelcomScreenState extends State<WelcomScreen> {
                         'سجلها الآن',
                         style: TextStyles.getSize16(
                           color: AppColors.primaryColor,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

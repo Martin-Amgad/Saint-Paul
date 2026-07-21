@@ -74,6 +74,8 @@ class _RegisterNewChurchScreenState extends State<RegisterNewChurchScreen> {
   }
 
   void _blockListener(BuildContext context, AuthState state) {
+    log('AuthState changed: $state');
+
     if (state is AuthSuccessState) {
       log(
         'Registration successful, navigating to main screen with role: ${LocalHelper.getUserType()}',

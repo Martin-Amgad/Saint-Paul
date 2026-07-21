@@ -18,11 +18,13 @@ class GroupsListBuilder extends StatefulWidget {
     required this.groups,
     required this.searchNotifier,
     this.selectedYear,
+    this.churchAdminFlag = false,
   });
 
   final List<GroupModel>? groups;
   final ValueNotifier<String> searchNotifier;
   final String? selectedYear;
+  final bool churchAdminFlag;
 
   @override
   State<GroupsListBuilder> createState() => _GroupsListBuilderState();
@@ -57,13 +59,16 @@ class _GroupsListBuilderState extends State<GroupsListBuilder> {
       child: ValueListenableBuilder(
         valueListenable: widget.searchNotifier,
         builder: (context, searchText, _) {
-          filteredGroups = searchText.isEmpty && widget.selectedYear == 'الكل'
+          filteredGroups = (searchText.isEmpty && widget.selectedYear == 'الكل')
               ? widget.groups
               : widget.groups?.where((group) {
                   final name = group.name ?? '';
-                  final studyLevel = group.studyLevel ?? '';
+                  final filterValue = widget.churchAdminFlag
+                      ? (group.groupFamily ?? '')
+                      : (group.studyLevel ?? '');
+
                   return name.contains(searchText) &&
-                      studyLevel.contains(widget.selectedYear ?? '');
+                      filterValue.contains(widget.selectedYear ?? '');
                 }).toList();
 
           if (filteredGroups == null || filteredGroups!.isEmpty) {

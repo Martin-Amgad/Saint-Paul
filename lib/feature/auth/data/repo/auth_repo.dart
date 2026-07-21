@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:saint_paul/core/models/church_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
@@ -20,6 +21,9 @@ class AuthRepo {
 
       final user = credential.user!;
       LocalHelper.setUserId(user.uid);
+      log(
+        'User logged in: ${user.email}, UID: ${user.uid}, Role indicator (photoURL): ${user.photoURL}',
+      );
 
       // Load role‑specific data from Firestore
       if (user.photoURL == '0') {
@@ -55,15 +59,32 @@ class AuthRepo {
                 assignedStudyLevel: '',
               ),
         );
+      } else if (user.photoURL == '2') {
+        // Church Admin
+        final userData = await FirebaseProvider.getTeacherByID(user.uid);
+
+        LocalHelper.setUserType('أمين خدمة التربية الكنسية');
+        LocalHelper.setTeacherName(userData?.name ?? '');
+        await LocalHelper.setUserChurchName(userData?.church ?? '');
+        LocalHelper.setTeacherData(
+          userData ??
+              TeacherModel(
+                uid: user.uid,
+                name: '',
+                church: '',
+                role: '',
+                assignedFamily: '',
+                assignedStudyLevel: '',
+              ),
+        );
       }
 
       log('User logged in with email: $email');
       log('User UID: ${user.uid}');
       log('Role indicator (photoURL): ${user.photoURL}');
       log('================================');
-      ;
 
-      return user.photoURL == '1' ? 'خادم' : 'مخدوم';
+      return user.photoURL == '1' || user.photoURL == '2' ? 'خادم' : 'مخدوم';
     } on FirebaseAuthException catch (e) {
       log('Login error code: ${e.code}');
       log('Login error message: ${e.message}');
@@ -91,17 +112,16 @@ class AuthRepo {
     required String password,
     required String name,
     String? studyLevel,
+    String? family,
     String? role,
     DateTime? birthday,
     String? churchName,
-    String? family,
   }) async {
     try {
-      final tayo = await FirebaseProvider.getDefaultTayo();
-
-      if (tayo.isEmpty) {
-        return 'حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.';
-      }
+      log('Starting registration in Repo ');
+      final tayo = await FirebaseProvider.getChurchDefaultFamilyTayo(
+        family ?? '',
+      );
 
       // 1. Create Auth account
       final credential = await FirebaseAuth.instance
@@ -233,6 +253,14 @@ class AuthRepo {
         );
 
         await FirebaseProvider.updateDefaultsChurchName(churchName, adminPin);
+        await FirebaseProvider.createChurch(
+          ChurchModel(
+            adminPin: adminPin,
+            churchName: churchName,
+            points: {},
+            tayo: {},
+          ),
+        );
       } catch (_) {
         // Roll back Firebase Auth account if Firestore write fails
         await user.delete();
@@ -248,6 +276,7 @@ class AuthRepo {
       // 4. Save everything to local storage (using the correct methods)
       LocalHelper.setUserId(user.uid);
       LocalHelper.setUserType("أمين خدمة التربية الكنسية");
+      LocalHelper.setUserChurchName(churchName);
 
       LocalHelper.setTeacherName(name);
       await LocalHelper.setTeacherData(

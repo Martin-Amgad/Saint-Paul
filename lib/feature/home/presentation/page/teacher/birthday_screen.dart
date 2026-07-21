@@ -67,9 +67,12 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
     filteredStudents = List.from(allStudents);
     filteredStudents.sort((a, b) {
       if (a.birthday == null && b.birthday == null) return 0;
-      if (a.birthday == null) return 1;
+      if (a.birthday == null) return 1; // push nulls to the end
       if (b.birthday == null) return -1;
-      return a.birthday!.month.compareTo(b.birthday!.month);
+      // Both non-null, sort by month, then day
+      return a.birthday!.month.compareTo(b.birthday!.month) == 0
+          ? a.birthday!.day.compareTo(b.birthday!.day)
+          : a.birthday!.month.compareTo(b.birthday!.month);
     });
 
     if (mounted) {
@@ -81,12 +84,21 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
 
   bool birthdayInAWeek(DateTime? birthday) {
     if (birthday == null) return false;
+
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final today = DateTime(now.year, now.month, now.day); // midnight
     final inAWeek = today.add(const Duration(days: 7));
-    final birthdayThisYear = DateTime(now.year, birthday.month, birthday.day);
-    return !birthdayThisYear.isBefore(today) &&
-        !birthdayThisYear.isAfter(inAWeek);
+
+    // Birthday this year (at midnight)
+    DateTime nextBirthday = DateTime(now.year, birthday.month, birthday.day);
+
+    // If already passed this year, use next year
+    if (nextBirthday.isBefore(today)) {
+      nextBirthday = DateTime(now.year + 1, birthday.month, birthday.day);
+    }
+
+    // Now check if the upcoming birthday is within [today, today+7]
+    return !nextBirthday.isBefore(today) && !nextBirthday.isAfter(inAWeek);
   }
 
   void onMonthSelected(String month) {
@@ -275,9 +287,7 @@ class _BirthdayScreenState extends State<BirthdayScreen> {
                             itemBuilder: (context, index) {
                               final student = filteredStudents[index];
                               final birthday = student.birthday;
-                              final isInAWeek = selectedMonth != null
-                                  ? birthdayInAWeek(birthday)
-                                  : false;
+                              final isInAWeek = birthdayInAWeek(birthday);
 
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 10),

@@ -99,6 +99,11 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthErrorState('الرقم السري غير صحيح'));
       return;
     }
+    log('Attempting to register with email: ${emailController.text}');
+    log('Attempting to register with password: ${passwordController.text}');
+    log('Attempting to register with name: ${usernameController.text}');
+    log('Attempting to register with study level: $selectedYear');
+
     String? response = await AuthRepo.register(
       email: emailController.text,
       password: passwordController.text,
@@ -109,10 +114,6 @@ class AuthCubit extends Cubit<AuthState> {
       churchName: selectedChurch,
       family: selectedFamily,
     );
-    log('Attempting to register with email: ${emailController.text}');
-    log('Attempting to register with password: ${passwordController.text}');
-    log('Attempting to register with name: ${usernameController.text}');
-    log('Attempting to register with study level: $selectedYear');
 
     if (response == 'تم إنشاء الحساب بنجاح.') {
       final uid = LocalHelper.getUserId()!;
@@ -152,8 +153,9 @@ class AuthCubit extends Cubit<AuthState> {
     log('Attempting to register with password: ${passwordController.text}');
     log('Attempting to register with name: ${usernameController.text}');
     log('Attempting to register with study level: $selectedYear');
+    log('response from registerNewChurch: $response');
 
-    if (response == 'تم إنشاء الحساب بنجاح.') {
+    if (response == 'تم إنشاء الكنيسة بنجاح.') {
       emit(AuthSuccessState(role: "أمين خدمة التربية الكنسية"));
     } else {
       emit(

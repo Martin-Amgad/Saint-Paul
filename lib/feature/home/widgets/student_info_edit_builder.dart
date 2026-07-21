@@ -38,8 +38,8 @@ class _StudentInfoEditbuilderState extends State<StudentInfoEditbuilder> {
     super.initState();
 
     studentsStream = FirebaseProvider.streamedSortStudentsByTotalTayo(
-      LocalHelper.getUserFamily(),
-      LocalHelper.getUserChurchName(),
+      family: LocalHelper.getUserFamily(),
+      church: LocalHelper.getUserChurchName() ?? '',
     );
     FirebaseProvider.getAssignedStudentIdsForTeacher(
       LocalHelper.getUserId() ?? '',

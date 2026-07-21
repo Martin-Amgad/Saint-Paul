@@ -8,9 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 enum AppBlockedReason { update, maintenance }
 
 class AppBlockedScreen extends StatelessWidget {
-  const AppBlockedScreen({super.key, required this.reason});
+  const AppBlockedScreen({
+    super.key,
+    required this.reason,
+    required this.appDownloadUrl,
+  });
 
   final AppBlockedReason reason;
+  final String appDownloadUrl;
 
   bool get _isUpdate => reason == AppBlockedReason.update;
 
@@ -120,9 +125,7 @@ class AppBlockedScreen extends StatelessWidget {
                       title: 'تحديث التطبيق',
                       onPressed: () {
                         launchUrl(
-                          Uri.parse(
-                            'https://drive.google.com/drive/folders/10NgtjR-G9jBDBp0SzaGw4dmVQMBJjC0r?usp=drive_link',
-                          ),
+                          Uri.parse(appDownloadUrl),
                           mode: LaunchMode.externalApplication,
                         );
                       },

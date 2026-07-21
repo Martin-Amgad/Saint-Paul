@@ -51,9 +51,11 @@ class _GroupsShowcaseScreenState extends State<GroupsShowcaseScreen> {
     super.initState();
     context.read<GroupCubit>().fetchGroups();
 
-    filterChipsElements.addAll(
-      SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? [],
-    );
+    LocalHelper.getUserType() == 'أمين خدمة التربية الكنسية'
+        ? filterChipsElements.addAll(SchoolYearsModel.getFamilies())
+        : filterChipsElements.addAll(
+            SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? [],
+          );
   }
 
   @override
@@ -232,6 +234,9 @@ class _GroupsShowcaseScreenState extends State<GroupsShowcaseScreen> {
                     groups: state.groups,
                     searchNotifier: searchNotifier,
                     selectedYear: selectedYear,
+                    churchAdminFlag:
+                        LocalHelper.getUserType() ==
+                        'أمين خدمة التربية الكنسية',
                   );
                 }
                 return const SizedBox();

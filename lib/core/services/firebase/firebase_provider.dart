@@ -2,12 +2,14 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:saint_paul/core/models/badge_model.dart';
+import 'package:saint_paul/core/models/church_model.dart';
 import 'package:saint_paul/core/models/group_model.dart';
 import 'package:saint_paul/core/models/mission_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/models/tayo_history_model.dart';
 import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/core/services/local/local_helper.dart';
+import 'package:timezone/timezone.dart';
 
 class FirebaseProvider {
   static final FirebaseFirestore firebase = FirebaseFirestore.instance;
@@ -32,6 +34,9 @@ class FirebaseProvider {
 
   static final CollectionReference<Map<String, dynamic>> fcmTokensCollection =
       firebase.collection('fcmTokens');
+
+  static final CollectionReference<Map<String, dynamic>> churchesCollection =
+      firebase.collection('Churches');
 
   // TEACHER METHODS ////////////////////////////////////////////////////////////
   static Future<void> createTeacher(TeacherModel teacher) async {
@@ -147,6 +152,15 @@ class FirebaseProvider {
       await configCollection.doc('defaults').update({
         'churchNames.$churchName': newPassword,
       });
+      await churchesCollection
+          .where('churchName', isEqualTo: churchName)
+          .limit(1)
+          .get()
+          .then((snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              snapshot.docs.first.reference.update({'adminPin': newPassword});
+            }
+          });
       log('Admin password updated successfully');
     } catch (e) {
       log('Error updating admin password: $e');
@@ -154,20 +168,39 @@ class FirebaseProvider {
   }
 
   // STUDENT METHODS ////////////////////////////////////////////////////////////
-  static Map<String, dynamic> updateTayoMethod(
+  static Map<String, dynamic> updateChurchDefaultTayoMethod(
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories,
   ) {
     Map<String, dynamic> updates = {};
+    String? family = LocalHelper.getUserFamily();
 
     for (var key in tayoNewCategories ?? []) {
-      updates['tayo.$key.count'] = 0;
-      updates['tayo.$key.takenAt'] = null;
+      updates['$family.tayo.$key.count'] = 0;
+      updates['$family.tayo.$key.takenAt'] = null;
     }
 
     for (var key in tayoRemovedCategories ?? []) {
+      updates['$family.tayo.$key'] = FieldValue.delete();
+    }
+    return updates;
+  }
+
+  static Map<String, dynamic> studentTayoUpdates(
+    List<String>? newCategories,
+    List<String>? removedCategories,
+  ) {
+    Map<String, dynamic> updates = {};
+
+    for (var key in newCategories ?? []) {
+      updates['tayo.$key.count'] = 0;
+      updates['tayo.$key.takenAt'] = FieldValue.serverTimestamp();
+    }
+
+    for (var key in removedCategories ?? []) {
       updates['tayo.$key'] = FieldValue.delete();
     }
+
     return updates;
   }
 
@@ -239,6 +272,14 @@ class FirebaseProvider {
         : null;
 
     await firestore.runTransaction((transaction) async {
+      DocumentSnapshot<Map<String, dynamic>>? groupSnap;
+
+      if (groupRef != null &&
+          groupPointsDelta != null &&
+          groupPointsDelta != 0) {
+        groupSnap = await transaction.get(groupRef);
+      }
+
       // 1. Read current server state
       final studentSnap = await transaction.get(studentRef);
       log('🔍 Transaction started. Student exists: ${studentSnap.exists}');
@@ -302,25 +343,13 @@ class FirebaseProvider {
       }
 
       // 6. Update group points atomically
-      if (groupRef != null &&
-          groupPointsDelta != null &&
-          groupPointsDelta != 0) {
-        final groupSnap = await transaction.get(groupRef);
-        if (groupSnap.exists) {
-          final groupData = groupSnap.data()!;
-          final currentGroupTotal =
-              (groupData['totalPoints'] as num?)?.toInt() ?? 0;
-          transaction.update(groupRef, {
-            'totalPoints': currentGroupTotal + groupPointsDelta,
-          });
-          log(
-            '✍️ Group points updated from $currentGroupTotal to ${currentGroupTotal + groupPointsDelta}',
-          );
-        } else {
-          log(
-            '⚠️ Group document $groupID not found, skipping group points update',
-          );
-        }
+      if (groupSnap != null && groupSnap.exists) {
+        final current =
+            (groupSnap.data()?['totalPoints'] as num?)?.toInt() ?? 0;
+
+        transaction.update(groupRef!, {
+          'totalPoints': current + groupPointsDelta!,
+        });
       }
 
       if (otherFields != null && otherFields.isNotEmpty) {
@@ -417,25 +446,32 @@ class FirebaseProvider {
     return studentCollection.doc(id).get();
   }
 
-  static Future<QuerySnapshot> getAllStudents() {
-    return studentCollection.get();
+  static Future<QuerySnapshot> getAllStudents(String? churchName) {
+    Query query = studentCollection;
+    if (churchName != null) {
+      query = query.where('church', isEqualTo: churchName);
+    }
+    return query.get();
   }
 
   static Future<QuerySnapshot> sortStudentsByTotalTayo() async {
     return await studentCollection.orderBy('totalTayo', descending: true).get();
   }
 
-  static Stream<QuerySnapshot> streamedSortStudentsByTotalTayo(
+  static Stream<QuerySnapshot> streamedSortStudentsByTotalTayo({
+    required String church, // remove nullable if always required
     String? family,
-    String? church,
-  ) {
-    // Stream students sorted by totalTayo in descending order
-    // with a condition of family
-    return studentCollection
-        .where('family', isEqualTo: family)
+  }) {
+    Query query = studentCollection
         .where('church', isEqualTo: church)
-        .orderBy('totalTayo', descending: true)
-        .snapshots();
+        .orderBy('totalTayo', descending: true);
+
+    // Only add a family filter if a specific family is requested
+    if (family != null && family.isNotEmpty && family != 'الكل') {
+      query = query.where('family', isEqualTo: family);
+    }
+
+    return query.snapshots();
   }
 
   static Future<QuerySnapshot<Object?>> fetchStudentsByBirthday(
@@ -458,19 +494,39 @@ class FirebaseProvider {
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   ////////////////⚠️⚠️⚠️⚠️⚠️Tayo UPDATE METHODS⚠️⚠️⚠️⚠️⚠️
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
-  static Future<void> updateTayoInAllDocuments(
+
+  // Updates the Tayo categories and counts for all students in the same family,
+  // and also updates the default Tayo categories in the church's config.
+  static Future<void> applyFamilyTayoCategoryChanges(
     List<String>? tayoNewCategories,
     List<String>? tayoRemovedCategories, {
     String? excludeStudentId,
   }) async {
+    log(
+      'Applying family Tayo category changes. New: $tayoNewCategories, Removed: $tayoRemovedCategories, Exclude: $excludeStudentId',
+    );
     if ((tayoNewCategories?.isEmpty ?? true) &&
         (tayoRemovedCategories?.isEmpty ?? true)) {
       return;
     }
+    // TODO
+    // if th euser is أمين خدمة التربية الكنسية i have to set the family
+    // await LocalHelper.setUserFamily('اعدادي');
 
-    // 1. Update config defaults
-    final updates = updateTayoMethod(tayoNewCategories, tayoRemovedCategories);
-    await configCollection.doc('defaults').update(updates);
+    // 1. Update churches default tayo categories
+    final updates = updateChurchDefaultTayoMethod(
+      tayoNewCategories,
+      tayoRemovedCategories,
+    );
+    await churchesCollection
+        .where('churchName', isEqualTo: LocalHelper.getUserChurchName() ?? '')
+        .limit(1)
+        .get()
+        .then((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            snapshot.docs.first.reference.update(updates);
+          }
+        });
 
     // 2. Fetch all students, skip the excluded one
     final snapshot = await studentCollection
@@ -489,7 +545,10 @@ class FirebaseProvider {
         }
 
         // If categories are being removed, we must adjust totalTayo
-        Map<String, dynamic> docUpdates = Map<String, dynamic>.from(updates);
+        Map<String, dynamic> docUpdates = studentTayoUpdates(
+          tayoNewCategories,
+          tayoRemovedCategories,
+        );
         if (tayoRemovedCategories != null && tayoRemovedCategories.isNotEmpty) {
           final data = doc.data();
           final tayo = Map<String, dynamic>.from(data['tayo'] ?? {});
@@ -505,7 +564,9 @@ class FirebaseProvider {
         }
         batch.update(doc.reference, docUpdates);
       }
-
+      log(
+        'Batch update for students in family ${LocalHelper.getUserFamily()} successful',
+      );
       await batch.commit();
     }
   }
@@ -538,19 +599,30 @@ class FirebaseProvider {
     await missionCollection.doc(missionId).delete();
   }
 
-  static Future<QuerySnapshot> fetchMissions() async {
-    return await missionCollection.get();
+  static Future<QuerySnapshot> fetchMissions(String? church) async {
+    Query query = missionCollection;
+    if (church != null && church.isNotEmpty) {
+      query = query.where('missionChurch', isEqualTo: church);
+    }
+    return await query.get();
   }
 
-  static Future<QuerySnapshot> fetchStudentMissions(String studyLevel) async {
+  static Future<QuerySnapshot> fetchStudentMissions(
+    String studyLevel,
+    String? church,
+  ) async {
     final normalizedStudyLevel = studyLevel.trim();
     final levels = normalizedStudyLevel.isEmpty
         ? <String>['الكل']
         : <String>[normalizedStudyLevel, 'الكل'];
 
-    return await missionCollection
-        .where('missionStudyLevel', whereIn: levels)
-        .get();
+    Query query = missionCollection.where('missionStudyLevel', whereIn: levels);
+
+    if (church != null && church.isNotEmpty) {
+      query = query.where('missionChurch', isEqualTo: church); // ✅ reassign
+    }
+
+    return await query.get();
   }
 
   static Future<void> updateMission(MissionModel mission) async {
@@ -569,8 +641,18 @@ class FirebaseProvider {
     await groupCollection.doc(groupId).delete();
   }
 
-  static Future<QuerySnapshot> fetchGroupsByTotalPoints() async {
-    return await groupCollection.orderBy('totalPoints', descending: true).get();
+  static Future<QuerySnapshot> fetchChurchGroupsByTotalPoints({
+    String? churchName,
+  }) async {
+    if (churchName == null || churchName.isEmpty) {
+      return await groupCollection
+          .orderBy('totalPoints', descending: true)
+          .get();
+    }
+    return await groupCollection
+        .where('groupChurch', isEqualTo: churchName)
+        .orderBy('totalPoints', descending: true)
+        .get();
   }
 
   static Future<DocumentSnapshot<Object?>> getGroupbyId(String? groupId) async {
@@ -715,7 +797,15 @@ class FirebaseProvider {
       for (final cat in removedCategories) {
         defaultsUpdates['points.$cat'] = FieldValue.delete();
       }
-      await configCollection.doc('defaults').update(defaultsUpdates);
+      await churchesCollection
+          .where('churchName', isEqualTo: LocalHelper.getUserChurchName())
+          .limit(1)
+          .get()
+          .then((snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              snapshot.docs.first.reference.update(defaultsUpdates);
+            }
+          });
 
       // 2. Fetch all groups except the one currently being edited
       final allSnap = await groupCollection
@@ -818,7 +908,16 @@ class FirebaseProvider {
     );
 
     // Update config document if needed
-    await configCollection.doc('defaults').update(updates);
+    // await configCollection.doc('defaults').update(updates);
+    await churchesCollection
+        .where('churchName', isEqualTo: LocalHelper.getUserChurchName())
+        .limit(1)
+        .get()
+        .then((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            snapshot.docs.first.reference.update(updates);
+          }
+        });
 
     // Update all group documents in batches of 500
     final snapshot = await groupCollection.get();
@@ -853,13 +952,19 @@ class FirebaseProvider {
     return updates;
   }
 
-  static Future<Map<String, dynamic>> getDefaultPoints() async {
-    final doc = await configCollection.doc('defaults').get();
-    return doc.get('points') as Map<String, dynamic>;
+  static Future<Map<String, dynamic>> getChurchDefaultPoints() async {
+    String? churchName = LocalHelper.getUserChurchName();
+    var church = await churchesCollection
+        .where('churchName', isEqualTo: churchName)
+        .limit(1)
+        .get();
+    return church.docs.isNotEmpty
+        ? church.docs.first.get('points') as Map<String, dynamic>
+        : {};
   }
   // Badge Methods //////////////////////////////////////////////////////////////
 
-  static Future<void> createBadge(
+  static Future<void> createBadgeForChurchFamily(
     String badgeName,
     String badgeCloudinaryUrl,
   ) async {
@@ -868,7 +973,7 @@ class FirebaseProvider {
 
     // Using a composite ID prevents duplicates and allows easy de-duplication.
 
-    await firebase.collection('badges').doc().set({
+    await badgesCollection.doc().set({
       'church': church,
       'family': family,
       'name': badgeName,
@@ -876,12 +981,11 @@ class FirebaseProvider {
     }, SetOptions(merge: true));
   }
 
-  static Future<List<BadgeModel>> getBadgesFor(
+  static Future<List<BadgeModel>> getChurchFamilyBadges(
     String? church,
     String? family,
   ) async {
-    final snapshot = await firebase
-        .collection('badges')
+    final snapshot = await badgesCollection
         .where('church', isEqualTo: church)
         .where('family', isEqualTo: family)
         .get();
@@ -900,8 +1004,7 @@ class FirebaseProvider {
     String? adminPin,
   ) async {
     await configCollection.doc('defaults').update({
-      // the churchNames is a map where each where the keys are the church names and the value is the admin pass
-      'churchNames': {churchName: adminPin},
+      'churchNames.$churchName': adminPin, // updates only this key
     });
   }
 
@@ -917,21 +1020,61 @@ class FirebaseProvider {
     }
   }
 
-  static Future<Map<String, dynamic>> getDefaultTayo() async {
-    final doc = await configCollection.doc('defaults').get();
-    return doc.get('tayo') as Map<String, dynamic>;
+  /// Returns the default Tayo map for the given [family] in the current user's church.
+  /// Returns an empty map if the church, family, or Tayo data is missing.
+  static Future<Map<String, dynamic>> getChurchDefaultFamilyTayo(
+    String family,
+  ) async {
+    final churchName = LocalHelper.getUserChurchName();
+    if (churchName == null || churchName.isEmpty) return {};
+
+    final churchSnapshot = await churchesCollection
+        .where('churchName', isEqualTo: churchName)
+        .limit(1)
+        .get();
+
+    if (churchSnapshot.docs.isEmpty) return {};
+
+    final churchData = churchSnapshot.docs.first.data();
+
+    // Access the family-specific map: {family: {tayo: {...}}}
+    final familyMap = churchData[family];
+    if (familyMap is! Map<String, dynamic>) return {};
+
+    final tayo = familyMap['tayo'];
+    if (tayo is! Map<String, dynamic>) return {};
+
+    return tayo;
   }
 
-  static Future<Map<String, bool>>
+  static Future<Map<String, dynamic>>
   checkIfUpdateAvailableOrAppUnderMaintenance() async {
     final doc = await configCollection.doc('defaults').get();
-    final isUpdateAvailable = doc.get('updateAvailable') as bool? ?? false;
-    final isAppUnderMaintenance =
-        doc.get('appUnderMaintenance') as bool? ?? false;
+    final data = doc.data();
+
+    if (data == null) {
+      return {
+        'isUpdateAvailable': false,
+        'isAppUnderMaintenance': false,
+        'minAppVersion': null,
+        'minBuildNumber': null,
+      };
+    }
+
     return {
-      'isUpdateAvailable': isUpdateAvailable,
-      'isAppUnderMaintenance': isAppUnderMaintenance,
+      'isUpdateAvailable':
+          data['updateAvailable'] as bool? ??
+          false, // use original field after testing
+      'isAppUnderMaintenance': data['appUnderMaintenance'] as bool? ?? false,
+      'minAppVersion': data['minAppVersion'] as String?,
+      'minBuildNumber': data['minBuildNumber'] as int?,
     };
+  }
+
+  static Future<String?>? getAppDownloadUrl() async {
+    final doc = await configCollection.doc('defaults').get();
+    final data = doc.data();
+    return data?['appDownloadUrl'] as String?;
   }
 
   static Future<void> addFieldToAllDocs(dynamic defaultValue) async {
@@ -989,5 +1132,10 @@ class FirebaseProvider {
     await studentCollection.doc(studentUid).update({
       'lastMissCheck': Timestamp.fromDate(date ?? DateTime.now()),
     });
+  }
+
+  /// churches Collection Methods
+  static Future<void> createChurch(ChurchModel church) async {
+    await churchesCollection.doc(church.churchId).set(church.toJson());
   }
 }

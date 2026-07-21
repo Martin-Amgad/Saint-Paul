@@ -71,7 +71,10 @@ class ProfileRepo {
     String church,
     String family,
   ) async {
-    final firestoreBadges = await FirebaseProvider.getBadgesFor(church, family);
+    final firestoreBadges = await FirebaseProvider.getChurchFamilyBadges(
+      church,
+      family,
+    );
     await LocalHelper.setAllBadges(
       firestoreBadges,
     ); // update cache with fresh data

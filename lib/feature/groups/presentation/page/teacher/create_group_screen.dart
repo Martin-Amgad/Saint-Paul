@@ -47,10 +47,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     super.initState();
     context.read<GroupCubit>().fetchStudents(
       LocalHelper.getUserFamily(),
-      LocalHelper.getUserChurchName(),
+      LocalHelper.getUserChurchName() ?? '',
     );
-    filterChipsElements
-      ..addAll(SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? []);
+    LocalHelper.getUserType() == 'أمين خدمة التربية الكنسية'
+        ? filterChipsElements.addAll(SchoolYearsModel.getFamilies())
+        : filterChipsElements.addAll(
+            SchoolYearsModel.allYears[LocalHelper.getUserFamily()] ?? [],
+          );
   }
 
   @override

@@ -312,8 +312,15 @@ class Routes {
 
       GoRoute(
         path: appBlockedScreen,
-        builder: (context, state) =>
-            AppBlockedScreen(reason: state.extra as AppBlockedReason),
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          final reason = args['reason'] as AppBlockedReason;
+          final appDownloadUrl = args['appDownloadUrl'] as String?;
+          return AppBlockedScreen(
+            reason: reason,
+            appDownloadUrl: appDownloadUrl ?? '',
+          );
+        },
       ),
 
       GoRoute(

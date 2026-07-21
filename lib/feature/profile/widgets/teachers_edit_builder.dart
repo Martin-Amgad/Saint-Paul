@@ -174,64 +174,74 @@ class _TeacherInfoEditbuilderState extends State<TeacherInfoEditbuilder> {
                           ),
                         ],
                       ),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: Column(
-                          children: [
-                            // Teacher avatar
-                            // CircleAvatar(
-                            //   radius: 40,
-                            //   backgroundColor: AppColors.primaryColor
-                            //       .withValues(alpha: 0.08),
-                            //   child: ClipOval(
-                            //     child:
-                            //         teacher.avatarUrl != null &&
-                            //             teacher.avatarUrl!.isNotEmpty
-                            //         ? CachedNetworkImage(
-                            //             imageUrl: teacher.avatarUrl!,
-                            //             width: 70,
-                            //             height: 70,
-                            //             fit: BoxFit.cover,
-                            //             errorWidget: (context, url, error) {
-                            //               return const Icon(
-                            //                 Icons.person_rounded,
-                            //                 color: AppColors.primaryColor,
-                            //                 size: 30,
-                            //               );
-                            //             },
-                            //           )
-                            //         : const Icon(
-                            //             Icons.person_rounded,
-                            //             color: AppColors.primaryColor,
-                            //             size: 30,
-                            //           ),
-                            //   ),
-                            // ),
-                            const Gap(3),
-                            // Teacher name
-                            Text(
-                              teacher.name ?? 'بدون اسم',
-                              style: TextStyles.getSize18(
-                                color: AppColors.accentColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                      // child: SizedBox(
+                      //   height: MediaQuery.of(context).size.height * 0.6,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Teacher avatar
+                          // CircleAvatar(
+                          //   radius: 40,
+                          //   backgroundColor: AppColors.primaryColor
+                          //       .withValues(alpha: 0.08),
+                          //   child: ClipOval(
+                          //     child:
+                          //         teacher.avatarUrl != null &&
+                          //             teacher.avatarUrl!.isNotEmpty
+                          //         ? CachedNetworkImage(
+                          //             imageUrl: teacher.avatarUrl!,
+                          //             width: 70,
+                          //             height: 70,
+                          //             fit: BoxFit.cover,
+                          //             errorWidget: (context, url, error) {
+                          //               return const Icon(
+                          //                 Icons.person_rounded,
+                          //                 color: AppColors.primaryColor,
+                          //                 size: 30,
+                          //               );
+                          //             },
+                          //           )
+                          //         : const Icon(
+                          //             Icons.person_rounded,
+                          //             color: AppColors.primaryColor,
+                          //             size: 30,
+                          //           ),
+                          //   ),
+                          // ),
+                          // Teacher name
+                          Text(
+                            teacher.name ?? 'بدون اسم',
+                            style: TextStyles.getSize16(
+                              color: AppColors.accentColor,
+                              fontWeight: FontWeight.w600,
                             ),
-                            // Optional: show church/family or "خادم"
-                            const Gap(2),
-                            Text(
-                              'خادم',
-                              style: TextStyles.getSize12(
-                                color: AppColors.accentColor.withValues(
-                                  alpha: 0.5,
-                                ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // Optional: show church/family or "خادم"
+                          Gap(2),
+
+                          Text(
+                            teacher.role ?? 'خادم',
+                            style: TextStyles.getSize12(
+                              color: AppColors.accentColor.withValues(
+                                alpha: 0.5,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          Gap(2),
+
+                          Text(
+                            teacher.assignedFamily ?? 'خادم',
+                            style: TextStyles.getSize12(
+                              color: AppColors.accentColor.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    // ),
                   );
                 },
               );
