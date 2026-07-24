@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Gap(10),
-                      CustomBackButton(),
+                      CustomButton(),
                       Gap(10),
                       Row(
                         children: [

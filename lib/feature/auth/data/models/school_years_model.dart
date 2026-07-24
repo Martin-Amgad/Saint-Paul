@@ -1,9 +1,5 @@
 // make a model for diffrent year lists it just stores the lists in another place to declutter the other pages
 class SchoolYearsModel {
-  static List<String> getSchoolYears() {
-    return ['اولي اعدادي', 'تانيه اعدادي', 'ثالثة اعدادي'];
-  }
-
   static List<String> getFamilies() {
     return ['كي جي', 'ابتدائي', 'اعدادي', 'ثانوي', 'جامعة'];
   }

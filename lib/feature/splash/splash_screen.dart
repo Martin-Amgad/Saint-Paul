@@ -80,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen>
 
       LocalHelper.setUserFamily(teacher?.assignedFamily ?? '');
       LocalHelper.setUserStudyLevel(teacher?.assignedStudyLevel ?? '');
-      LocalHelper.setUserRole(teacher?.role ?? '');
+      LocalHelper.setUserChurchName(teacher?.church ?? '');
       LocalHelper.setUserType(teacher?.role ?? '');
     } else if (role == '0') {
       // ── STUDENT ──────────────
@@ -101,12 +101,12 @@ class _SplashScreenState extends State<SplashScreen>
       LocalHelper.setUserType('مخدوم');
     }
 
-    log('User role: $role');
-    log('Is new user: $isNewUser');
-    log('User family: ${LocalHelper.getUserFamily()}');
-    log('User study level: ${LocalHelper.getUserStudyLevel()}');
-    log('User type: ${LocalHelper.getUserType()}');
-    log('User church name: ${LocalHelper.getUserChurchName()}');
+    log('User role: $role.');
+    log('Is new user: $isNewUser.');
+    log('User family: ${LocalHelper.getUserFamily()}.');
+    log('User study level: ${LocalHelper.getUserStudyLevel()}.');
+    log('User type: ${LocalHelper.getUserType()}.');
+    log('User church name: ${LocalHelper.getUserChurchName()}.');
 
     // 2. Check for updates / maintenance + version comparison
     Map<String, dynamic> updateCheck;

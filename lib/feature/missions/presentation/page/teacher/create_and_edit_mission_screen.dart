@@ -107,7 +107,7 @@ class _CreateAndEditMissionScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomBackButton(),
+                      CustomButton(),
                       Gap(20),
                       Row(
                         children: [

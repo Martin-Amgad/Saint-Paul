@@ -224,7 +224,7 @@ class _TayoDetailsScreenState extends State<TayoDetailsScreen> {
                   // Back + title
                   Row(
                     children: [
-                      CustomBackButton(
+                      CustomButton(
                         onTap: () async {
                           if (equality.equals(tayo, oldTayo)) {
                             pop(context); // no changes, pop manually

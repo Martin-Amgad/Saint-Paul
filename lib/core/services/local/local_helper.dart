@@ -25,7 +25,8 @@ class LocalHelper {
   static String KUserChurch = 'user_church';
   static String KUserRole = 'user_role';
   static String KFCMToken = 'fcm_token';
-  static String badgeNamesKey = 'badge_names_map';
+  static String KBadgeNamesKey = 'badge_names_map';
+  static String KteacherNames = 'teacher_names';
 
   static Future<void> init() async {
     preferences = await SharedPreferences.getInstance();
@@ -224,7 +225,7 @@ class LocalHelper {
 
   static Future<void> setBadgeNamesMap(Map<String, String> map) async {
     try {
-      await preferences.setString(badgeNamesKey, jsonEncode(map));
+      await preferences.setString(KBadgeNamesKey, jsonEncode(map));
       log('✅ Badge names map saved');
     } catch (e) {
       log('❌ setBadgeNamesMap failed: $e');
@@ -233,7 +234,7 @@ class LocalHelper {
 
   static Map<String, String> getBadgeNamesMap() {
     try {
-      final dataString = preferences.getString(badgeNamesKey);
+      final dataString = preferences.getString(KBadgeNamesKey);
       if (dataString != null) {
         final Map<String, dynamic> decoded = jsonDecode(dataString);
         return decoded.map((key, value) => MapEntry(key, value.toString()));
@@ -242,5 +243,27 @@ class LocalHelper {
       log('❌ getBadgeNamesMap failed: $e');
     }
     return {};
+  }
+
+  static Future<void> setTeacherNames(List<String> names) async {
+    try {
+      await preferences.setString(KteacherNames, jsonEncode(names));
+      log('✅ Teacher names saved');
+    } catch (e) {
+      log('❌ setTeacherNames failed: $e');
+    }
+  }
+
+  static List<String> getTeacherNames() {
+    try {
+      final dataString = preferences.getString(KteacherNames);
+      if (dataString != null) {
+        final List<dynamic> decoded = jsonDecode(dataString);
+        return decoded.map((name) => name.toString()).toList();
+      }
+    } catch (e) {
+      log('❌ getTeacherNames failed: $e');
+    }
+    return [];
   }
 }

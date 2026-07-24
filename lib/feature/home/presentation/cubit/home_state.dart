@@ -1,4 +1,5 @@
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/teacher_model.dart';
 
 class HomeState {}
 
@@ -42,4 +43,14 @@ class HomeBadgeCreationSuccessState extends HomeState {
 
 class HomeGroupUpdateSuccessState extends HomeState {
   HomeGroupUpdateSuccessState();
+}
+
+class HomeTeachersLoadedState extends HomeState {
+  final List<TeacherModel> teachers;
+  HomeTeachersLoadedState({required this.teachers});
+}
+
+class HomeExcelTemplateDownloadSuccessState extends HomeState {
+  final String? message;
+  HomeExcelTemplateDownloadSuccessState({this.message});
 }

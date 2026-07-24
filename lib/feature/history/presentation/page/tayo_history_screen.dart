@@ -85,7 +85,7 @@ class _TayoHistoryScreenState extends State<TayoHistoryScreen> {
                   children: [
                     Row(
                       children: [
-                        CustomBackButton(),
+                        CustomButton(),
 
                         const Gap(12),
                         Text(

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 
-class CustomBackButton extends StatelessWidget {
-  const CustomBackButton({super.key, this.onTap});
+class CustomButton extends StatelessWidget {
+  const CustomButton({super.key, this.onTap, this.icon});
   final Function()? onTap;
+  final IconData? icon;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -20,7 +21,7 @@ class CustomBackButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
-          Icons.arrow_back_ios_rounded,
+          icon ?? Icons.arrow_back_ios_rounded,
           color: AppColors.whiteColor,
           size: 22,
         ),

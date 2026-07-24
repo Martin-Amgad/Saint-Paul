@@ -112,7 +112,7 @@ class _RegisterNewChurchScreenState extends State<RegisterNewChurchScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Gap(10),
-                  CustomBackButton(),
+                  CustomButton(),
                   Gap(10),
                   Row(
                     children: [

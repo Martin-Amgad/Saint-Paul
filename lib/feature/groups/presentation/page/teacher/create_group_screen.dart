@@ -133,7 +133,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
                   Row(
                     children: [
-                      CustomBackButton(),
+                      CustomButton(),
                       const Gap(12),
                       Text(
                         'إنشاء مجموعة',

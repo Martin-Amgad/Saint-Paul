@@ -1,7 +1,11 @@
 import 'dart:developer';
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/feature/home/data/repo/home_repo.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,14 +18,26 @@ class HomeCubit extends Cubit<HomeState> {
   var personalPhoneController = TextEditingController();
   var housePhoneController = TextEditingController();
   var addressController = TextEditingController();
-  var responsibleTeacherController = TextEditingController();
   var birthdayController = TextEditingController();
   var avatarUrlController = TextEditingController();
 
-  String? selectedValue;
+  String? selectedYear;
+  String? selectedFamily;
+  String? selectedResponsibleTeacher = '';
+
+  List<StudentModel> studentsList = [];
+  List<TeacherModel> teachers = [];
 
   var formkey = GlobalKey<FormState>();
 
+  bool get isGoogleMapsLink {
+    final text = addressController.text.trim();
+    return text.contains("maps.app.goo.gl") ||
+        text.contains("google.com/maps") ||
+        text.contains("maps.google");
+  }
+
+  // this method is used to update a student's information in the database.
   Future<void> updateStudent({
     required StudentModel newStudent,
     StudentModel? oldStudent,
@@ -61,6 +77,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   Future<void> updateStudentTakenAt(
     StudentModel student, {
     List<String>? tayoNewCategories,
@@ -85,6 +102,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   void getStudentTayoDetails(StudentModel student) async {
     emit(HomeLoadingState());
     try {
@@ -102,6 +120,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   void createStudent(StudentModel student) async {
     emit(HomeLoadingState());
     String? res;
@@ -116,20 +135,27 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   void loadStudentControllers(StudentModel? student) {
+    log(
+      'Loading student controllers with student teacher: ${student?.responsibleTeacher}',
+    );
     nameController.text = (student?.name ?? '').trim();
     fatherPhoneController.text = (student?.fatherPhone ?? '').trim();
     motherPhoneController.text = (student?.motherPhone ?? '').trim();
     personalPhoneController.text = (student?.personalPhone ?? '').trim();
     housePhoneController.text = (student?.housePhone ?? '').trim();
     addressController.text = (student?.address ?? '').trim();
-    selectedValue = student?.studyLevel;
+    selectedFamily = student?.family;
+    selectedYear = student?.studyLevel;
+    selectedResponsibleTeacher = student?.responsibleTeacher;
     birthdayController.text = DateFormat(
       'yyyy-MM-dd',
     ).format(student?.birthday ?? DateTime.now());
     avatarUrlController.text = student?.avatarUrl ?? '';
   }
 
+  // this method
   Future<void> loadStudentYear(String? id) async {
     emit(HomeLoadingState());
     try {
@@ -143,6 +169,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   void loadStudentData(String? id) async {
     emit(HomeLoadingState());
     try {
@@ -161,6 +188,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   Future<String?> uploadBadgeImageToCloudinary(
     String path,
     String badgeName,
@@ -180,6 +208,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   Future<void> createChurchFamilyBadge(String badgeName, String url) async {
     try {
       var currentBadges = await HomeRepo.getCurrentChurchFamilyBadges();
@@ -213,6 +242,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method
   Future<void> addChurchToAllDocs(String churchName) async {
     try {
       log(
@@ -230,6 +260,66 @@ class HomeCubit extends Cubit<HomeState> {
       emit(
         HomeErrorState(
           message: 'حدث خطأ أثناء إضافة اسم الكنيسة. الرجاء المحاولة مرة أخرى.',
+        ),
+      );
+    }
+  }
+
+  // this method
+  Future<void> importStudentsFromExcel(Uint8List bytes) async {
+    emit(HomeLoadingState());
+    try {
+      await HomeRepo.importStudentsFromExcel(bytes);
+      emit(HomeSuccessState(message: "تم اضافة الطلاب بنجاح."));
+    } catch (e) {
+      emit(
+        HomeErrorState(
+          message: "حدث خطأ أثناء استيراد الطلاب. الرجاء المحاولة مرة أخرى.",
+        ),
+      );
+    }
+  }
+
+  // this method
+  Future<void> downloadExcelTemplate() async {
+    try {
+      final data = await rootBundle.load('assets/files/student_template.xlsx');
+      final bytes = data.buffer.asUint8List();
+
+      final path = await FilePicker.saveFile(
+        dialogTitle: 'حفظ نموذج الملف',
+        fileName: 'student_template.xlsx',
+        bytes: bytes,
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (path != null) {
+        emit(
+          HomeExcelTemplateDownloadSuccessState(message: "تم حفظ الملف بنجاح."),
+        );
+      } else {
+        // user cancelled the dialog — you may want to just do nothing here
+      }
+    } catch (e) {
+      log('Error while saving the file: ${e.toString()}');
+      emit(HomeErrorState(message: "حدث خطأ أثناء حفظ الملف."));
+    }
+  }
+
+  Future<void> getChurchTeachers(String churchName) async {
+    try {
+      teachers = await HomeRepo.getChurchTeachers(churchName);
+      emit(HomeTeachersLoadedState(teachers: teachers));
+    } on Exception catch (e) {
+      log('Error while loading church teachers: ${e.toString()}');
+      emit(HomeErrorState(message: e.toString()));
+    } catch (e) {
+      log('Unexpected error: ${e.toString()}');
+      emit(
+        HomeErrorState(
+          message:
+              'حدث خطأ أثناء تحميل بيانات الخدام. الرجاء المحاولة مرة أخرى.',
         ),
       );
     }

@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:saint_paul/core/models/badge_model.dart';
@@ -89,6 +90,20 @@ class FirebaseProvider {
 
     return snapshot.docs
         .map((doc) => StudentModel.fromJson(doc.data(), doc.id))
+        .toList();
+  }
+
+  static Future<List<TeacherModel>> getChurchTeachers(String? church) async {
+    if (church == null) {
+      return [];
+    }
+
+    final snapshot = await teacherCollection
+        .where('church', isEqualTo: church)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => TeacherModel.fromJson(doc.data(), doc.id))
         .toList();
   }
 
@@ -206,6 +221,85 @@ class FirebaseProvider {
 
   static Future<void> createStudent(StudentModel student) async {
     await studentCollection.doc(student.uid).set(student.toJson());
+  }
+
+  static Future<void> updateStudentsBatch(List<StudentModel> students) async {
+    final firestore = FirebaseFirestore.instance;
+
+    const batchSize = 500;
+
+    for (int i = 0; i < students.length; i += batchSize) {
+      final batch = firestore.batch();
+
+      final end = math.min(i + batchSize, students.length);
+
+      for (int j = i; j < end; j++) {
+        final student = students[j];
+
+        final doc = studentCollection.doc(student.uid);
+
+        batch.set(doc, student.toJson(), SetOptions(merge: true));
+      }
+
+      await batch.commit();
+    }
+  }
+
+  /// delete any student depending on the church and if the name is empty or null
+  static Future<int> deleteStudentsWithEmptyOrNullName(String church) async {
+    final firestore = FirebaseFirestore.instance;
+
+    // Firestore can't query for null OR empty string in one query reliably,
+    // so we fetch all students for the church and filter client-side.
+    final snapshot = await studentCollection
+        .where("church", isEqualTo: church)
+        .get();
+
+    final docsToDelete = snapshot.docs.where((doc) {
+      final data = doc.data();
+      final name = data['name'];
+      return name == 'null' ||
+          name == null ||
+          (name is String && name.trim().isEmpty);
+    }).toList();
+
+    if (docsToDelete.isEmpty) return 0;
+
+    const batchSize = 500;
+    for (int i = 0; i < docsToDelete.length; i += batchSize) {
+      final batch = firestore.batch();
+      final end = math.min(i + batchSize, docsToDelete.length);
+
+      for (int j = i; j < end; j++) {
+        batch.delete(docsToDelete[j].reference);
+      }
+
+      await batch.commit();
+    }
+
+    return docsToDelete.length;
+  }
+
+  static Future<Map<String, StudentModel>> getExistingStudentsKeyedByPhone(
+    String church,
+  ) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection("students")
+        .where("church", isEqualTo: church)
+        .get();
+
+    final Map<String, StudentModel> map = {};
+    for (final doc in snapshot.docs) {
+      final student = StudentModel.fromJson(
+        doc.data(),
+        doc.id,
+      ); // adjust to your actual fromJson
+      final key = student.personalPhone?.trim();
+      if (key != null && key.isNotEmpty) {
+        map[key] = student;
+      }
+    }
+    return map;
   }
 
   static Future<void> updateStudentGroupID(
@@ -360,42 +454,6 @@ class FirebaseProvider {
     });
   }
 
-  //   static Future<void> updateStudentWithHistory(
-  //   StudentModel student,
-  //   List<TayoHistoryChange> historyChanges,
-  // ) async {
-  //   final batch = firebase.batch();
-
-  //   // Update student
-  //   batch.update(
-  //     studentCollection.doc(student.uid),
-  //     student.toUpdateData(),
-  //   );
-
-  //   final historyCollection = studentCollection
-  //       .doc(student.uid)
-  //       .collection('history');
-
-  //   final teacher = LocalHelper.getTeacherData();
-
-  //   for (final change in historyChanges) {
-  //     final historyDoc = historyCollection.doc();
-
-  //     batch.set(
-  //       historyDoc,
-  //       TayoHistoryModel(
-  //         category: change.category,
-  //         change: change.change,
-  //         createdAt: DateTime.now(), // or FieldValue.serverTimestamp() if your model supports it
-  //         teacherId: teacher.uid,
-  //         teacherName: teacher.name,
-  //       ).toJson(),
-  //     );
-  //   }
-
-  //   await batch.commit();
-  // }
-
   static Future<void> updateStudentImage(
     String? studentId,
     String avatarUrl,
@@ -462,6 +520,9 @@ class FirebaseProvider {
     required String church, // remove nullable if always required
     String? family,
   }) {
+    log(
+      'Streaming students sorted by totalTayo for church: $church, family: $family',
+    );
     Query query = studentCollection
         .where('church', isEqualTo: church)
         .orderBy('totalTayo', descending: true);
@@ -510,7 +571,7 @@ class FirebaseProvider {
       return;
     }
     // TODO
-    // if th euser is أمين خدمة التربية الكنسية i have to set the family
+    // if the user is أمين خدمة التربية الكنسية i have to set the family
     // await LocalHelper.setUserFamily('اعدادي');
 
     // 1. Update churches default tayo categories

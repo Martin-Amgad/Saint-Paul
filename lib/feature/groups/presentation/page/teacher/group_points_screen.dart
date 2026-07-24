@@ -211,7 +211,7 @@ class _GroupPointsScreenState extends State<GroupPointsScreen> {
                   // Back + title
                   Row(
                     children: [
-                      CustomBackButton(
+                      CustomButton(
                         onTap: () async {
                           if (equality.equals(point, oldPoint)) {
                             pop(

@@ -141,7 +141,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                                   size: 24,
                                 ),
                               )
-                            : CustomBackButton(
+                            : CustomButton(
                                 onTap: () {
                                   pop(context, totalPoints);
                                 },

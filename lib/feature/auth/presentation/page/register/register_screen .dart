@@ -145,7 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Gap(10),
-                  CustomBackButton(),
+                  CustomButton(),
                   Gap(10),
                   Row(
                     children: [
@@ -208,7 +208,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         debugPrint('Church dropdown tapped');
                       },
                       isDense: false,
-                      value: cubit.selectedChurch,
+                      initialValue: cubit.selectedChurch,
                       hint: Text(
                         'الكنيسة',
                         style: TextStyles.getSize16(
@@ -267,7 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.church_rounded,
                     child: DropdownButtonFormField<String>(
                       isDense: false,
-                      value: cubit.selectedRole,
+                      initialValue: cubit.selectedRole,
                       hint: Text(
                         'الانضمام كـ',
                         style: TextStyles.getSize16(
@@ -329,7 +329,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.group_rounded,
                     child: DropdownButtonFormField<String>(
                       isDense: false,
-                      value: cubit.selectedFamily,
+                      initialValue: cubit.selectedFamily,
                       hint: Text(
                         'الأسرة',
                         style: TextStyles.getSize16(
@@ -393,7 +393,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.school_rounded,
                     child: DropdownButtonFormField<String>(
                       isDense: false,
-                      value: cubit.selectedYear,
+                      initialValue: cubit.selectedYear,
                       hint: Text(
                         cubit.selectedRole == 'مخدوم'
                             ? " المستوى الدراسي"

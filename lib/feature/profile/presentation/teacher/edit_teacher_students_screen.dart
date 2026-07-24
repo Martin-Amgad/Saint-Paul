@@ -152,7 +152,7 @@ class _EditTeacherStudentsScreenState extends State<EditTeacherStudentsScreen> {
               ),
               child: Row(
                 children: [
-                  CustomBackButton(),
+                  CustomButton(),
                   const Gap(12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
