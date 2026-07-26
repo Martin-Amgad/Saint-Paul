@@ -387,4 +387,24 @@ class HomeRepo {
       return []; // Return an empty list on error
     }
   }
+
+  static Future<void> addStudentIdToTeacher({
+    String? teacherId,
+    String? studentId,
+  }) async {
+    try {
+      if (teacherId == null || teacherId.isEmpty) {
+        log('Teacher ID is null or empty. Cannot add student ID.');
+        return;
+      }
+      if (studentId == null || studentId.isEmpty) {
+        log('Student ID is null or empty. Cannot add to teacher.');
+        return;
+      }
+      await FirebaseProvider.addStudentIdToTeacher(teacherId, studentId);
+      log('Successfully added student ID $studentId to teacher ID $teacherId.');
+    } catch (e) {
+      log('Error while adding student ID to teacher: ${e.toString()}');
+    }
+  }
 }

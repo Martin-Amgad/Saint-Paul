@@ -219,6 +219,7 @@ class StudentModel {
 
   /// CopyWith
   StudentModel copyWith({
+    String? uid,
     String? name,
     String? motherPhone,
     String? fatherPhone,
@@ -240,7 +241,7 @@ class StudentModel {
     DateTime? lastMissCheck,
   }) {
     return StudentModel(
-      uid: uid,
+      uid: uid ?? this.uid,
       name: name ?? this.name,
       motherPhone: motherPhone ?? this.motherPhone,
       fatherPhone: fatherPhone ?? this.fatherPhone,

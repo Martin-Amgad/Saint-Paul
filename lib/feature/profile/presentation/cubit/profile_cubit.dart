@@ -34,6 +34,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoadingState());
     try {
       StudentModel? res = await ProfileRepo.loadStudentData(id);
+
+      if (isClosed) return;
       emit(ProfileLoadedState(studentData: res));
     } on Exception catch (e) {
       log(e.toString());
@@ -62,6 +64,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     try {
       emit(ProfileLoadingState());
       await ProfileRepo.deleteStudent(studentId);
+
+      if (isClosed) return;
       emit(ProfileDeletedState());
     } catch (e) {
       log(e.toString());
@@ -77,6 +81,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoadingState());
     try {
       final badges = await ProfileRepo.getBadgesFor(church, family);
+
+      if (isClosed) return;
       emit(ProfileBadgesLoadedState(badges: badges));
     } catch (e) {
       emit(ProfileErrorState(message: e.toString()));
@@ -87,6 +93,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoadingState());
     try {
       await ProfileRepo.deleteTeacher(teacherId);
+
+      if (isClosed) return;
       emit(ProfileDeletedState());
     } catch (e) {
       emit(ProfileErrorState(message: e.toString()));
@@ -134,6 +142,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
     try {
       final students = await ProfileRepo.fetchStudentsByIds(studentIds);
+
+      if (isClosed) return;
       emit(
         ProfileAssignedStudentsLoadedState(
           students: students,
@@ -145,24 +155,24 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
+  // this method is used to save the selected students for a teacher,
+  // and it also calculates which students were added or removed from the list.
   Future<void> saveTeacherStudents({
     required String teacherId,
+    required String teacherName,
     required List<String> selectedIds,
     required List<String> previousIds,
   }) async {
-    final added = selectedIds.where((id) => !previousIds.contains(id)).toList();
-    final removed = previousIds
-        .where((id) => !selectedIds.contains(id))
-        .toList();
-
     emit(ProfileLoadingState());
     try {
-      await ProfileRepo.updateTeacherStudents(
+      await ProfileRepo.saveTeacherStudentAssignment(
         teacherId: teacherId,
-        assignedStudentIds: selectedIds,
-        addedStudentIds: added,
-        removedStudentIds: removed,
+        teacherName: teacherName,
+        selectedIds: selectedIds,
+        previousIds: previousIds,
       );
+
+      if (isClosed) return;
       emit(ProfileSuccessState(message: 'تم حفظ الطلاب المسندين بنجاح'));
     } catch (e) {
       emit(ProfileErrorState(message: 'حدث خطأ أثناء الحفظ'));

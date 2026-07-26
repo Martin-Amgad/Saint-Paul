@@ -16,9 +16,9 @@ import 'package:saint_paul/feature/history/presentation/cubit/history_cubit.dart
 import 'package:saint_paul/feature/history/presentation/page/tayo_history_screen.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_cubit.dart';
 import 'package:saint_paul/feature/home/presentation/page/student/student_home_screen.dart';
+import 'package:saint_paul/feature/home/presentation/page/teacher/add_edit_new_student_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/students_excel_upload_screen.dart';
-import 'package:saint_paul/feature/miss_checks/presentation/page/miss_check_screen.dart';
-import 'package:saint_paul/feature/profile/presentation/teacher/add_edit_new_student_screen.dart';
+import 'package:saint_paul/feature/profile/presentation/teacher/miss_check_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/teacher_home_screen.dart';
 import 'package:saint_paul/feature/home/presentation/page/teacher/tayo_details_screen.dart';
 import 'package:saint_paul/feature/missions/widgets/student_missions_list.dart';

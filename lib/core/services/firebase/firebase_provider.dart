@@ -182,6 +182,15 @@ class FirebaseProvider {
     }
   }
 
+  static Future<void> addStudentIdToTeacher(
+    String teacherId,
+    String studentId,
+  ) async {
+    await teacherCollection.doc(teacherId).update({
+      'assignedStudentIds': FieldValue.arrayUnion([studentId]),
+    });
+  }
+
   // STUDENT METHODS ////////////////////////////////////////////////////////////
   static Map<String, dynamic> updateChurchDefaultTayoMethod(
     List<String>? tayoNewCategories,
@@ -551,6 +560,40 @@ class FirebaseProvider {
     return await query.orderBy('birthday', descending: true).get();
   }
 
+  static Future<void> saveTeacherStudentAssignment({
+    required String teacherId,
+    required String teacherName,
+    required List<String> selectedIds,
+    required List<String> previousIds,
+  }) async {
+    final added = selectedIds.where((id) => !previousIds.contains(id)).toList();
+    final removed = previousIds
+        .where((id) => !selectedIds.contains(id))
+        .toList();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    // 1. Update the teacher's list
+    batch.update(teacherCollection.doc(teacherId), {
+      'assignedStudentIds': selectedIds,
+    });
+
+    // 2. Set teacher on newly added students
+    for (final id in added) {
+      batch.update(studentCollection.doc(id), {
+        'responsibleTeacher': teacherName,
+      });
+    }
+
+    // 3. Clear teacher on removed students (use FieldValue.delete() or null)
+    for (final id in removed) {
+      batch.update(studentCollection.doc(id), {
+        'responsibleTeacher': FieldValue.delete(), // removes the field entirely
+      });
+    }
+
+    await batch.commit();
+  }
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   ///////////////⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   ////////////////⚠️⚠️⚠️⚠️⚠️Tayo UPDATE METHODS⚠️⚠️⚠️⚠️⚠️

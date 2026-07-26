@@ -15,6 +15,7 @@ import 'package:saint_paul/core/extentions/app_regex.dart';
 import 'package:saint_paul/core/extentions/dialogs.dart';
 import 'package:saint_paul/core/models/badge_model.dart';
 import 'package:saint_paul/core/models/student_model.dart';
+import 'package:saint_paul/core/models/teacher_model.dart';
 import 'package:saint_paul/core/routes/navigation.dart';
 import 'package:saint_paul/core/routes/routes.dart';
 import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
@@ -49,6 +50,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
       .toList();
 
   List<String?> teachersNames = LocalHelper.getTeacherNames() ?? [];
+  List<TeacherModel> teachers = [];
   DateTime? pickedDate;
   @override
   void initState() {
@@ -65,7 +67,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
   }
 
   Future<void> getAllTeacher() async {
-    var teachers = await FirebaseProvider.getChurchTeachers(
+    teachers = await FirebaseProvider.getChurchTeachers(
       LocalHelper.getUserChurchName() ?? '',
     );
     LocalHelper.setTeacherNames(
@@ -150,7 +152,13 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
           child: MainButton(
             title: 'حفظ',
             onPressed: () async {
-              log('Save button pressed. Validating form...');
+              var teacherId = teachers
+                  .firstWhere(
+                    (teacher) =>
+                        teacher.name == cubit.selectedResponsibleTeacher,
+                    orElse: () => TeacherModel(),
+                  )
+                  .uid;
               // log the new badges
               log('Current badges: ${myBadges.keys.join(', ')}');
               if (cubit.formkey.currentState?.validate() ?? false) {
@@ -163,31 +171,42 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                       personalPhone: cubit.personalPhoneController.text.trim(),
                       housePhone: cubit.housePhoneController.text.trim(),
                       address: cubit.addressController.text.trim(),
-                      studyLevel: cubit.selectedYear,
                       birthday: pickedDate,
+                      studyLevel: cubit.selectedYear,
                       responsibleTeacher: cubit.selectedResponsibleTeacher,
-
+                      avatarUrl: cubit.avatarUrlController.text.trim(),
                       myBadges: Map<String, String>.from(myBadges),
+                      family: cubit.selectedFamily,
+                      church: LocalHelper.getUserChurchName(),
                     ),
                     oldStudent: widget.student!,
+                    teacherId: teacherId,
+                    studentId: widget.student!.uid,
                   );
-                  return;
+                } else {
+                  cubit.createStudent(
+                    StudentModel(
+                      name: cubit.nameController.text.trim(),
+                      fatherPhone: cubit.fatherPhoneController.text.trim(),
+                      motherPhone: cubit.motherPhoneController.text.trim(),
+                      personalPhone: cubit.personalPhoneController.text.trim(),
+                      housePhone: cubit.housePhoneController.text.trim(),
+                      address: cubit.addressController.text.trim(),
+                      birthday: pickedDate,
+                      avatarUrl: cubit.avatarUrlController.text.trim(),
+                      studyLevel: cubit.selectedYear,
+                      responsibleTeacher: cubit.selectedResponsibleTeacher,
+                      myBadges: Map<String, String>.from(myBadges),
+                      family: cubit.selectedFamily,
+                      church: LocalHelper.getUserChurchName(),
+                    ),
+                    teacherId: teacherId,
+                  );
                 }
-                cubit.createStudent(
-                  StudentModel(
-                    uid: LocalHelper.getUserId() ?? '',
-                    name: cubit.nameController.text.trim(),
-                    fatherPhone: cubit.fatherPhoneController.text.trim(),
-                    motherPhone: cubit.motherPhoneController.text.trim(),
-                    personalPhone: cubit.personalPhoneController.text.trim(),
-                    housePhone: cubit.housePhoneController.text.trim(),
-                    address: cubit.addressController.text.trim(),
-                    studyLevel: cubit.selectedYear,
-                    birthday: pickedDate,
-                    responsibleTeacher: cubit.selectedResponsibleTeacher,
-                    myBadges: Map<String, String>.from(myBadges),
-                  ),
-                );
+                // cubit.addStudentIdToTeacher(
+                //   teacherId: cubit.selectedResponsibleTeacher,
+                //   studentId: widget.student?.uid ?? '',
+                // );
               }
             },
           ),
@@ -514,7 +533,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                               isDense: false,
                               initialValue: selectedTeacher,
                               hint: Text(
-                                'ادخل الخادم المسئول',
+                                'اختر الخادم المسئول',
                                 style: TextStyles.getSize16(
                                   color: AppColors.greyColor,
                                   fontWeight: FontWeight.w500,
@@ -710,6 +729,7 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                           ),
                           if (availableBadges.isNotEmpty) ...[
                             const Gap(15),
+
                             // badge dropdown
                             CustomFormField(
                               label: ' أضافة وسام',
@@ -784,7 +804,6 @@ class _AddEditNewStudentScreenState extends State<AddEditNewStudentScreen> {
                               ),
                             ),
                           ],
-
                           const Gap(15),
 
                           // badges list

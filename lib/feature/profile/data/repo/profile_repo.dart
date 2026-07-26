@@ -132,4 +132,18 @@ class ProfileRepo {
       removedStudentIds: removedStudentIds,
     );
   }
+
+  static Future<void> saveTeacherStudentAssignment({
+    required String teacherId,
+    required String teacherName,
+    required List<String> selectedIds,
+    required List<String> previousIds,
+  }) async {
+    await FirebaseProvider.saveTeacherStudentAssignment(
+      teacherId: teacherId,
+      teacherName: teacherName,
+      selectedIds: selectedIds,
+      previousIds: previousIds,
+    );
+  }
 }

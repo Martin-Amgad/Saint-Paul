@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
@@ -6,7 +8,7 @@ import 'package:saint_paul/core/constants/app_assets.dart';
 import 'package:saint_paul/core/utils/colors.dart';
 import 'package:saint_paul/core/utils/text_styles.dart';
 import 'package:saint_paul/feature/home/widgets/filter_chip.dart';
-import 'package:saint_paul/feature/miss_checks/widgets/miss_check_list_builder.dart';
+import 'package:saint_paul/feature/profile/widgets/miss_check_list_builder.dart';
 
 /// Teacher-facing screen for tracking pastoral check-ins (افتقاد).
 ///

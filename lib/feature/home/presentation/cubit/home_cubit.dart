@@ -1,11 +1,13 @@
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:saint_paul/core/models/student_model.dart';
 import 'package:saint_paul/core/models/teacher_model.dart';
+import 'package:saint_paul/core/services/firebase/firebase_provider.dart';
 import 'package:saint_paul/feature/home/data/repo/home_repo.dart';
 import 'package:saint_paul/feature/home/presentation/cubit/home_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,6 +47,8 @@ class HomeCubit extends Cubit<HomeState> {
     List<String>? tayoRemovedCategories,
     String? groupID,
     int? groupPointsDelta,
+    String? teacherId,
+    String? studentId,
   }) async {
     emit(HomeLoadingState());
     try {
@@ -60,6 +64,18 @@ class HomeCubit extends Cubit<HomeState> {
         groupPointsDelta: groupPointsDelta,
       );
       log('Student update completed with result: $res');
+
+      // This is the new addition to the method to add the student ID to the teacher's assigned students list.
+      if (teacherId != null && studentId != null) {
+        log('Adding student ID $studentId to teacher ID $teacherId');
+        await HomeRepo.addStudentIdToTeacher(
+          teacherId: teacherId,
+          studentId: studentId,
+        );
+        log(
+          'Student ID $studentId added to teacher ID $teacherId successfully',
+        );
+      }
 
       if (isClosed) return;
       emit(HomeSuccessState(message: res));
@@ -121,12 +137,26 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   // this method
-  void createStudent(StudentModel student) async {
+  void createStudent(StudentModel student, {String? teacherId}) async {
     emit(HomeLoadingState());
     String? res;
     try {
+      final newStudentId = FirebaseProvider.studentCollection.doc().id;
+      log('Creating student with ID: $newStudentId');
+      student = student.copyWith(uid: newStudentId);
       res = await HomeRepo.createStudent(student);
 
+      // This is the new addition to the method to add the student ID to the teacher's assigned students list.
+      if (teacherId != null && newStudentId.isNotEmpty) {
+        log('Adding student ID $newStudentId to teacher ID $teacherId');
+        await HomeRepo.addStudentIdToTeacher(
+          teacherId: teacherId,
+          studentId: newStudentId,
+        );
+        log(
+          'Student ID $newStudentId added to teacher ID $teacherId successfully',
+        );
+      }
       if (isClosed) return;
       emit(HomeSuccessState(message: res));
     } on Exception catch (e) {
@@ -155,7 +185,7 @@ class HomeCubit extends Cubit<HomeState> {
     avatarUrlController.text = student?.avatarUrl ?? '';
   }
 
-  // this method
+  // this method is used to load the student's year from the database and emit the appropriate state based on the result.
   Future<void> loadStudentYear(String? id) async {
     emit(HomeLoadingState());
     try {
@@ -169,7 +199,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  // this method
+  // this method is used to load the student's data from the database and emit the appropriate state based on the result.
   void loadStudentData(String? id) async {
     emit(HomeLoadingState());
     try {
@@ -188,7 +218,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  // this method
+  // this method is used to upload a badge image to Cloudinary and return the new URL.
   Future<String?> uploadBadgeImageToCloudinary(
     String path,
     String badgeName,
@@ -208,7 +238,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  // this method
+  // this method is used to create a new church family badge in the database and emit the appropriate state based on the result.
   Future<void> createChurchFamilyBadge(String badgeName, String url) async {
     try {
       var currentBadges = await HomeRepo.getCurrentChurchFamilyBadges();
@@ -242,7 +272,8 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  // this method
+  // this method is used to add a church name to all documents in the Students collection
+  // and emit the appropriate state based on the result.
   Future<void> addChurchToAllDocs(String churchName) async {
     try {
       log(
@@ -265,7 +296,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  // this method
+  // this method is used to import students from an Excel file and emit the appropriate state based on the result.
   Future<void> importStudentsFromExcel(Uint8List bytes) async {
     emit(HomeLoadingState());
     try {
@@ -280,7 +311,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  // this method
+  // this method is used to download an Excel template for students and emit the appropriate state based on the result.
   Future<void> downloadExcelTemplate() async {
     try {
       final data = await rootBundle.load('assets/files/student_template.xlsx');
@@ -307,6 +338,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // this method is used to get the teachers of a specific church and emit the appropriate state based on the result.
   Future<void> getChurchTeachers(String churchName) async {
     try {
       teachers = await HomeRepo.getChurchTeachers(churchName);

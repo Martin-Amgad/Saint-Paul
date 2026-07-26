@@ -90,8 +90,10 @@ class _EditTeacherStudentsScreenState extends State<EditTeacherStudentsScreen> {
     final previousIds = List<String>.from(
       widget.teacher.assignedStudentIds ?? [],
     );
+
     context.read<ProfileCubit>().saveTeacherStudents(
       teacherId: widget.teacher.uid!,
+      teacherName: widget.teacher.name ?? '',
       selectedIds: selectedIds,
       previousIds: previousIds,
     );
