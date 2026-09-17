@@ -24,6 +24,8 @@ class MainAppScreen extends StatefulWidget {
 
 class _MainPageState extends State<MainAppScreen> {
   int _selectedIndex = 0;
+  bool isAdminTeacher =
+      LocalHelper.getUserRole() == "أمين خدمة التربية الكنسية";
   List<Widget> get pages => widget.role == 'خادم'
       ? [
           const TeacherHomeScreen(),
@@ -45,7 +47,11 @@ class _MainPageState extends State<MainAppScreen> {
           GButton(icon: Icons.cake, text: 'أعياد الميلاد'),
           GButton(iconSize: 29, icon: Icons.assignment, text: 'المهام'),
           GButton(iconSize: 29, icon: Icons.groups, text: 'المجموعات'),
-          GButton(iconSize: 29, icon: Icons.group, text: 'المخدومين'),
+          GButton(
+            iconSize: 29,
+            icon: Icons.group,
+            text: isAdminTeacher ? 'المخدومين' : 'الخدام',
+          ),
         ]
       : [
           GButton(iconSize: 28, icon: Icons.leaderboard, text: 'المتصدرين'),
