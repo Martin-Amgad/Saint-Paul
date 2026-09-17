@@ -4,7 +4,7 @@
   <img src="https://github.com/user-attachments/assets/8e52a05c-2322-4dde-b9d5-1a97c809758c" alt="Saint Paul Logo" width="300"/>
 </p>
 
-> A Flutter mobile app for tracking and engaging church youth students — built for both teachers and students, powered by Firebase in real time.
+> A Flutter mobile app for tracking and engaging church youth students across churches and church families — built for teachers and students, powered by Firebase in real time.
 
 ---
 
@@ -27,11 +27,11 @@
 
 ## Overview
 
-**Saint Paul** is a dual-role Flutter application designed for church youth groups. Teachers can manage students, assign missions, organize groups, and track attendance via a "Tayo" point system. Students can view their missions, check their progress, earn badges, and see where they rank on the leaderboard — all with real-time updates from Cloud Firestore.
+**Saint Paul** is a Flutter application for managing church youth groups. Teachers can manage students, assign missions, organize groups, track attendance through a "Tayo" point system, and follow weekly miss checks. Students can view missions, check their progress, earn badges, and see group and church-family rankings — all with real-time updates from Cloud Firestore.
 
-The app is Arabic-first with full RTL support using the Cairo font family.
+The app is Arabic-first with full RTL support using the Cairo font family. Data is scoped by church, church family, and study level so the same application can support multiple communities.
 
-> **Note:** The app currently supports the preparatory year only. Support for additional school years is planned for future releases.
+> **Note:** Available study levels are configured per church family. Add or update them in the shared school-year configuration as the ministry grows.
 
 ---
 
@@ -39,14 +39,18 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 
 ### 👨‍🏫 Teacher Side
 - View and manage all students (add, edit, delete)
+- Filter students by church family, study level, and responsible teacher
+- Import students in bulk from an Excel file and download the import template
 - Track student attendance and behavior via the **Tayo** point system
+- Review Tayo history and manage weekly miss checks
 - Create, edit, and assign **missions** to students by study level
-- Organize students into **groups** and manage group details
+- Organize students into **groups**, manage group details, and track group points
 - View birthday reminders and student contact info
 - See a leaderboard of top students in real time
-- Create new badge definitions from teacher home (name + Cloudinary image)
+- Create church-family badge definitions from teacher home (name + Cloudinary image)
 - Assign and remove badges per student from the student edit screen
-- Change admin PIN via a bottom sheet from the teacher home screen
+- Edit teacher assignments and manage the church's teaching structure
+- Change the church admin PIN from the teacher home screen
 
 ### 🎯 Student Side
 - Browse available and completed missions
@@ -56,16 +60,19 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 - Real-time score and ranking updates
 - View badge progress with earned vs. locked badges
 - Update profile avatar via camera or gallery
+- Receive Firebase Cloud Messaging notifications and local foreground notifications
 
 ### 🔐 Auth
 - Email/password login and registration via Firebase Auth
 - Forgot password support (email reset is available)
-- Role-based routing (teacher vs. student) after sign-in
+- Register a new church and select an existing church family during registration
+- Role-based routing (teacher, student, and church admin) after sign-in
 
 ### ⚙️ App Control (Remote Flags)
 - Force app update via Firestore config flag — blocks the app and opens the APK download link via `url_launcher`
 - Put app in maintenance mode via Firestore config flag — blocks the app with a maintenance message
 - Both states are checked on every app launch from the splash screen before any routing occurs
+- Store church-specific defaults for Tayo categories, group points, badges, and the admin PIN
 
 ---
 
@@ -108,6 +115,16 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 |---------|--------|
 | <img src="https://github.com/user-attachments/assets/661be14c-9fc0-454b-a783-5c38519c03b1" width="180"/> | <img src="https://github.com/user-attachments/assets/937669a7-8ad5-4727-b85f-e65bae6c8872" width="180"/> |
 
+### Newer Flows
+
+| New Church Registration | Excel Student Import | Miss Check |
+|-------------------------|----------------------|------------|
+|<img src="https://github.com/user-attachments/assets/e044429b-1048-4434-a2a0-15b8629e07fd" width="180"/> |<img  src="https://github.com/user-attachments/assets/215580ed-5bf3-4d4c-bdc4-c2dfdf478f35" width="180"/> |<img src="https://github.com/user-attachments/assets/635df602-57a7-4dec-ae20-e4156f542940"  width="180"/> |
+
+| Tayo History | Group Points | Group Points History
+|--------------|--------------|--------------| 
+|<img  src="https://github.com/user-attachments/assets/04af28cb-34e5-43a5-a674-d869c352c9de" width="180"/> |<img src="https://github.com/user-attachments/assets/4f71758f-d3b8-4cfd-b5dc-daaf5beeb5bc" width="180"/> |<img  src="https://github.com/user-attachments/assets/eccdb47f-fa20-4f93-9cba-6be63ff31d34" width="180"/> |
+
 
 ---
 
@@ -124,7 +141,10 @@ The app is Arabic-first with full RTL support using the Cairo font family.
 | UI | Arabic-first RTL, Cairo font, `flutter_svg`, `lottie`, `google_nav_bar` |
 | Images | `cached_network_image`, `image_picker` |
 | Image Storage | Cloudinary (student avatars + badge images) |
-| Links | `url_launcher` |
+| Notifications | Firebase Cloud Messaging, `flutter_local_notifications`, `timezone` |
+| Files and Import | `excel`, `file_picker` |
+| Links and HTTP | `url_launcher`, `http` |
+| Utilities | `intl`, `gap`, `super_tooltip`, `package_info_plus` |
 | Localization | `flutter_localizations` (Arabic + English) |
 
 ---
@@ -144,7 +164,7 @@ Flutter UI  ──►  Cubit  ──►  Repository  ──►  Firebase Provide
                                                     Flutter UI
 ```
 
-Each feature module owns its presentation layer (screens + cubit), its data layer (repository), and its models. Shared models and utilities live in `lib/core/`.
+Each feature module owns its presentation layer (screens + Cubit), its data layer (repository), and its models. Shared Firebase access, local storage, notifications, models, routes, and utilities live in `lib/core/`. Firebase Messaging is initialized during app startup and foreground messages are displayed through local notifications.
 
 ---
 
@@ -161,12 +181,14 @@ lib/
 │   ├── models/                # Shared data models
 │   │   ├── student_model.dart
 │   │   ├── teacher_model.dart
+│   │   ├── church_model.dart
 │   │   ├── mission_model.dart
 │   │   └── group_model.dart
 │   ├── routes/
 │   │   └── routes.dart        # GoRouter route definitions
 │   ├── services/
-│   │   └── local/             # SharedPreferences helper
+│   │   ├── firebase/           # Firestore, Auth, and notification services
+│   │   └── local/              # SharedPreferences and local notifications
 │   └── utils/
 │       └── theme.dart         # App theme
 │
@@ -175,8 +197,10 @@ lib/
 └── feature/
     ├── auth/                  # Login, register, forgot password
     ├── home/                  # Teacher home, student home, Tayo details
+    ├── history/               # Tayo history
     ├── missions/              # Mission list, creation, details
     ├── groups/                # Group management
+    ├── Notifications/         # FCM token and notification handling
     ├── profile/               # Student profile, badges, student management
     ├── main/                  # Bottom nav bar (role-aware)
     ├── splash/                # Splash screen
@@ -208,7 +232,13 @@ Tracks everything about a student: contact info, study level, responsible teache
 Represents a task assigned to students. Includes title, description, optional link, reward points, expiry duration, enrollment count, and study level targeting.
 
 ### GroupModel
-Represents a student group with a teacher-managed membership list.
+Represents a student group with a teacher-managed membership list, church, family, Tayo totals, and group points.
+
+### ChurchModel
+Represents a church's shared configuration, including its admin PIN, default Tayo categories, and group-point settings.
+
+### TeacherModel and BadgeModel
+Teachers are assigned to a church and family. Badges are scoped to a church family and store their display name and Cloudinary image URL.
 
 ---
 
@@ -221,6 +251,7 @@ Student data and config are cached locally using `shared_preferences` to elimina
 | Student profile | `userData` | Every profile screen open via `ProfileCubit.loadStudentData` |
 | All badges (config) | `allBadges` | Every `BadgesScreen` open |
 | App config flags | checked live | Every app launch from splash |
+| User church and family | `user_church`, `user_family` | During authentication and profile initialization |
 
 **Avatar updates** write back to local storage immediately after a successful Cloudinary upload, so the new image persists across app restarts without waiting for the next Firestore sync.
 
@@ -230,11 +261,10 @@ Student data and config are cached locally using `shared_preferences` to elimina
 
 ## Auth and Role Notes
 
-- Roles are encoded using Firebase Auth `photoURL`:
-  - `1` → Teacher (`خادم`)
-  - `0` → Student (`مخدوم`)
-- Teacher registration is protected by an admin PIN validated against Firestore.
-- The admin PIN can be changed at any time from the teacher home screen via a bottom sheet.
+- Authentication uses Firebase Auth email/password accounts with role-specific profile data.
+- Student and teacher records are scoped to a church; teachers are additionally assigned to a church family.
+- Teacher and church registration is protected by an admin PIN validated against Firestore.
+- The church admin PIN can be changed at any time from the teacher home screen via a bottom sheet.
 - Email reset password is active.
 
 ---
@@ -249,6 +279,8 @@ All routes are defined in `lib/core/routes/routes.dart` using **GoRouter**. Role
 | `/welcome` | Welcome |
 | `/login` | Login |
 | `/Register` | Register |
+| `/RegisterNewChurch` | Register a new church |
+| `/emailScreen`, `/otpScreen`, `/NewPasswordScreen`, `/confirmScreen` | Password recovery flow |
 | `/mainScreen` | Main Nav (role-aware) |
 | `/thereIsAnUpdateScreen` | Force Update |
 | `/underMaintenanceScreen` | App Maintenance |
@@ -267,6 +299,12 @@ All routes are defined in `lib/core/routes/routes.dart` using **GoRouter**. Role
 | `/studentProfileScreen` | Student Profile |
 | `/badgesScreen` | Badges |
 | `/tayoDetailsScreen` | Tayo / Attendance Detail |
+| `/groupPointsScreen` | Group points |
+| `/tayoHistoryScreen` | Tayo history |
+| `/editTeachersInfoScreen` | Edit teacher information |
+| `/editTeacherStudents` | Teacher's students |
+| `/missCheckStudentScreen` | Weekly miss check |
+| `/StudentsExcelUploadScreen` | Bulk student import |
 
 ---
 
@@ -279,11 +317,13 @@ Make sure you have a Firebase project with **Authentication** and **Cloud Firest
 
 Student avatar and badge image uploads use **Cloudinary**. You'll need a Cloudinary account and must configure your upload URL and unsigned upload preset in the app before image uploads will work.
 
+Push notifications use Firebase Cloud Messaging. Configure Firebase Messaging for the target platform and ensure the Android notification resources and iOS notification capabilities are available before testing notifications on a device.
+
 The force update screen opens the APK download link via `url_launcher` with `LaunchMode.externalApplication`. Update the download URL in `AppBlockedScreen` before releasing.
 
 ### Firestore Config Requirements
 
-The app reads operational defaults from `config/defaults`:
+The app reads operational defaults from the church configuration in Firestore. The exact field paths are used by the Firebase provider and may be nested by church family:
 
 - `tayo` — map of default Tayo categories with `{count: 0, takenAt: null}` per entry
 - `badges` — flat map of badge name to Cloudinary image URL (`Map<String, String>`)
@@ -304,7 +344,8 @@ Example shape:
   },
   "updateAvailable": false,
   "appUnderMaintenance": false,
-  "adminPin": "your-pin-here"
+  "adminPin": "your-pin-here",
+  "points": {}
 }
 ```
 
@@ -332,3 +373,8 @@ Output will be at `build/app/outputs/flutter-apk/`.
 - **Offline caching**: `shared_preferences` caches student data and badge config locally for instant loads. See [Caching Strategy](#caching-strategy) for details.
 - **Splash routing**: On every launch the splash screen checks `updateAvailable` and `appUnderMaintenance` from Firestore before routing. Both checks run in parallel with a minimum 2-second splash duration using `Future.wait`, so the update check never causes a premature navigation.
 - **Badge system**: Badges are defined globally in `config/defaults.badges` by an admin and stored as a flat `Map<String, String>` (name → URL). Each student's earned badges are stored in `myBadges` on their document using the same structure, so no additional lookup is needed at display time.
+- **Church and family scope**: Student, teacher, mission, group, badge, and leaderboard queries use the signed-in user's church and family context where applicable.
+- **Bulk student import**: Teachers can use the Excel template and upload screen to create students in batches instead of entering each record manually.
+- **Miss checks**: The miss-check screen records `lastMissCheck` on each student; due status is calculated from that timestamp and the church week.
+- **Notifications**: FCM tokens are registered for authenticated users. Foreground messages are shown with `flutter_local_notifications`, while Firebase handles system display for background messages.
+- **Release metadata**: The current application version is `0.2.0+3`, declared in `pubspec.yaml`.
